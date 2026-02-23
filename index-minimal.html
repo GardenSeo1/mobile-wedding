@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서정원 ❤️ 제시현 결혼식 초대</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            color: #383737;
+            background: #f5f3ed;
+            line-height: 1.8;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+        }
+
+        .header {
+            padding: 60px 20px 40px;
+            text-align: center;
+            background: linear-gradient(to bottom, #fafaf8, white);
+        }
+
+        .header .date {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: 500;
+            margin-bottom: 30px;
+            letter-spacing: 3px;
+        }
+
+        .header .venue {
+            font-size: 13px;
+            color: #666;
+            line-height: 2;
+        }
+
+        .main-image {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #666;
+        }
+
+        .section {
+            padding: 60px 30px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #43573a;
+            letter-spacing: 2px;
+        }
+
+        .greeting {
+            text-align: center;
+            font-size: 14px;
+            line-height: 2.2;
+            color: #555;
+        }
+
+        .quote {
+            font-style: italic;
+            color: #888;
+            text-align: center;
+            padding: 30px 20px;
+            border-left: 3px solid #43573a;
+            margin: 30px 0;
+            background: #fafaf8;
+            font-size: 13px;
+            line-height: 2;
+        }
+
+        .dday-section {
+            background: #43573a;
+            color: white;
+            text-align: center;
+        }
+
+        .dday-counter {
+            font-size: 48px;
+            font-weight: 700;
+            margin: 20px 0;
+        }
+
+        .footer {
+            background: #43573a;
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .footer-text {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="date">2024. 10. 08. TUE</div>
+        <h1>서정원 ❤️ 제시현</h1>
+        <div class="venue">
+            오후 2시 30분<br>
+            ○○ 웨딩홀 ○층 ○○홀
+        </div>
+    </div>
+
+    <div class="main-image">
+        MAIN IMAGE
+    </div>
+
+    <section class="section">
+        <div class="section-title">INVITATION</div>
+        <div class="quote">
+            "사랑은 언제나 오래 참고<br>
+            언제나 온유하며<br>
+            모든 것을 믿으며 모든 것을 바라며<br>
+            모든 것을 견디느니라"
+        </div>
+        <div class="greeting">
+            저희 두 사람이 사랑과 믿음으로<br>
+            한 가정을 이루게 되었습니다.<br><br>
+            귀한 걸음 하시어<br>
+            저희의 앞날을 축복해 주시면<br>
+            더없는 기쁨으로 간직하겠습니다.
+        </div>
+    </section>
+
+    <section class="section dday-section">
+        <div class="section-title" style="color: white;">WEDDING DAY</div>
+        <div class="dday-counter" id="ddayCounter">D-DAY</div>
+        <div style="font-size: 14px;">2024년 10월 8일 화요일 오후 2시 30분</div>
+    </section>
+
+    <div class="footer">
+        <div class="footer-text">서정원 ❤️ 제시현 결혼합니다</div>
+        <div style="font-size: 11px; opacity: 0.7;">© 2024 Wedding Invitation</div>
+    </div>
+</div>
+
+<script>
+    // D-day 계산
+    function updateDday() {
+        const weddingDate = new Date('2024-10-08');
+        const today = new Date();
+        const diff = Math.ceil((weddingDate - today) / (1000 * 60 * 60 * 24));
+
+        const counter = document.getElementById('ddayCounter');
+        if (diff > 0) {
+            counter.textContent = 'D-' + diff;
+        } else if (diff === 0) {
+            counter.textContent = 'D-DAY';
+        } else {
+            counter.textContent = 'D+' + Math.abs(diff);
+        }
+    }
+
+    updateDday();
+    console.log('페이지 로드 완료!');
+</script>
+</body>
+</html>

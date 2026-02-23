@@ -4,12 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>모바일 청첩장</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_KAKAO_MAP_API_KEY"></script>
+    <!-- CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <style>
         * {
             margin: 0;
@@ -476,17 +473,157 @@
             line-height: 1;
         }
 
+        /* 달력 */
+        .calendar-container {
+            max-width: 320px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .calendar-header {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: #43573a;
+            margin-bottom: 15px;
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .calendar-weekdays div {
+            text-align: center;
+            font-size: 11px;
+            color: #999;
+            font-weight: 600;
+            padding: 6px 0;
+        }
+
+        .calendar-weekdays div:first-child {
+            color: #ff6b6b;
+        }
+
+        .calendar-weekdays div:last-child {
+            color: #4dabf7;
+        }
+
+        .calendar-dates {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .calendar-date {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #666;
+            border-radius: 50%;
+            transition: all 0.2s;
+            padding: 2px;
+        }
+
+        .calendar-date.empty {
+            visibility: hidden;
+        }
+
+        .calendar-date.wedding-day {
+            background: #43573a;
+            color: white;
+            font-weight: 700;
+        }
+
+        .calendar-date.wedding-day .date-number {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .calendar-date.wedding-day .date-time {
+            font-size: 8px;
+            margin-top: 1px;
+            opacity: 0.95;
+            line-height: 1;
+        }
+
+        .calendar-date.sunday {
+            color: #ff6b6b;
+        }
+
+        .calendar-date.saturday {
+            color: #4dabf7;
+        }
+
+        .calendar-date.holiday {
+            color: #ff6b6b;
+        }
+
         /* D-day */
         .dday-section {
-            background: #43573a;
+            background: linear-gradient(135deg, #43573a 0%, #516349 100%);
             color: white;
             text-align: center;
         }
 
+        .dday-title {
+            font-size: 15px;
+            font-weight: 400;
+            margin-bottom: 25px;
+            opacity: 0.95;
+            letter-spacing: 0.5px;
+        }
+
+        .dday-date {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-top: 25px;
+            font-weight: 300;
+        }
+
         .dday-counter {
-            font-size: 48px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .dday-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .dday-circle {
+            min-width: 70px;
+            height: 70px;
+            padding: 0 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
             font-weight: 700;
-            margin: 20px 0;
+            margin-bottom: 8px;
+            backdrop-filter: blur(10px);
+            white-space: nowrap;
+        }
+
+        .dday-label {
+            font-size: 11px;
+            opacity: 0.8;
+            font-weight: 400;
         }
 
         /* 지도 */
@@ -772,17 +909,43 @@
         .kakaopay-btn:hover {
             background: #FDDC3F;
         }
+
+        /* 토스트 메시지 */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            z-index: 10001;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* 부드러운 스크롤 */
+        html {
+            scroll-behavior: smooth;
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <!-- 헤더 -->
     <div class="header">
-        <div class="date">2024. 10. 08. TUE</div>
+        <div class="date">2026. 10. 04. SAT</div>
         <h1>서정원 ❤️ 제시현</h1>
         <div class="venue">
-            오후 2시 30분<br>
-            ○○ 웨딩홀 ○층 ○○홀
+            오후 2시<br>
+            라온 웨딩홀 23층 화이트홀
         </div>
     </div>
 
@@ -829,8 +992,8 @@
                 <div class="label">GROOM</div>
                 <div class="name">서정원</div>
                 <div class="info">
-                    93년 8월 3일<br>
-                    서울 강동구<br>
+                    94년 4월 26일<br>
+                    경기도 성남시<br>
                     IT 개발자
                 </div>
                 <div>
@@ -841,9 +1004,9 @@
                 <div class="label">BRIDE</div>
                 <div class="name">제시현</div>
                 <div class="info">
-                    95년 8월 3일<br>
-                    경기도 용인<br>
-                    디자이너
+                    97년 9월 28일<br>
+                    경기도 성남시<br>
+                    영양사
                 </div>
                 <div>
                     <button class="contact-btn" onclick="openContactModal('bride')">연락하기</button>
@@ -905,11 +1068,46 @@
         </button>
     </section>
 
+    <!-- 달력 -->
+    <section class="section" data-aos="fade-up" style="background: #fafaf8;">
+        <div class="section-title">CALENDAR</div>
+        <div class="calendar-container">
+            <div class="calendar-header">10월</div>
+            <div class="calendar-weekdays">
+                <div>일</div>
+                <div>월</div>
+                <div>화</div>
+                <div>수</div>
+                <div>목</div>
+                <div>금</div>
+                <div>토</div>
+            </div>
+            <div class="calendar-dates" id="calendarDates"></div>
+        </div>
+    </section>
+
     <!-- D-day -->
     <section class="section dday-section" data-aos="fade-up">
-        <div class="section-title" style="color: white;">WEDDING DAY</div>
-        <div class="dday-counter" id="ddayCounter">D-DAY</div>
-        <div style="font-size: 14px;">2024년 10월 8일 화요일 오후 2시 30분</div>
+        <div class="dday-title">서정원 ❤️ 제시현 결혼식까지</div>
+        <div class="dday-counter" id="ddayCounter">
+            <div class="dday-item">
+                <div class="dday-circle" id="dday-days">0</div>
+                <div class="dday-label">일</div>
+            </div>
+            <div class="dday-item">
+                <div class="dday-circle" id="dday-hours">00</div>
+                <div class="dday-label">시</div>
+            </div>
+            <div class="dday-item">
+                <div class="dday-circle" id="dday-minutes">00</div>
+                <div class="dday-label">분</div>
+            </div>
+            <div class="dday-item">
+                <div class="dday-circle" id="dday-seconds">00</div>
+                <div class="dday-label">초</div>
+            </div>
+        </div>
+        <div class="dday-date">2026년 10월 4일 토요일 오후 2시</div>
     </section>
 
     <!-- 오시는 길 -->
@@ -925,15 +1123,15 @@
         </div>
 
         <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: center;">
-            <a href="https://map.naver.com/p/search/네이버%20그린팩토리" target="_blank"
+            <a href="https://map.naver.com/p/search/네이버%20그린팩토리"
                style="flex: 1; text-align: center; padding: 12px; background: #03C75A; color: white; text-decoration: none; border-radius: 8px; font-size: 13px;">
                 네이버지도
             </a>
-            <a href="http://kko.to/greenfactory" target="_blank"
+            <a href="http://kko.to/greenfactory"
                style="flex: 1; text-align: center; padding: 12px; background: #FEE500; color: #000; text-decoration: none; border-radius: 8px; font-size: 13px;">
                 카카오맵
             </a>
-            <a href="https://m.map.tmap.co.kr/tmap2/mobile/route.jsp?name=네이버%20그린팩토리" target="_blank"
+            <a href="https://m.map.tmap.co.kr/tmap2/mobile/route.jsp?name=네이버%20그린팩토리"
                style="flex: 1; text-align: center; padding: 12px; background: #1C63B4; color: white; text-decoration: none; border-radius: 8px; font-size: 13px;">
                 티맵
             </a>
@@ -949,18 +1147,25 @@
             <div class="account-item">
                 <div class="account-info">
                     <div class="bank">신랑 서정원 | 신한은행</div>
-                    <div class="number">110-123-456789</div>
+                    <div class="number">110-469-119088</div>
                 </div>
-                <button class="copy-btn" onclick="copyAccount('110-123-456789')">복사</button>
+                <button class="copy-btn" onclick="copyAccount('110-469-119088')">복사</button>
             </div>
             <div class="account-item">
                 <div class="account-info">
-                    <div class="bank">신랑 부 김○○ | 국민은행</div>
+                    <div class="bank">신랑 부 서용항 | 국민은행</div>
                     <div class="number">123-456-789012</div>
                 </div>
                 <button class="copy-btn" onclick="copyAccount('123-456-789012')">복사</button>
             </div>
-            <a href="https://qr.kakaopay.com/YOUR_KAKAOPAY_CODE" target="_blank" class="kakaopay-btn" style="display: block; margin-top: 15px; padding: 12px; text-align: center; border-radius: 8px; text-decoration: none;">
+            <div class="account-item">
+                <div class="account-info">
+                    <div class="bank">신랑 모 김활연 | 국민은행</div>
+                    <div class="number">123-456-789012</div>
+                </div>
+                <button class="copy-btn" onclick="copyAccount('123-456-789012')">복사</button>
+            </div>
+            <a href="https://qr.kakaopay.com/YOUR_KAKAOPAY_CODE" class="kakaopay-btn" style="display: block; margin-top: 15px; padding: 12px; text-align: center; border-radius: 8px; text-decoration: none;">
                 💳 카카오페이 송금
             </a>
         </div>
@@ -969,19 +1174,26 @@
             <div class="account-title bride">신부측 계좌번호</div>
             <div class="account-item">
                 <div class="account-info">
-                    <div class="bank">신부 제시현 | 카카오뱅크</div>
-                    <div class="number">3333-01-1234567</div>
+                    <div class="bank">신부 제시현 | 하나은행</div>
+                    <div class="number">511-910754-46907</div>
                 </div>
-                <button class="copy-btn" onclick="copyAccount('3333-01-1234567')">복사</button>
+                <button class="copy-btn" onclick="copyAccount('511-910754-46907')">복사</button>
             </div>
             <div class="account-item">
                 <div class="account-info">
-                    <div class="bank">신부 모 이○○ | 우리은행</div>
+                    <div class="bank">신부 부 제인수 | 우리은행</div>
                     <div class="number">1002-123-456789</div>
                 </div>
                 <button class="copy-btn" onclick="copyAccount('1002-123-456789')">복사</button>
             </div>
-            <a href="https://qr.kakaopay.com/YOUR_KAKAOPAY_CODE" target="_blank" class="kakaopay-btn" style="display: block; margin-top: 15px; padding: 12px; text-align: center; border-radius: 8px; text-decoration: none;">
+            <div class="account-item">
+                <div class="account-info">
+                    <div class="bank">신부 모 정영옥 | 우리은행</div>
+                    <div class="number">1002-123-456789</div>
+                </div>
+                <button class="copy-btn" onclick="copyAccount('1002-123-456789')">복사</button>
+            </div>
+            <a href="https://qr.kakaopay.com/YOUR_KAKAOPAY_CODE" class="kakaopay-btn" style="display: block; margin-top: 15px; padding: 12px; text-align: center; border-radius: 8px; text-decoration: none;">
                 💳 카카오페이 송금
             </a>
         </div>
@@ -1013,6 +1225,9 @@
         <div class="footer-credit">© 2026 Wedding Invitation</div>
     </div>
 </div>
+
+<!-- 토스트 메시지 -->
+<div class="toast" id="toast"></div>
 
 <!-- 라이트박스 -->
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
@@ -1111,40 +1326,122 @@
     </div>
 </div>
 
+<!-- JavaScript 라이브러리 -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
 <script>
     // Supabase 초기화
-    const supabase = window.supabase.createClient(
+    const supabaseClient = window.supabase.createClient(
         "https://fupncptwrevxjlanbnsc.supabase.co",
-        "sb_publishable_35ehQQvEkhzow1Zs9jMgHQ_MSnHUhnr"
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1cG5jcHR3cmV2eGpsYW5ibnNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3OTg4ODYsImV4cCI6MjA4NzM3NDg4Nn0.cjkLp94xTl56r8Q4ahy4Zx192yvBULPjNX33XJCoHzI"
     );
+    console.log('✅ Supabase 초기화 성공!');
 
     let selectedFiles = [];
     let currentTab = 'all';
 
-    // D-day 계산
-    function updateDday() {
-        const weddingDate = new Date('2024-10-08');
-        const today = new Date();
-        const diff = Math.ceil((weddingDate - today) / (1000 * 60 * 60 * 24));
+    // 달력 생성
+    function generateCalendar() {
+        const calendarDates = document.getElementById('calendarDates');
+        if (!calendarDates) return;
 
-        const counter = document.getElementById('ddayCounter');
-        if (diff > 0) {
-            counter.textContent = 'D-' + diff;
-        } else if (diff === 0) {
-            counter.textContent = 'D-DAY';
-        } else {
-            counter.textContent = 'D+' + Math.abs(diff);
+        // 2026년 10월 달력 (10월 1일이 목요일, 31일까지)
+        const firstDayOfWeek = 4; // 목요일 (0=일요일)
+        const daysInMonth = 31;
+        const weddingDay = 4; // 10월 4일
+
+        let html = '';
+
+        // 빈 칸 추가 (10월 1일 전)
+        for (let i = 0; i < firstDayOfWeek; i++) {
+            html += '<div class="calendar-date empty"></div>';
         }
+
+        // 날짜 추가
+        for (let day = 1; day <= daysInMonth; day++) {
+            // 요일 계산 (0=일요일, 6=토요일)
+            const dayOfWeek = (firstDayOfWeek + day - 1) % 7;
+            let dayClass = 'calendar-date';
+
+            if (dayOfWeek === 0) dayClass += ' sunday'; // 일요일
+            if (dayOfWeek === 6) dayClass += ' saturday'; // 토요일
+            if (day === 5) dayClass += ' holiday'; // 10월 5일 대체공휴일
+
+            if (day === weddingDay) {
+                html += `
+                    <div class="${dayClass} wedding-day">
+                        <div class="date-number">${day}</div>
+                        <div class="date-time">오후2:00</div>
+                    </div>
+                `;
+            } else {
+                html += `<div class="${dayClass}">${day}</div>`;
+            }
+        }
+
+        calendarDates.innerHTML = html;
+    }
+
+    // D-day 실시간 카운트다운
+    function updateDday() {
+        const weddingDate = new Date('2026-10-04T14:00:00'); // 2026년 10월 4일 오후 2시
+        const now = new Date();
+        const diff = weddingDate - now;
+
+        const daysEl = document.getElementById('dday-days');
+        const hoursEl = document.getElementById('dday-hours');
+        const minutesEl = document.getElementById('dday-minutes');
+        const secondsEl = document.getElementById('dday-seconds');
+
+        if (!daysEl || !hoursEl || !minutesEl || !secondsEl) return;
+
+        if (diff > 0) {
+            // 남은 시간 계산
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            daysEl.textContent = days;
+            hoursEl.textContent = String(hours).padStart(2, '0');
+            minutesEl.textContent = String(minutes).padStart(2, '0');
+            secondsEl.textContent = String(seconds).padStart(2, '0');
+        } else {
+            // 지난 날짜 - 마이너스로 표시
+            const absDiff = Math.abs(diff);
+            const days = Math.floor(absDiff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((absDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((absDiff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((absDiff % (1000 * 60)) / 1000);
+
+            daysEl.textContent = '-' + days;
+            hoursEl.textContent = String(hours).padStart(2, '0');
+            minutesEl.textContent = String(minutes).padStart(2, '0');
+            secondsEl.textContent = String(seconds).padStart(2, '0');
+        }
+    }
+
+    // 토스트 메시지 표시
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.classList.add('show');
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000);
     }
 
     // 계좌번호 복사
     function copyAccount(number) {
         if (navigator.clipboard) {
             navigator.clipboard.writeText(number).then(function() {
-                alert('계좌번호가 복사되었습니다');
+                showToast('계좌번호가 복사되었습니다 ✓');
             });
         } else {
-            alert(number);
+            showToast(number);
         }
     }
 
@@ -1160,8 +1457,13 @@
 
     // 갤러리 로드
     async function loadGallery() {
+        if (!supabaseClient) {
+            console.log('Supabase가 초기화되지 않았습니다.');
+            return;
+        }
+
         try {
-            let query = supabase.from("photos").select("*").order("created_at", { ascending: false });
+            let query = supabaseClient.from("photos").select("*").order("created_at", { ascending: false });
 
             if (currentTab !== 'all') {
                 query = query.eq("photo_type", currentTab);
@@ -1222,6 +1524,11 @@
 
     // 사진 업로드
     async function uploadPhotos() {
+        if (!supabaseClient) {
+            alert('데이터베이스 연결에 실패했습니다. 관리자에게 문의하세요.');
+            return;
+        }
+
         if (selectedFiles.length === 0) return;
 
         const uploadBtn = document.getElementById('uploadBtn');
@@ -1236,11 +1543,11 @@
             const filePath = 'guest/' + Date.now() + '_' + i + '_' + file.name;
 
             try {
-                const { error } = await supabase.storage.from("wedding-photos").upload(filePath, file);
+                const { error } = await supabaseClient.storage.from("wedding-photos").upload(filePath, file);
 
                 if (!error) {
                     const imageUrl = 'https://fupncptwrevxjlanbnsc.supabase.co/storage/v1/object/public/wedding-photos/' + filePath;
-                    await supabase.from("photos").insert([{ image_url: imageUrl, photo_type: 'guest' }]);
+                    await supabaseClient.from("photos").insert([{ image_url: imageUrl, photo_type: 'guest' }]);
                     uploaded++;
                 }
             } catch (err) {
@@ -1264,6 +1571,11 @@
 
     // 방명록 제출
     async function submitGuestbook() {
+        if (!supabaseClient) {
+            alert('데이터베이스 연결에 실패했습니다. 관리자에게 문의하세요.');
+            return;
+        }
+
         const name = document.getElementById('guestName').value;
         const password = document.getElementById('guestPassword').value;
         const message = document.getElementById('guestMessage').value;
@@ -1274,7 +1586,7 @@
         }
 
         try {
-            await supabase.from("guestbook").insert([{ name: name, password: password, message: message }]);
+            await supabaseClient.from("guestbook").insert([{ name: name, password: password, message: message }]);
 
             document.getElementById('guestName').value = '';
             document.getElementById('guestPassword').value = '';
@@ -1290,8 +1602,13 @@
 
     // 방명록 로드
     async function loadGuestbook() {
+        if (!supabaseClient) {
+            console.log('Supabase가 초기화되지 않았습니다.');
+            return;
+        }
+
         try {
-            const { data } = await supabase.from("guestbook").select("*").order("created_at", { ascending: false });
+            const { data } = await supabaseClient.from("guestbook").select("*").order("created_at", { ascending: false });
             const list = document.getElementById('guestbookList');
 
             if (!data || data.length === 0) {
@@ -1369,6 +1686,9 @@
                     clickable: true,
                 },
             });
+            console.log('✅ Swiper 초기화 성공!');
+        } else {
+            console.error('❌ Swiper 라이브러리가 로드되지 않았습니다');
         }
     }
 
@@ -1384,10 +1704,10 @@
             // 공유 API가 지원되지 않는 경우 URL 복사
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(window.location.href).then(() => {
-                    alert('초대장 링크가 복사되었습니다');
+                    showToast('초대장 링크가 복사되었습니다 ✓');
                 });
             } else {
-                alert('이 브라우저는 공유 기능을 지원하지 않습니다');
+                showToast('이 브라우저는 공유 기능을 지원하지 않습니다');
             }
         }
     }
@@ -1395,10 +1715,10 @@
     // 캘린더에 저장
     function addToCalendar() {
         const title = '서정원 ❤️ 제시현 결혼식';
-        const location = '경기도 성남시 분당구 정자일로 95 (네이버 그린팩토리)';
+        const location = '부산광역시 부산진구 중앙대로 640 ABL부산타워 23층';
         const details = '저희 결혼식에 초대합니다';
-        const startDate = '20241008T143000';
-        const endDate = '20241008T163000';
+        const startDate = '20261004T140000';
+        const endDate = '20261004T150000';
 
         // Google Calendar URL
         const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
@@ -1444,6 +1764,12 @@
 
     async function submitRsvp(event) {
         event.preventDefault();
+
+        if (!supabaseClient) {
+            alert('데이터베이스 연결에 실패했습니다. 관리자에게 문의하세요.');
+            return;
+        }
+
         const form = event.target;
         const formData = new FormData(form);
 
@@ -1457,7 +1783,7 @@
         };
 
         try {
-            await supabase.from('rsvp').insert([rsvpData]);
+            await supabaseClient.from('rsvp').insert([rsvpData]);
             alert('참석 여부가 전달되었습니다. 감사합니다! 💕');
             closeRsvpModal();
             form.reset();
@@ -1472,14 +1798,14 @@
         groom: {
             title: '신랑에게 연락하기',
             name: '서정원',
-            phone: '010-0000-0000',
-            sms: '010-0000-0000'
+            phone: '010-8358-7077',
+            sms: '010-8358-7077'
         },
         bride: {
             title: '신부에게 연락하기',
             name: '제시현',
-            phone: '010-0000-0000',
-            sms: '010-0000-0000'
+            phone: '010-4764-8574',
+            sms: '010-4764-8574'
         }
     };
 
@@ -1500,48 +1826,58 @@
         document.getElementById('contactModal').classList.remove('active');
     }
 
-    // 모달 배경 클릭 시 닫기
-    document.getElementById('rsvpModal').addEventListener('click', function(e) {
-        if (e.target === this) closeRsvpModal();
-    });
+    // 페이지 초기화 함수
+    function initPage() {
+        // 모달 배경 클릭 시 닫기
+        const rsvpModal = document.getElementById('rsvpModal');
+        const contactModal = document.getElementById('contactModal');
 
-    document.getElementById('contactModal').addEventListener('click', function(e) {
-        if (e.target === this) closeContactModal();
-    });
+        if (rsvpModal) {
+            rsvpModal.addEventListener('click', function(e) {
+                if (e.target === this) closeRsvpModal();
+            });
+        }
 
-    // 초기화
-    updateDday();
-    setInterval(updateDday, 3600000);
-    loadGallery();
-    loadGuestbook();
+        if (contactModal) {
+            contactModal.addEventListener('click', function(e) {
+                if (e.target === this) closeContactModal();
+            });
+        }
 
-    // 지도는 페이지 로드 후 초기화
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            initMap();
-            initSwiper();
-            // AOS 초기화
-            if (typeof AOS !== 'undefined') {
-                AOS.init({
-                    duration: 800,
-                    once: true,
-                    offset: 100
-                });
-            }
-        });
-    } else {
+        // 초기화
+        generateCalendar();
+        updateDday();
+        setInterval(updateDday, 1000); // 1초마다 업데이트
+
+        if (supabaseClient) {
+            loadGallery();
+            loadGuestbook();
+        }
+
         initMap();
         initSwiper();
+
+        // AOS 초기화
         if (typeof AOS !== 'undefined') {
             AOS.init({
                 duration: 800,
                 once: true,
                 offset: 100
             });
+            console.log('✅ AOS 초기화 성공!');
+        } else {
+            console.error('❌ AOS 라이브러리가 로드되지 않았습니다');
         }
+
+        console.log('페이지 로드 완료');
     }
 
-    console.log('페이지 로드 완료');
+    // 페이지 로드 후 초기화
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPage);
+    } else {
+        initPage();
+    }
 </script>
 </body>
 </html>

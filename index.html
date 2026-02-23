@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>💒 Wedding Gallery</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .upload-section {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+        .upload-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        .file-input-label {
+            display: block;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            color: white;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 12px rgba(240,147,251,0.3);
+        }
+        .file-input-label:active {
+            transform: scale(0.98);
+        }
+        .file-input-label .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .file-input-label .text {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .file-input-label .subtext {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        .preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .preview-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .preview-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255,0,0,0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .upload-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        }
+        .upload-btn:active {
+            transform: scale(0.98);
+        }
+        .upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+        }
+        .gallery-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .gallery-item:active {
+            transform: scale(0.95);
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .gallery-item .badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(255,255,255,0.95);
+            color: #666;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .lightbox.active {
+            display: flex;
+        }
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+        }
+        .lightbox .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            color: #333;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 24px;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .status-message {
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+            font-size: 14px;
+        }
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        .empty-state .icon {
+            font-size: 64px;
+            margin-bottom: 15px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>💒 우리의 결혼식</h1>
+    <p>소중한 순간을 함께 나눠주세요</p>
+</div>
+
+<div class="container">
+    <div class="upload-section">
+        <div class="upload-title">
+            <span>📸</span>
+            <span>축하 사진 올리기</span>
+        </div>
+
+        <div class="file-input-wrapper">
+            <input type="file" id="guestFileInput" accept="image/*" multiple onchange="previewGuestImages()" />
+            <label class="file-input-label" for="guestFileInput">
+                <div class="icon">📷</div>
+                <div class="text">사진 선택하기</div>
+                <div class="subtext">축하의 순간을 공유해주세요 (여러 장 가능)</div>
+            </label>
+        </div>
+
+        <div id="guestPreview" class="preview-container"></div>
+
+        <button class="upload-btn" onclick="uploadGuestPhotos()" id="guestUploadBtn" disabled>
+            사진 업로드하기
+        </button>
+
+        <div class="status-message" id="uploadStatus"></div>
+    </div>
+
+    <div class="section">
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('all')">전체 사진</button>
+            <button class="tab" onclick="switchTab('admin')">웨딩 사진</button>
+            <button class="tab" onclick="switchTab('guest')">축하 사진</button>
+        </div>
+
+        <div id="allGallery" class="gallery-grid"></div>
+    </div>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <button class="close-btn" onclick="closeLightbox()">&times;</button>
+    <img id="lightboxImg" src="" alt="Full size" />
+</div>
+
+<script>
+    const supabase = window.supabase.createClient(
+        "https://fupncptwrevxjlanbnsc.supabase.co",
+        "sb_publishable_35ehQQvEkhzow1Zs9jMgHQ_MSnHUhnr"
+    );
+
+    let selectedGuestFiles = [];
+    let currentFilter = 'all';
+
+    function previewGuestImages() {
+        const fileInput = document.getElementById("guestFileInput");
+        const files = Array.from(fileInput.files);
+        selectedGuestFiles = files;
+
+        const previewContainer = document.getElementById("guestPreview");
+        const uploadBtn = document.getElementById("guestUploadBtn");
+
+        previewContainer.innerHTML = "";
+
+        if (files.length === 0) {
+            uploadBtn.disabled = true;
+            return;
+        }
+
+        uploadBtn.disabled = false;
+
+        files.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const previewItem = document.createElement("div");
+                previewItem.className = "preview-item";
+                previewItem.innerHTML = `
+                    <img src="${e.target.result}" alt="Preview" />
+                    <button class="remove-btn" onclick="removeGuestPreview(${index})">&times;</button>
+                `;
+                previewContainer.appendChild(previewItem);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function removeGuestPreview(index) {
+        selectedGuestFiles.splice(index, 1);
+
+        const dataTransfer = new DataTransfer();
+        selectedGuestFiles.forEach(file => dataTransfer.items.add(file));
+        document.getElementById("guestFileInput").files = dataTransfer.files;
+
+        previewGuestImages();
+    }
+
+    async function uploadGuestPhotos() {
+        if (selectedGuestFiles.length === 0) {
+            showUploadStatus("사진을 선택해주세요", "error");
+            return;
+        }
+
+        const uploadBtn = document.getElementById("guestUploadBtn");
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = "업로드 중...";
+
+        let uploaded = 0;
+
+        for (let i = 0; i < selectedGuestFiles.length; i++) {
+            const file = selectedGuestFiles[i];
+            const filePath = `guest/${Date.now()}_${i}_${file.name}`;
+
+            const { data, error } = await supabase.storage
+                .from("wedding-photos")
+                .upload(filePath, file);
+
+            if (error) {
+                console.error("업로드 실패:", error);
+                continue;
+            }
+
+            const imageUrl = `https://fupncptwrevxjlanbnsc.supabase.co/storage/v1/object/public/wedding-photos/${filePath}`;
+
+            await supabase.from("photos").insert([
+                {
+                    image_url: imageUrl,
+                    photo_type: 'guest'
+                }
+            ]);
+
+            uploaded++;
+        }
+
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = "사진 업로드하기";
+
+        document.getElementById("guestFileInput").value = "";
+        document.getElementById("guestPreview").innerHTML = "";
+        selectedGuestFiles = [];
+
+        showUploadStatus(`${uploaded}개의 사진이 업로드되었습니다! 감사합니다 💕`, "success");
+        loadGallery();
+    }
+
+    function showUploadStatus(message, type) {
+        const status = document.getElementById("uploadStatus");
+        status.textContent = message;
+        status.className = `status-message ${type}`;
+        status.style.display = "block";
+
+        setTimeout(() => {
+            status.style.display = "none";
+        }, 3000);
+    }
+
+    function switchTab(filter) {
+        currentFilter = filter;
+
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        event.target.classList.add('active');
+
+        loadGallery();
+    }
+
+    async function loadGallery() {
+        let query = supabase
+            .from("photos")
+            .select("*")
+            .order("created_at", { ascending: false });
+
+        if (currentFilter !== 'all') {
+            query = query.eq("photo_type", currentFilter);
+        }
+
+        const { data, error } = await query;
+
+        const gallery = document.getElementById("allGallery");
+        gallery.innerHTML = "";
+
+        if (!data || data.length === 0) {
+            gallery.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">📷</div>
+                    <div>아직 사진이 없습니다</div>
+                </div>
+            `;
+            return;
+        }
+
+        data.forEach(photo => {
+            const galleryItem = document.createElement("div");
+            galleryItem.className = "gallery-item";
+
+            const badgeText = photo.photo_type === 'admin' ? '💍 웨딩' : '🎉 축하';
+
+            galleryItem.innerHTML = `
+                <img src="${photo.image_url}" alt="Photo" onclick="openLightbox('${photo.image_url}')" />
+                ${currentFilter === 'all' ? `<div class="badge">${badgeText}</div>` : ''}
+            `;
+            gallery.appendChild(galleryItem);
+        });
+    }
+
+    function openLightbox(imageUrl) {
+        const lightbox = document.getElementById("lightbox");
+        const lightboxImg = document.getElementById("lightboxImg");
+        lightboxImg.src = imageUrl;
+        lightbox.classList.add("active");
+    }
+
+    function closeLightbox() {
+        const lightbox = document.getElementById("lightbox");
+        lightbox.classList.remove("active");
+    }
+
+    loadGallery();
+</script>
+</body>
+</html>

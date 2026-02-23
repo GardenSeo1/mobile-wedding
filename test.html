@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>테스트 페이지</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        .box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            margin: 0 auto;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        p {
+            color: #666;
+            line-height: 1.8;
+        }
+        .button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: #43573a;
+            color: white;
+            text-align: center;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>✅ 테스트 성공!</h1>
+        <p>이 페이지가 보인다면 GitHub Pages가 정상 작동 중입니다.</p>
+        <p>현재 시간: <span id="time"></span></p>
+        <a href="index.html" class="button">메인 페이지로 이동</a>
+    </div>
+
+    <script>
+        document.getElementById('time').textContent = new Date().toLocaleString('ko-KR');
+        console.log('테스트 페이지 로드 성공');
+    </script>
+</body>
+</html>

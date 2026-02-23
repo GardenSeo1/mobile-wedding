@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>모바일 청첩장</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -153,6 +154,29 @@
         }
 
         /* 갤러리 */
+        .gallery-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .gallery-tab {
+            padding: 8px 20px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .gallery-tab.active {
+            background: #43573a;
+            color: white;
+            border-color: #43573a;
+        }
+
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -168,6 +192,251 @@
             justify-content: center;
             color: white;
             font-size: 11px;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 사진 업로드 */
+        .upload-section {
+            background: white;
+        }
+
+        .upload-box {
+            border: 2px dashed #43573a;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            background: #fafaf8;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .upload-box:hover {
+            background: #f0f0f0;
+        }
+
+        .upload-box input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .preview-item {
+            aspect-ratio: 1;
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .upload-btn {
+            width: 100%;
+            padding: 15px;
+            background: #43573a;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-btn:hover {
+            background: #516349;
+        }
+
+        .upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .status-message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 13px;
+            display: none;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* 방명록 */
+        .guestbook-section {
+            background: white;
+        }
+
+        .guestbook-form {
+            background: #fafaf8;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: #43573a;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .submit-btn:hover {
+            background: #516349;
+        }
+
+        .guestbook-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .guestbook-item {
+            background: #fafaf8;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .guestbook-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .guestbook-name {
+            font-weight: 600;
+            color: #43573a;
+        }
+
+        .guestbook-date {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .guestbook-message {
+            font-size: 13px;
+            line-height: 1.8;
+            color: #555;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* 라이트박스 */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lightbox.active {
+            display: flex;
+        }
+
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            line-height: 1;
         }
 
         /* D-day */
@@ -361,7 +630,12 @@
     <!-- 갤러리 -->
     <section class="section">
         <div class="section-title">GALLERY</div>
-        <div class="gallery-grid">
+        <div class="gallery-tabs">
+            <button class="gallery-tab active" onclick="switchTab('all')">전체</button>
+            <button class="gallery-tab" onclick="switchTab('admin')">웨딩사진</button>
+            <button class="gallery-tab" onclick="switchTab('guest')">축하사진</button>
+        </div>
+        <div class="gallery-grid" id="gallery">
             <div class="gallery-item">SUB SAMPLE 1</div>
             <div class="gallery-item">SUB SAMPLE 2</div>
             <div class="gallery-item">SUB SAMPLE 3</div>
@@ -369,6 +643,29 @@
             <div class="gallery-item">SUB SAMPLE 5</div>
             <div class="gallery-item">SUB SAMPLE 6</div>
         </div>
+    </section>
+
+    <!-- 사진 업로드 -->
+    <section class="section upload-section">
+        <div class="section-title">📸 축하 사진 올리기</div>
+        <p style="text-align: center; color: #666; margin-bottom: 20px; font-size: 13px;">
+            축하의 마음을 담은 사진을 올려주세요
+        </p>
+
+        <div class="upload-box">
+            <input type="file" id="guestFileInput" accept="image/*" multiple onchange="previewImages()">
+            <div class="upload-icon">📷</div>
+            <div style="font-size: 14px; margin-bottom: 5px;">사진 선택하기</div>
+            <div style="font-size: 12px; color: #999;">여러 장 선택 가능</div>
+        </div>
+
+        <div class="preview-grid" id="previewGrid"></div>
+
+        <button class="upload-btn" id="uploadBtn" onclick="uploadPhotos()" disabled>
+            업로드하기
+        </button>
+
+        <div class="status-message" id="uploadStatus"></div>
     </section>
 
     <!-- D-day -->
@@ -432,6 +729,26 @@
         </div>
     </section>
 
+    <!-- 방명록 -->
+    <section class="section guestbook-section">
+        <div class="section-title">💌 방명록</div>
+
+        <div class="guestbook-form">
+            <div class="form-group">
+                <input type="text" id="guestName" placeholder="이름">
+            </div>
+            <div class="form-group">
+                <input type="password" id="guestPassword" placeholder="비밀번호 (삭제 시 필요)">
+            </div>
+            <div class="form-group">
+                <textarea id="guestMessage" placeholder="축하 메시지를 남겨주세요"></textarea>
+            </div>
+            <button class="submit-btn" onclick="submitGuestbook()">축하 메시지 남기기</button>
+        </div>
+
+        <div class="guestbook-list" id="guestbookList"></div>
+    </section>
+
     <!-- 푸터 -->
     <div class="footer">
         <div class="footer-text">김도연 ❤️ 이지유 결혼합니다</div>
@@ -439,7 +756,22 @@
     </div>
 </div>
 
+<!-- 라이트박스 -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+    <img id="lightboxImg" src="" alt="">
+</div>
+
 <script>
+    // Supabase 초기화
+    const supabase = window.supabase.createClient(
+        "https://fupncptwrevxjlanbnsc.supabase.co",
+        "sb_publishable_35ehQQvEkhzow1Zs9jMgHQ_MSnHUhnr"
+    );
+
+    let selectedFiles = [];
+    let currentTab = 'all';
+
     // D-day 계산
     function updateDday() {
         const weddingDate = new Date('2026-05-15');
@@ -467,9 +799,185 @@
         }
     }
 
+    // 갤러리 탭 전환
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.gallery-tab').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        loadGallery();
+    }
+
+    // 갤러리 로드
+    async function loadGallery() {
+        try {
+            let query = supabase.from("photos").select("*").order("created_at", { ascending: false });
+
+            if (currentTab !== 'all') {
+                query = query.eq("photo_type", currentTab);
+            }
+
+            const { data } = await query;
+            const gallery = document.getElementById("gallery");
+
+            if (!data || data.length === 0) {
+                gallery.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">아직 사진이 없습니다</div>';
+                return;
+            }
+
+            gallery.innerHTML = '';
+            data.forEach(photo => {
+                const item = document.createElement('div');
+                item.className = 'gallery-item';
+                item.onclick = () => openLightbox(photo.image_url);
+                item.innerHTML = '<img src="' + photo.image_url + '" alt="">';
+                gallery.appendChild(item);
+            });
+        } catch (error) {
+            console.error('갤러리 로드 실패:', error);
+        }
+    }
+
+    // 사진 미리보기
+    function previewImages() {
+        const fileInput = document.getElementById('guestFileInput');
+        const files = Array.from(fileInput.files);
+        selectedFiles = files;
+
+        const previewGrid = document.getElementById('previewGrid');
+        const uploadBtn = document.getElementById('uploadBtn');
+
+        previewGrid.innerHTML = '';
+        uploadBtn.disabled = files.length === 0;
+
+        files.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+                item.innerHTML = '<img src="' + e.target.result + '" alt=""><button class="remove-btn" onclick="removePreview(' + index + ')">&times;</button>';
+                previewGrid.appendChild(item);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function removePreview(index) {
+        selectedFiles.splice(index, 1);
+        const dataTransfer = new DataTransfer();
+        selectedFiles.forEach(file => dataTransfer.items.add(file));
+        document.getElementById('guestFileInput').files = dataTransfer.files;
+        previewImages();
+    }
+
+    // 사진 업로드
+    async function uploadPhotos() {
+        if (selectedFiles.length === 0) return;
+
+        const uploadBtn = document.getElementById('uploadBtn');
+        const status = document.getElementById('uploadStatus');
+
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = '업로드 중...';
+
+        let uploaded = 0;
+        for (let i = 0; i < selectedFiles.length; i++) {
+            const file = selectedFiles[i];
+            const filePath = 'guest/' + Date.now() + '_' + i + '_' + file.name;
+
+            try {
+                const { error } = await supabase.storage.from("wedding-photos").upload(filePath, file);
+
+                if (!error) {
+                    const imageUrl = 'https://fupncptwrevxjlanbnsc.supabase.co/storage/v1/object/public/wedding-photos/' + filePath;
+                    await supabase.from("photos").insert([{ image_url: imageUrl, photo_type: 'guest' }]);
+                    uploaded++;
+                }
+            } catch (err) {
+                console.error('업로드 실패:', err);
+            }
+        }
+
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = '업로드하기';
+        document.getElementById('guestFileInput').value = '';
+        document.getElementById('previewGrid').innerHTML = '';
+        selectedFiles = [];
+
+        status.className = 'status-message success';
+        status.textContent = uploaded + '개의 사진이 업로드되었습니다! 💕';
+        status.style.display = 'block';
+        setTimeout(() => status.style.display = 'none', 3000);
+
+        loadGallery();
+    }
+
+    // 방명록 제출
+    async function submitGuestbook() {
+        const name = document.getElementById('guestName').value;
+        const password = document.getElementById('guestPassword').value;
+        const message = document.getElementById('guestMessage').value;
+
+        if (!name || !password || !message) {
+            alert('모든 항목을 입력해주세요');
+            return;
+        }
+
+        try {
+            await supabase.from("guestbook").insert([{ name: name, password: password, message: message }]);
+
+            document.getElementById('guestName').value = '';
+            document.getElementById('guestPassword').value = '';
+            document.getElementById('guestMessage').value = '';
+
+            alert('축하 메시지가 등록되었습니다 💕');
+            loadGuestbook();
+        } catch (error) {
+            console.error('방명록 등록 실패:', error);
+            alert('등록에 실패했습니다');
+        }
+    }
+
+    // 방명록 로드
+    async function loadGuestbook() {
+        try {
+            const { data } = await supabase.from("guestbook").select("*").order("created_at", { ascending: false });
+            const list = document.getElementById('guestbookList');
+
+            if (!data || data.length === 0) {
+                list.innerHTML = '<div class="empty-state">첫 번째 축하 메시지를 남겨주세요</div>';
+                return;
+            }
+
+            list.innerHTML = '';
+            data.forEach(item => {
+                const date = new Date(item.created_at).toLocaleDateString('ko-KR');
+                const div = document.createElement('div');
+                div.className = 'guestbook-item';
+                div.innerHTML = '<div class="guestbook-header"><div class="guestbook-name">' + item.name + '</div><div class="guestbook-date">' + date + '</div></div><div class="guestbook-message">' + item.message + '</div>';
+                list.appendChild(div);
+            });
+        } catch (error) {
+            console.error('방명록 로드 실패:', error);
+        }
+    }
+
+    // 라이트박스
+    function openLightbox(url) {
+        document.getElementById('lightboxImg').src = url;
+        document.getElementById('lightbox').classList.add('active');
+    }
+
+    function closeLightbox() {
+        document.getElementById('lightbox').classList.remove('active');
+    }
+
     // 초기화
     updateDday();
     setInterval(updateDday, 3600000);
+    loadGallery();
+    loadGuestbook();
 
     console.log('페이지 로드 완료');
 </script>

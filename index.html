@@ -954,10 +954,11 @@
     <!-- 메인 이미지 슬라이더 -->
     <div class="main-image">
         <div class="swiper mainSwiper">
-            <div class="swiper-wrapper">
-                <div class="swiper-slide">MAIN SAMPLE 1</div>
-                <div class="swiper-slide">MAIN SAMPLE 2</div>
-                <div class="swiper-slide">MAIN SAMPLE 3</div>
+            <div class="swiper-wrapper" id="mainSwiperWrapper">
+                <!-- 메인 사진이 동적으로 로드됩니다 -->
+                <div class="swiper-slide">
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #999;">사진 로딩 중...</div>
+                </div>
             </div>
             <div class="swiper-pagination"></div>
         </div>
@@ -1684,8 +1685,55 @@
         }
     }
 
+    // 메인 슬라이더 사진 로드
+    async function loadMainSlider() {
+        if (!supabaseClient) {
+            console.log('Supabase가 초기화되지 않았습니다.');
+            return;
+        }
+
+        try {
+            const { data } = await supabaseClient
+                .from("photos")
+                .select("*")
+                .eq("photo_type", "main")
+                .order("created_at", { ascending: true });
+
+            const wrapper = document.getElementById("mainSwiperWrapper");
+
+            if (!data || data.length === 0) {
+                // 메인 사진이 없으면 기본 이미지 표시
+                wrapper.innerHTML = `
+                    <div class="swiper-slide">
+                        <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #999; font-size: 18px;">
+                            메인 사진을 등록해주세요
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Supabase에서 불러온 사진으로 슬라이드 생성
+            wrapper.innerHTML = '';
+            data.forEach(photo => {
+                const slide = document.createElement('div');
+                slide.className = 'swiper-slide';
+                slide.innerHTML = `<img src="${photo.image_url}" alt="Wedding Photo">`;
+                wrapper.appendChild(slide);
+            });
+
+            console.log(`✅ 메인 사진 ${data.length}개 로드 완료!`);
+        } catch (error) {
+            console.error('메인 슬라이더 로드 실패:', error);
+        }
+    }
+
     // 스와이퍼 초기화
-    function initSwiper() {
+    async function initSwiper() {
+        // 먼저 메인 사진 로드
+        await loadMainSlider();
+
+        // 그 다음 Swiper 초기화
         if (typeof Swiper !== 'undefined') {
             new Swiper('.mainSwiper', {
                 loop: true,
@@ -1839,7 +1887,7 @@
     }
 
     // 페이지 초기화 함수
-    function initPage() {
+    async function initPage() {
         // 모달 배경 클릭 시 닫기
         const rsvpModal = document.getElementById('rsvpModal');
         const contactModal = document.getElementById('contactModal');
@@ -1867,7 +1915,7 @@
         }
 
         initMap();
-        initSwiper();
+        await initSwiper();
 
         // AOS 초기화
         if (typeof AOS !== 'undefined') {

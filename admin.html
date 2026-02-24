@@ -192,14 +192,98 @@
             padding-bottom: 10px;
             border-bottom: 2px solid #f0f0f0;
         }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .tab-btn {
+            padding: 12px 24px;
+            background: white;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tab-btn:hover {
+            color: #333;
+        }
+        .tab-btn.active {
+            color: #764ba2;
+            border-bottom-color: #764ba2;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .limit-info {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            color: #856404;
+            font-size: 14px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>🎉 웨딩 사진 관리자 페이지</h1>
 
-    <div class="upload-section">
-        <div class="section-title">새 사진 업로드</div>
+    <!-- 탭 메뉴 -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('main')">📸 메인 사진</button>
+        <button class="tab-btn" onclick="switchTab('wedding')">💒 웨딩 사진</button>
+    </div>
+
+    <!-- 메인 사진 탭 -->
+    <div id="main-tab" class="tab-content active">
+        <div class="upload-section">
+            <div class="section-title">메인 슬라이더 사진 업로드</div>
+            <div class="limit-info">
+                ⚠️ 메인 사진은 최대 5개까지 등록 가능합니다 (현재: <span id="mainPhotoCount">0</span>/5)
+            </div>
+
+            <div class="file-input-wrapper">
+                <input type="file" id="mainFileInput" accept="image/*" multiple onchange="previewMainImages()" />
+                <label class="file-input-label" for="mainFileInput">
+                    <div style="font-size: 48px; margin-bottom: 10px;">📷</div>
+                    <div>클릭하여 메인 사진을 선택하세요</div>
+                    <div style="font-size: 14px; color: #999; margin-top: 5px;">여러 장 선택 가능 (최대 5개)</div>
+                </label>
+            </div>
+
+            <div id="mainPreviewGrid" class="preview-grid"></div>
+
+            <button class="upload-btn" onclick="uploadMainImages()" id="mainUploadBtn" disabled>
+                업로드 하기
+            </button>
+
+            <div class="progress-bar" id="mainProgressBar">
+                <div class="progress-bar-fill" id="mainProgressBarFill"></div>
+            </div>
+
+            <div class="status-message" id="mainStatusMessage"></div>
+        </div>
+
+        <div class="gallery-section">
+            <div class="section-title">업로드된 메인 사진 목록</div>
+            <div id="mainGallery" class="gallery-grid"></div>
+        </div>
+    </div>
+
+    <!-- 웨딩 사진 탭 -->
+    <div id="wedding-tab" class="tab-content">
+        <div class="upload-section">
+            <div class="section-title">웨딩 사진 업로드</div>
 
         <div class="file-input-wrapper">
             <input type="file" id="fileInput" accept="image/*" multiple onchange="previewImages()" />
@@ -227,6 +311,7 @@
         <div class="section-title">업로드된 웨딩 사진 목록</div>
         <div id="gallery" class="gallery-grid"></div>
     </div>
+    </div>
 </div>
 
 <script>
@@ -239,6 +324,27 @@
     );
 
     let selectedFiles = [];
+    let selectedMainFiles = [];
+    const MAX_MAIN_PHOTOS = 5;
+
+    // 탭 전환
+    function switchTab(tabName) {
+        // 모든 탭 버튼 비활성화
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        // 모든 탭 콘텐츠 숨기기
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+        // 선택한 탭 활성화
+        event.target.classList.add('active');
+        document.getElementById(tabName + '-tab').classList.add('active');
+
+        // 해당 탭의 갤러리 로드
+        if (tabName === 'main') {
+            loadMainGallery();
+        } else {
+            loadGallery();
+        }
+    }
 
     function previewImages() {
         const fileInput = document.getElementById("fileInput");
@@ -280,6 +386,184 @@
         document.getElementById("fileInput").files = dataTransfer.files;
 
         previewImages();
+    }
+
+    // 메인 사진 미리보기
+    async function previewMainImages() {
+        const fileInput = document.getElementById("mainFileInput");
+        const files = Array.from(fileInput.files);
+
+        // 현재 업로드된 메인 사진 개수 확인
+        const { data: currentPhotos } = await supabase
+            .from("photos")
+            .select("*")
+            .eq("photo_type", "main");
+
+        const currentCount = currentPhotos ? currentPhotos.length : 0;
+        const availableSlots = MAX_MAIN_PHOTOS - currentCount;
+
+        if (files.length > availableSlots) {
+            showMainStatus(`최대 ${availableSlots}개까지만 추가할 수 있습니다. (현재 ${currentCount}/${MAX_MAIN_PHOTOS})`, "error");
+            fileInput.value = "";
+            return;
+        }
+
+        selectedMainFiles = files;
+
+        const previewGrid = document.getElementById("mainPreviewGrid");
+        const uploadBtn = document.getElementById("mainUploadBtn");
+
+        previewGrid.innerHTML = "";
+
+        if (files.length === 0) {
+            uploadBtn.disabled = true;
+            return;
+        }
+
+        uploadBtn.disabled = false;
+
+        files.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const previewItem = document.createElement("div");
+                previewItem.className = "preview-item";
+                previewItem.innerHTML = `
+                    <img src="${e.target.result}" alt="Preview" />
+                    <button class="remove-btn" onclick="removeMainPreview(${index})">&times;</button>
+                `;
+                previewGrid.appendChild(previewItem);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function removeMainPreview(index) {
+        selectedMainFiles.splice(index, 1);
+
+        const dataTransfer = new DataTransfer();
+        selectedMainFiles.forEach(file => dataTransfer.items.add(file));
+        document.getElementById("mainFileInput").files = dataTransfer.files;
+
+        previewMainImages();
+    }
+
+    // 메인 사진 업로드
+    async function uploadMainImages() {
+        if (selectedMainFiles.length === 0) {
+            showMainStatus("파일을 선택해주세요", "error");
+            return;
+        }
+
+        const uploadBtn = document.getElementById("mainUploadBtn");
+        const progressBar = document.getElementById("mainProgressBar");
+        const progressBarFill = document.getElementById("mainProgressBarFill");
+
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = "업로드 중...";
+        progressBar.style.display = "block";
+
+        let uploaded = 0;
+        const total = selectedMainFiles.length;
+
+        for (let i = 0; i < selectedMainFiles.length; i++) {
+            const file = selectedMainFiles[i];
+            const filePath = `main/${Date.now()}_${i}_${file.name}`;
+
+            const { data, error } = await supabase.storage
+                .from("wedding-photos")
+                .upload(filePath, file);
+
+            if (error) {
+                console.error("업로드 실패:", error);
+                continue;
+            }
+
+            const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/wedding-photos/${filePath}`;
+
+            await supabase.from("photos").insert([
+                {
+                    image_url: imageUrl,
+                    photo_type: 'main'
+                }
+            ]);
+
+            uploaded++;
+            const progress = (uploaded / total) * 100;
+            progressBarFill.style.width = progress + "%";
+        }
+
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = "업로드 하기";
+        progressBar.style.display = "none";
+        progressBarFill.style.width = "0%";
+
+        document.getElementById("mainFileInput").value = "";
+        document.getElementById("mainPreviewGrid").innerHTML = "";
+        selectedMainFiles = [];
+
+        showMainStatus(`${uploaded}개 사진이 업로드되었습니다!`, "success");
+        loadMainGallery();
+    }
+
+    function showMainStatus(message, type) {
+        const statusMessage = document.getElementById("mainStatusMessage");
+        statusMessage.textContent = message;
+        statusMessage.className = `status-message ${type}`;
+        statusMessage.style.display = "block";
+
+        setTimeout(() => {
+            statusMessage.style.display = "none";
+        }, 3000);
+    }
+
+    // 메인 사진 갤러리 로드
+    async function loadMainGallery() {
+        const { data, error } = await supabase
+            .from("photos")
+            .select("*")
+            .eq("photo_type", "main")
+            .order("created_at", { ascending: false });
+
+        const gallery = document.getElementById("mainGallery");
+        const countSpan = document.getElementById("mainPhotoCount");
+
+        gallery.innerHTML = "";
+
+        if (!data || data.length === 0) {
+            gallery.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">업로드된 메인 사진이 없습니다</p>';
+            countSpan.textContent = "0";
+            return;
+        }
+
+        countSpan.textContent = data.length;
+
+        data.forEach(photo => {
+            const galleryItem = document.createElement("div");
+            galleryItem.className = "gallery-item";
+            galleryItem.innerHTML = `
+                <img src="${photo.image_url}" alt="Main Photo" />
+                <button class="delete-btn" onclick="deleteMainPhoto(${photo.id}, '${photo.image_url}')">삭제</button>
+            `;
+            gallery.appendChild(galleryItem);
+        });
+    }
+
+    async function deleteMainPhoto(id, imageUrl) {
+        if (!confirm("이 메인 사진을 삭제하시겠습니까?")) return;
+
+        const filePath = imageUrl.split("/wedding-photos/")[1];
+
+        await supabase.storage
+            .from("wedding-photos")
+            .remove([filePath]);
+
+        await supabase
+            .from("photos")
+            .delete()
+            .eq("id", id);
+
+        showMainStatus("사진이 삭제되었습니다", "success");
+        loadMainGallery();
     }
 
     async function uploadImages() {
@@ -394,7 +678,9 @@
         loadGallery();
     }
 
+    // 페이지 로드 시 실행
     loadGallery();
+    loadMainGallery();
 </script>
 </body>
 </html>

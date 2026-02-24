@@ -7,6 +7,8 @@
     <!-- CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- 네이버 지도 API -->
+    <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=r33bt148sx"></script>
     <style>
         * {
             margin: 0;
@@ -964,12 +966,6 @@
     <!-- 인사말 -->
     <section class="section" data-aos="fade-up">
         <div class="section-title">INVITATION</div>
-        <div class="quote">
-            "사랑은 언제나 오래 참고<br>
-            언제나 온유하며<br>
-            모든 것을 믿으며 모든 것을 바라며<br>
-            모든 것을 견디느니라"
-        </div>
         <div class="greeting">
             저희 두 사람이 사랑과 믿음으로<br>
             한 가정을 이루게 되었습니다.<br><br>
@@ -986,27 +982,23 @@
 
     <!-- 신랑신부 -->
     <section class="section couple-section" data-aos="fade-up">
-        <div class="section-title">GROOM & BRIDE</div>
+        <div class="section-title">신랑 & 신부</div>
         <div class="couple-info">
             <div class="person groom">
-                <div class="label">GROOM</div>
+                <div class="label">신랑</div>
                 <div class="name">서정원</div>
                 <div class="info">
                     94년 4월 26일<br>
-                    경기도 성남시<br>
-                    IT 개발자
                 </div>
                 <div>
                     <button class="contact-btn" onclick="openContactModal('groom')">연락하기</button>
                 </div>
             </div>
             <div class="person bride">
-                <div class="label">BRIDE</div>
+                <div class="label">신부</div>
                 <div class="name">제시현</div>
                 <div class="info">
                     97년 9월 28일<br>
-                    경기도 성남시<br>
-                    영양사
                 </div>
                 <div>
                     <button class="contact-btn" onclick="openContactModal('bride')">연락하기</button>
@@ -1116,22 +1108,25 @@
         <div id="map" class="map-container" style="background: white;">
             🗺️ 지도 영역
         </div>
-        <div class="location-name">네이버 그린팩토리</div>
+        <div class="location-name">라온 웨딩홀 23층 화이트홀</div>
         <div class="location-address">
-            경기도 성남시 분당구 정자일로 95 (정자동)<br>
+            부산광역시 부산진구 중앙대로 640<br>
+            ABL부산타워 23층<br>
             Tel. 1588-3820
         </div>
 
         <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: center;">
-            <a href="https://map.naver.com/p/search/네이버%20그린팩토리"
+            <a href="https://map.naver.com/p/entry/place/34698403"
+               target="_blank"
                style="flex: 1; text-align: center; padding: 12px; background: #03C75A; color: white; text-decoration: none; border-radius: 8px; font-size: 13px;">
                 네이버지도
             </a>
-            <a href="http://kko.to/greenfactory"
+            <a href="https://place.map.kakao.com/25639730"
+               target="_blank"
                style="flex: 1; text-align: center; padding: 12px; background: #FEE500; color: #000; text-decoration: none; border-radius: 8px; font-size: 13px;">
                 카카오맵
             </a>
-            <a href="https://m.map.tmap.co.kr/tmap2/mobile/route.jsp?name=네이버%20그린팩토리"
+            <a href="tmap://route?goalname=라온웨딩홀&goalx=129.0580&goaly=35.1455"
                style="flex: 1; text-align: center; padding: 12px; background: #1C63B4; color: white; text-decoration: none; border-radius: 8px; font-size: 13px;">
                 티맵
             </a>
@@ -1639,31 +1634,48 @@
         document.getElementById('lightbox').classList.remove('active');
     }
 
-    // 카카오맵 초기화
+    // 네이버 지도 초기화
     function initMap() {
         try {
-            if (typeof kakao !== 'undefined' && kakao.maps) {
-                const container = document.getElementById('map');
-                const options = {
-                    center: new kakao.maps.LatLng(37.3595704, 127.1052133),
-                    level: 3
+            if (typeof naver !== 'undefined' && naver.maps) {
+                const mapOptions = {
+                    center: new naver.maps.LatLng(35.1455, 129.0580),
+                    zoom: 16,
+                    zoomControl: true,
+                    zoomControlOptions: {
+                        position: naver.maps.Position.TOP_RIGHT
+                    }
                 };
-                const map = new kakao.maps.Map(container, options);
+
+                const map = new naver.maps.Map('map', mapOptions);
 
                 // 마커 추가
-                const markerPosition = new kakao.maps.LatLng(37.3595704, 127.1052133);
-                const marker = new kakao.maps.Marker({
-                    position: markerPosition
+                const marker = new naver.maps.Marker({
+                    position: new naver.maps.LatLng(35.1455, 129.0580),
+                    map: map,
+                    title: '라온웨딩홀'
                 });
-                marker.setMap(map);
 
-                // 인포윈도우 추가
-                const infowindow = new kakao.maps.InfoWindow({
-                    content: '<div style="padding:5px;font-size:12px;">네이버 그린팩토리</div>'
+                // 정보창 추가
+                const infoWindow = new naver.maps.InfoWindow({
+                    content: '<div style="padding:10px;font-size:12px;"><strong>라온웨딩홀</strong><br/>부산광역시 부산진구 중앙대로 640<br/>ABL부산타워 23층 화이트홀</div>'
                 });
-                infowindow.open(map, marker);
+
+                // 마커 클릭 시 정보창 표시
+                naver.maps.Event.addListener(marker, 'click', function() {
+                    if (infoWindow.getMap()) {
+                        infoWindow.close();
+                    } else {
+                        infoWindow.open(map, marker);
+                    }
+                });
+
+                // 기본적으로 정보창 열어두기
+                infoWindow.open(map, marker);
+
+                console.log('✅ 네이버 지도 초기화 성공!');
             } else {
-                // 카카오맵 API가 로드되지 않은 경우 대체 텍스트 표시
+                // 네이버 지도 API가 로드되지 않은 경우 대체 텍스트 표시
                 document.getElementById('map').innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #999; font-size: 14px;">🗺️ 지도를 로드할 수 없습니다<br>아래 버튼으로 위치를 확인하세요</div>';
             }
         } catch (error) {
@@ -1715,7 +1727,7 @@
     // 캘린더에 저장
     function addToCalendar() {
         const title = '서정원 ❤️ 제시현 결혼식';
-        const location = '부산광역시 부산진구 중앙대로 640 ABL부산타워 23층';
+        const location = '부산광역시 부산진구 중앙대로 640 ABL부산타워 23층 라온웨딩홀 화이트홀';
         const details = '저희 결혼식에 초대합니다';
         const startDate = '20261004T140000';
         const endDate = '20261004T150000';

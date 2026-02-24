@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <title>관리자 - 웨딩 사진 관리</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; }
@@ -13,7 +16,7 @@
             background: #f5f5f5;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -53,48 +56,55 @@
             transition: all 0.3s;
         }
         .file-input-label:hover {
-            border-color: #ff69b4;
+            border-color: #667eea;
             background: #fff;
         }
-        .upload-btn {
-            width: 100%;
-            padding: 15px;
+        .upload-btn, .action-btn {
+            padding: 12px 24px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             transition: transform 0.2s;
+            margin-right: 10px;
         }
-        .upload-btn:hover {
+        .upload-btn:hover, .action-btn:hover {
             transform: translateY(-2px);
         }
-        .upload-btn:disabled {
+        .upload-btn:disabled, .action-btn:disabled {
             background: #ccc;
             cursor: not-allowed;
             transform: none;
         }
-        .preview-grid {
+        .preview-grid, .gallery-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 15px;
             margin-top: 20px;
         }
-        .preview-item {
+        .preview-item, .gallery-item {
             position: relative;
             aspect-ratio: 1;
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        .preview-item img {
+        .gallery-item {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .gallery-item:hover {
+            transform: scale(1.05);
+        }
+        .preview-item img, .gallery-item img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        .preview-item .remove-btn {
+        .remove-btn {
             position: absolute;
             top: 5px;
             right: 5px;
@@ -107,52 +117,29 @@
             cursor: pointer;
             font-size: 18px;
             line-height: 1;
+            z-index: 10;
         }
-        .gallery-section {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .gallery-item {
-            position: relative;
-            aspect-ratio: 1;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .gallery-item:hover {
-            transform: scale(1.05);
-        }
-        .gallery-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .gallery-item .delete-btn {
+        .checkbox-wrapper {
             position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(255,0,0,0.8);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 8px 12px;
-            cursor: pointer;
-            font-size: 14px;
-            opacity: 0;
-            transition: opacity 0.2s;
+            top: 5px;
+            left: 5px;
+            z-index: 10;
         }
-        .gallery-item:hover .delete-btn {
-            opacity: 1;
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+        .photo-type-badge {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
         }
         .progress-bar {
             width: 100%;
@@ -197,6 +184,7 @@
             gap: 10px;
             margin-bottom: 30px;
             border-bottom: 2px solid #f0f0f0;
+            flex-wrap: wrap;
         }
         .tab-btn {
             padding: 12px 24px;
@@ -232,16 +220,206 @@
             font-size: 14px;
             text-align: center;
         }
+        .bulk-actions {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .bulk-actions.active {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .bulk-actions select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .bulk-actions-label {
+            font-weight: 600;
+            color: #333;
+        }
+        /* 라이트박스 */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .lightbox.active {
+            display: flex;
+        }
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .select-all-wrapper {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        .select-all-wrapper label {
+            cursor: pointer;
+            font-weight: 600;
+            color: #333;
+        }
+        .select-all-wrapper input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+        /* 로그인 화면 */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        .login-overlay.hidden {
+            display: none;
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        .login-box h2 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 24px;
+        }
+        .login-box p {
+            margin: 0 0 30px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .login-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+        .login-input:focus {
+            outline: none;
+            border-color: #764ba2;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .login-btn:hover {
+            transform: translateY(-2px);
+        }
+        .login-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .login-error {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 15px;
+            display: none;
+        }
+        .admin-content {
+            display: none;
+        }
+        .admin-content.active {
+            display: block;
+        }
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.9);
+            border: 2px solid #764ba2;
+            border-radius: 8px;
+            color: #764ba2;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        .logout-btn:hover {
+            background: #764ba2;
+            color: white;
+        }
     </style>
 </head>
 <body>
-<div class="container">
+<!-- 로그인 화면 -->
+<div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+        <h2>🔒 관리자 로그인</h2>
+        <p>웨딩 사진 관리 페이지</p>
+        <input type="password" id="adminPassword" class="login-input" placeholder="비밀번호를 입력하세요">
+        <button class="login-btn" id="loginBtn">로그인</button>
+        <div class="login-error" id="loginError">비밀번호가 올바르지 않습니다</div>
+    </div>
+</div>
+
+<!-- 로그아웃 버튼 -->
+<button class="logout-btn" id="logoutBtn" style="display: none;">로그아웃</button>
+
+<div class="container admin-content" id="adminContent">
     <h1>🎉 웨딩 사진 관리자 페이지</h1>
 
     <!-- 탭 메뉴 -->
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('main')">📸 메인 사진</button>
-        <button class="tab-btn" onclick="switchTab('wedding')">💒 웨딩 사진</button>
+        <button class="tab-btn" onclick="switchTab('admin')">💒 웨딩 사진</button>
+        <button class="tab-btn" onclick="switchTab('guest')">👥 게스트 사진</button>
+        <button class="tab-btn" onclick="switchTab('all')">🖼️ 전체 사진</button>
+        <button class="tab-btn" onclick="switchTab('users')">👤 사용자별 보기</button>
     </div>
 
     <!-- 메인 사진 탭 -->
@@ -253,7 +431,7 @@
             </div>
 
             <div class="file-input-wrapper">
-                <input type="file" id="mainFileInput" accept="image/*" multiple onchange="previewMainImages()" />
+                <input type="file" id="mainFileInput" accept="image/*" multiple onchange="previewImages('main')" />
                 <label class="file-input-label" for="mainFileInput">
                     <div style="font-size: 48px; margin-bottom: 10px;">📷</div>
                     <div>클릭하여 메인 사진을 선택하세요</div>
@@ -263,7 +441,7 @@
 
             <div id="mainPreviewGrid" class="preview-grid"></div>
 
-            <button class="upload-btn" onclick="uploadMainImages()" id="mainUploadBtn" disabled>
+            <button class="upload-btn" onclick="uploadImages('main')" id="mainUploadBtn" disabled>
                 업로드 하기
             </button>
 
@@ -274,85 +452,376 @@
             <div class="status-message" id="mainStatusMessage"></div>
         </div>
 
-        <div class="gallery-section">
+        <div class="upload-section">
             <div class="section-title">업로드된 메인 사진 목록</div>
+
+            <div class="select-all-wrapper">
+                <label>
+                    <input type="checkbox" id="selectAllMain" onchange="selectAll('main', this.checked)">
+                    전체 선택
+                </label>
+            </div>
+
+            <div class="bulk-actions" id="mainBulkActions">
+                <span class="bulk-actions-label">선택한 사진:</span>
+                <select id="mainBulkType">
+                    <option value="">영역 선택</option>
+                    <option value="main">메인 사진</option>
+                    <option value="admin">웨딩 사진</option>
+                    <option value="guest">게스트 사진</option>
+                </select>
+                <button class="action-btn" onclick="bulkChangeType('main')">영역 변경</button>
+                <button class="action-btn" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" onclick="bulkDelete('main')">선택 삭제</button>
+            </div>
+
             <div id="mainGallery" class="gallery-grid"></div>
         </div>
     </div>
 
     <!-- 웨딩 사진 탭 -->
-    <div id="wedding-tab" class="tab-content">
+    <div id="admin-tab" class="tab-content">
         <div class="upload-section">
             <div class="section-title">웨딩 사진 업로드</div>
 
-        <div class="file-input-wrapper">
-            <input type="file" id="fileInput" accept="image/*" multiple onchange="previewImages()" />
-            <label class="file-input-label" for="fileInput">
-                <div style="font-size: 48px; margin-bottom: 10px;">📷</div>
-                <div>클릭하여 사진을 선택하세요</div>
-                <div style="font-size: 14px; color: #999; margin-top: 5px;">여러 장 선택 가능</div>
-            </label>
+            <div class="file-input-wrapper">
+                <input type="file" id="adminFileInput" accept="image/*" multiple onchange="previewImages('admin')" />
+                <label class="file-input-label" for="adminFileInput">
+                    <div style="font-size: 48px; margin-bottom: 10px;">📷</div>
+                    <div>클릭하여 웨딩 사진을 선택하세요</div>
+                    <div style="font-size: 14px; color: #999; margin-top: 5px;">여러 장 선택 가능</div>
+                </label>
+            </div>
+
+            <div id="adminPreviewGrid" class="preview-grid"></div>
+
+            <button class="upload-btn" onclick="uploadImages('admin')" id="adminUploadBtn" disabled>
+                업로드 하기
+            </button>
+
+            <div class="progress-bar" id="adminProgressBar">
+                <div class="progress-bar-fill" id="adminProgressBarFill"></div>
+            </div>
+
+            <div class="status-message" id="adminStatusMessage"></div>
         </div>
 
-        <div id="previewGrid" class="preview-grid"></div>
+        <div class="upload-section">
+            <div class="section-title">업로드된 웨딩 사진 목록</div>
 
-        <button class="upload-btn" onclick="uploadImages()" id="uploadBtn" disabled>
-            업로드 하기
-        </button>
+            <div class="select-all-wrapper">
+                <label>
+                    <input type="checkbox" id="selectAllAdmin" onchange="selectAll('admin', this.checked)">
+                    전체 선택
+                </label>
+            </div>
 
-        <div class="progress-bar" id="progressBar">
-            <div class="progress-bar-fill" id="progressBarFill"></div>
+            <div class="bulk-actions" id="adminBulkActions">
+                <span class="bulk-actions-label">선택한 사진:</span>
+                <select id="adminBulkType">
+                    <option value="">영역 선택</option>
+                    <option value="main">메인 사진</option>
+                    <option value="admin">웨딩 사진</option>
+                    <option value="guest">게스트 사진</option>
+                </select>
+                <button class="action-btn" onclick="bulkChangeType('admin')">영역 변경</button>
+                <button class="action-btn" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" onclick="bulkDelete('admin')">선택 삭제</button>
+            </div>
+
+            <div id="adminGallery" class="gallery-grid"></div>
+        </div>
+    </div>
+
+    <!-- 게스트 사진 탭 -->
+    <div id="guest-tab" class="tab-content">
+        <div class="upload-section">
+            <div class="section-title">게스트 사진 업로드</div>
+
+            <div class="file-input-wrapper">
+                <input type="file" id="guestFileInput" accept="image/*" multiple onchange="previewImages('guest')" />
+                <label class="file-input-label" for="guestFileInput">
+                    <div style="font-size: 48px; margin-bottom: 10px;">📷</div>
+                    <div>클릭하여 게스트 사진을 선택하세요</div>
+                    <div style="font-size: 14px; color: #999; margin-top: 5px;">여러 장 선택 가능</div>
+                </label>
+            </div>
+
+            <div id="guestPreviewGrid" class="preview-grid"></div>
+
+            <button class="upload-btn" onclick="uploadImages('guest')" id="guestUploadBtn" disabled>
+                업로드 하기
+            </button>
+
+            <div class="progress-bar" id="guestProgressBar">
+                <div class="progress-bar-fill" id="guestProgressBarFill"></div>
+            </div>
+
+            <div class="status-message" id="guestStatusMessage"></div>
         </div>
 
-        <div class="status-message" id="statusMessage"></div>
+        <div class="upload-section">
+            <div class="section-title">업로드된 게스트 사진 목록</div>
+
+            <div class="select-all-wrapper">
+                <label>
+                    <input type="checkbox" id="selectAllGuest" onchange="selectAll('guest', this.checked)">
+                    전체 선택
+                </label>
+            </div>
+
+            <div class="bulk-actions" id="guestBulkActions">
+                <span class="bulk-actions-label">선택한 사진:</span>
+                <select id="guestBulkType">
+                    <option value="">영역 선택</option>
+                    <option value="main">메인 사진</option>
+                    <option value="admin">웨딩 사진</option>
+                    <option value="guest">게스트 사진</option>
+                </select>
+                <button class="action-btn" onclick="bulkChangeType('guest')">영역 변경</button>
+                <button class="action-btn" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" onclick="bulkDelete('guest')">선택 삭제</button>
+            </div>
+
+            <div id="guestGallery" class="gallery-grid"></div>
+        </div>
     </div>
 
-    <div class="gallery-section">
-        <div class="section-title">업로드된 웨딩 사진 목록</div>
-        <div id="gallery" class="gallery-grid"></div>
+    <!-- 전체 사진 탭 -->
+    <div id="all-tab" class="tab-content">
+        <div class="upload-section">
+            <div class="section-title">전체 사진 목록 (모든 영역)</div>
+
+            <div class="select-all-wrapper">
+                <label>
+                    <input type="checkbox" id="selectAllAll" onchange="selectAll('all', this.checked)">
+                    전체 선택
+                </label>
+            </div>
+
+            <div class="bulk-actions" id="allBulkActions">
+                <span class="bulk-actions-label">선택한 사진:</span>
+                <select id="allBulkType">
+                    <option value="">영역 선택</option>
+                    <option value="main">메인 사진</option>
+                    <option value="admin">웨딩 사진</option>
+                    <option value="guest">게스트 사진</option>
+                </select>
+                <button class="action-btn" onclick="bulkChangeType('all')">영역 변경</button>
+                <button class="action-btn" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" onclick="bulkDelete('all')">선택 삭제</button>
+            </div>
+
+            <div id="allGallery" class="gallery-grid"></div>
+        </div>
     </div>
+
+    <!-- 사용자별 보기 탭 -->
+    <div id="users-tab" class="tab-content">
+        <div class="upload-section">
+            <div class="section-title">사용자별 사진 모아보기</div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="font-weight: 600; color: #333; display: block; margin-bottom: 10px;">사용자 선택:</label>
+                <select id="userFilter" onchange="loadUserPhotos()" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                    <option value="">사용자를 선택하세요</option>
+                </select>
+            </div>
+
+            <div id="userPhotoStats" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none;">
+                <div style="font-weight: 600; color: #333; margin-bottom: 8px;">
+                    <span id="selectedUserName"></span>님의 사진
+                </div>
+                <div style="color: #666; font-size: 14px;">
+                    총 <span id="userPhotoCount" style="font-weight: 600; color: #764ba2;">0</span>개
+                </div>
+            </div>
+
+            <div class="select-all-wrapper" id="usersSelectAllWrapper" style="display: none;">
+                <label>
+                    <input type="checkbox" id="selectAllUsers" onchange="selectAll('users', this.checked)">
+                    전체 선택
+                </label>
+            </div>
+
+            <div class="bulk-actions" id="usersBulkActions">
+                <span class="bulk-actions-label">선택한 사진:</span>
+                <select id="usersBulkType">
+                    <option value="">영역 선택</option>
+                    <option value="main">메인 사진</option>
+                    <option value="admin">웨딩 사진</option>
+                    <option value="guest">게스트 사진</option>
+                </select>
+                <button class="action-btn" onclick="bulkChangeType('users')">영역 변경</button>
+                <button class="action-btn" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" onclick="bulkDelete('users')">선택 삭제</button>
+            </div>
+
+            <div id="usersGallery" class="gallery-grid"></div>
+        </div>
     </div>
+</div>
+
+<!-- 라이트박스 -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+    <img id="lightboxImg" src="" alt="">
 </div>
 
 <script>
     const SUPABASE_URL = "https://fupncptwrevxjlanbnsc.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1cG5jcHR3cmV2eGpsYW5ibnNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3OTg4ODYsImV4cCI6MjA4NzM3NDg4Nn0.cjkLp94xTl56r8Q4ahy4Zx192yvBULPjNX33XJCoHzI";
 
-    const supabase = window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_KEY
-    );
+    // Supabase 클라이언트 생성
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let selectedFiles = [];
-    let selectedMainFiles = [];
+    let selectedFiles = {
+        main: [],
+        admin: [],
+        guest: []
+    };
+
+    let selectedPhotos = {
+        main: new Set(),
+        admin: new Set(),
+        guest: new Set(),
+        all: new Set(),
+        users: new Set()
+    };
+
     const MAX_MAIN_PHOTOS = 5;
+    const PHOTO_TYPE_LABELS = {
+        main: '메인',
+        admin: '웨딩',
+        guest: '게스트'
+    };
+
+    // 로그인/로그아웃 기능
+    async function loginAdmin() {
+        const passwordInput = document.getElementById('adminPassword');
+        const password = passwordInput.value.trim();
+        const loginError = document.getElementById('loginError');
+
+        if (!password) {
+            loginError.textContent = '비밀번호를 입력해주세요';
+            loginError.style.display = 'block';
+            return;
+        }
+
+        try {
+            // DB에서 비밀번호 가져오기
+            const { data, error } = await supabaseClient
+                .from('admin_settings')
+                .select('setting_value')
+                .eq('setting_key', 'admin_password')
+                .single();
+
+            if (error) {
+                console.error('비밀번호 확인 오류:', error);
+                loginError.textContent = '로그인 중 오류가 발생했습니다';
+                loginError.style.display = 'block';
+                return;
+            }
+
+            if (data && data.setting_value === password) {
+                // 로그인 성공
+                sessionStorage.setItem('adminAuthenticated', 'true');
+                sessionStorage.setItem('adminLoginTime', Date.now().toString());
+
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('adminContent').classList.add('active');
+                document.getElementById('logoutBtn').style.display = 'block';
+
+                loginError.style.display = 'none';
+                passwordInput.value = '';
+
+                // 메인 갤러리 로드
+                loadGallery('main');
+            } else {
+                // 로그인 실패
+                loginError.textContent = '비밀번호가 올바르지 않습니다';
+                loginError.style.display = 'block';
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        } catch (err) {
+            console.error('로그인 오류:', err);
+            loginError.textContent = '로그인 중 오류가 발생했습니다';
+            loginError.style.display = 'block';
+        }
+    }
+
+    function logoutAdmin() {
+        if (confirm('로그아웃 하시겠습니까?')) {
+            sessionStorage.removeItem('adminAuthenticated');
+            sessionStorage.removeItem('adminLoginTime');
+
+            document.getElementById('loginOverlay').classList.remove('hidden');
+            document.getElementById('adminContent').classList.remove('active');
+            document.getElementById('logoutBtn').style.display = 'none';
+            document.getElementById('adminPassword').focus();
+        }
+    }
+
+    function checkAuth() {
+        const isAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
+        const loginTime = parseInt(sessionStorage.getItem('adminLoginTime') || '0');
+        const currentTime = Date.now();
+        const sessionDuration = 24 * 60 * 60 * 1000; // 24시간
+
+        if (isAuthenticated && (currentTime - loginTime) < sessionDuration) {
+            // 세션 유효
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('adminContent').classList.add('active');
+            document.getElementById('logoutBtn').style.display = 'block';
+            loadGallery('main');
+        } else {
+            // 세션 만료 또는 미인증
+            sessionStorage.removeItem('adminAuthenticated');
+            sessionStorage.removeItem('adminLoginTime');
+            document.getElementById('loginOverlay').classList.remove('hidden');
+            document.getElementById('adminContent').classList.remove('active');
+            document.getElementById('logoutBtn').style.display = 'none';
+            document.getElementById('adminPassword').focus();
+        }
+    }
 
     // 탭 전환
     function switchTab(tabName) {
-        // 모든 탭 버튼 비활성화
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        // 모든 탭 콘텐츠 숨기기
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
-        // 선택한 탭 활성화
         event.target.classList.add('active');
         document.getElementById(tabName + '-tab').classList.add('active');
 
-        // 해당 탭의 갤러리 로드
-        if (tabName === 'main') {
-            loadMainGallery();
+        if (tabName === 'users') {
+            loadUserList();
         } else {
-            loadGallery();
+            loadGallery(tabName);
         }
     }
 
-    function previewImages() {
-        const fileInput = document.getElementById("fileInput");
+    // 사진 미리보기
+    async function previewImages(type) {
+        const fileInput = document.getElementById(type + 'FileInput');
         const files = Array.from(fileInput.files);
-        selectedFiles = files;
 
-        const previewGrid = document.getElementById("previewGrid");
-        const uploadBtn = document.getElementById("uploadBtn");
+        // 메인 사진 개수 제한 확인
+        if (type === 'main') {
+            const { data: currentPhotos } = await supabaseClient
+                .from("photos")
+                .select("*")
+                .eq("photo_type", "main");
+
+            const currentCount = currentPhotos ? currentPhotos.length : 0;
+            const availableSlots = MAX_MAIN_PHOTOS - currentCount;
+
+            if (files.length > availableSlots) {
+                showStatus(type, `최대 ${availableSlots}개까지만 추가할 수 있습니다. (현재 ${currentCount}/${MAX_MAIN_PHOTOS})`, "error");
+                fileInput.value = "";
+                return;
+            }
+        }
+
+        selectedFiles[type] = files;
+
+        const previewGrid = document.getElementById(type + 'PreviewGrid');
+        const uploadBtn = document.getElementById(type + 'UploadBtn');
 
         previewGrid.innerHTML = "";
 
@@ -370,7 +839,7 @@
                 previewItem.className = "preview-item";
                 previewItem.innerHTML = `
                     <img src="${e.target.result}" alt="Preview" />
-                    <button class="remove-btn" onclick="removePreview(${index})">&times;</button>
+                    <button class="remove-btn" onclick="removePreview('${type}', ${index})">&times;</button>
                 `;
                 previewGrid.appendChild(previewItem);
             };
@@ -378,99 +847,40 @@
         });
     }
 
-    function removePreview(index) {
-        selectedFiles.splice(index, 1);
+    function removePreview(type, index) {
+        selectedFiles[type].splice(index, 1);
 
         const dataTransfer = new DataTransfer();
-        selectedFiles.forEach(file => dataTransfer.items.add(file));
-        document.getElementById("fileInput").files = dataTransfer.files;
+        selectedFiles[type].forEach(file => dataTransfer.items.add(file));
+        document.getElementById(type + 'FileInput').files = dataTransfer.files;
 
-        previewImages();
+        previewImages(type);
     }
 
-    // 메인 사진 미리보기
-    async function previewMainImages() {
-        const fileInput = document.getElementById("mainFileInput");
-        const files = Array.from(fileInput.files);
-
-        // 현재 업로드된 메인 사진 개수 확인
-        const { data: currentPhotos } = await supabase
-            .from("photos")
-            .select("*")
-            .eq("photo_type", "main");
-
-        const currentCount = currentPhotos ? currentPhotos.length : 0;
-        const availableSlots = MAX_MAIN_PHOTOS - currentCount;
-
-        if (files.length > availableSlots) {
-            showMainStatus(`최대 ${availableSlots}개까지만 추가할 수 있습니다. (현재 ${currentCount}/${MAX_MAIN_PHOTOS})`, "error");
-            fileInput.value = "";
+    // 사진 업로드
+    async function uploadImages(type) {
+        if (selectedFiles[type].length === 0) {
+            showStatus(type, "파일을 선택해주세요", "error");
             return;
         }
 
-        selectedMainFiles = files;
-
-        const previewGrid = document.getElementById("mainPreviewGrid");
-        const uploadBtn = document.getElementById("mainUploadBtn");
-
-        previewGrid.innerHTML = "";
-
-        if (files.length === 0) {
-            uploadBtn.disabled = true;
-            return;
-        }
-
-        uploadBtn.disabled = false;
-
-        files.forEach((file, index) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const previewItem = document.createElement("div");
-                previewItem.className = "preview-item";
-                previewItem.innerHTML = `
-                    <img src="${e.target.result}" alt="Preview" />
-                    <button class="remove-btn" onclick="removeMainPreview(${index})">&times;</button>
-                `;
-                previewGrid.appendChild(previewItem);
-            };
-            reader.readAsDataURL(file);
-        });
-    }
-
-    function removeMainPreview(index) {
-        selectedMainFiles.splice(index, 1);
-
-        const dataTransfer = new DataTransfer();
-        selectedMainFiles.forEach(file => dataTransfer.items.add(file));
-        document.getElementById("mainFileInput").files = dataTransfer.files;
-
-        previewMainImages();
-    }
-
-    // 메인 사진 업로드
-    async function uploadMainImages() {
-        if (selectedMainFiles.length === 0) {
-            showMainStatus("파일을 선택해주세요", "error");
-            return;
-        }
-
-        const uploadBtn = document.getElementById("mainUploadBtn");
-        const progressBar = document.getElementById("mainProgressBar");
-        const progressBarFill = document.getElementById("mainProgressBarFill");
+        const uploadBtn = document.getElementById(type + 'UploadBtn');
+        const progressBar = document.getElementById(type + 'ProgressBar');
+        const progressBarFill = document.getElementById(type + 'ProgressBarFill');
 
         uploadBtn.disabled = true;
         uploadBtn.textContent = "업로드 중...";
         progressBar.style.display = "block";
 
         let uploaded = 0;
-        const total = selectedMainFiles.length;
+        const total = selectedFiles[type].length;
 
-        for (let i = 0; i < selectedMainFiles.length; i++) {
-            const file = selectedMainFiles[i];
-            const filePath = `main/${Date.now()}_${i}_${file.name}`;
+        for (let i = 0; i < selectedFiles[type].length; i++) {
+            const file = selectedFiles[type][i];
+            const filePath = `${type}/${Date.now()}_${i}_${file.name}`;
 
-            const { data, error } = await supabase.storage
-                .from("wedding-photos")
+            const { data, error } = await supabaseClient.storage
+                .from("wedding_photos")
                 .upload(filePath, file);
 
             if (error) {
@@ -478,12 +888,12 @@
                 continue;
             }
 
-            const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/wedding-photos/${filePath}`;
+            const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/wedding_photos/${filePath}`;
 
-            await supabase.from("photos").insert([
+            await supabaseClient.from("photos").insert([
                 {
                     image_url: imageUrl,
-                    photo_type: 'main'
+                    photo_type: type
                 }
             ]);
 
@@ -497,18 +907,18 @@
         progressBar.style.display = "none";
         progressBarFill.style.width = "0%";
 
-        document.getElementById("mainFileInput").value = "";
-        document.getElementById("mainPreviewGrid").innerHTML = "";
-        selectedMainFiles = [];
+        document.getElementById(type + 'FileInput').value = "";
+        document.getElementById(type + 'PreviewGrid').innerHTML = "";
+        selectedFiles[type] = [];
 
-        showMainStatus(`${uploaded}개 사진이 업로드되었습니다!`, "success");
-        loadMainGallery();
+        showStatus(type, `${uploaded}개 사진이 업로드되었습니다!`, "success");
+        loadGallery(type);
     }
 
-    function showMainStatus(message, type) {
-        const statusMessage = document.getElementById("mainStatusMessage");
+    function showStatus(type, message, statusType) {
+        const statusMessage = document.getElementById(type + 'StatusMessage');
         statusMessage.textContent = message;
-        statusMessage.className = `status-message ${type}`;
+        statusMessage.className = `status-message ${statusType}`;
         statusMessage.style.display = "block";
 
         setTimeout(() => {
@@ -516,133 +926,23 @@
         }, 3000);
     }
 
-    // 메인 사진 갤러리 로드
-    async function loadMainGallery() {
-        const { data, error } = await supabase
-            .from("photos")
-            .select("*")
-            .eq("photo_type", "main")
-            .order("created_at", { ascending: false });
+    // 갤러리 로드
+    async function loadGallery(type) {
+        let query = supabaseClient.from("photos").select("*").order("created_at", { ascending: false });
 
-        const gallery = document.getElementById("mainGallery");
-        const countSpan = document.getElementById("mainPhotoCount");
+        if (type !== 'all') {
+            query = query.eq("photo_type", type);
+        }
 
+        const { data, error } = await query;
+
+        const gallery = document.getElementById(type + 'Gallery');
         gallery.innerHTML = "";
 
-        if (!data || data.length === 0) {
-            gallery.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">업로드된 메인 사진이 없습니다</p>';
-            countSpan.textContent = "0";
-            return;
+        if (type === 'main') {
+            const countSpan = document.getElementById("mainPhotoCount");
+            countSpan.textContent = data ? data.length : 0;
         }
-
-        countSpan.textContent = data.length;
-
-        data.forEach(photo => {
-            const galleryItem = document.createElement("div");
-            galleryItem.className = "gallery-item";
-            galleryItem.innerHTML = `
-                <img src="${photo.image_url}" alt="Main Photo" />
-                <button class="delete-btn" onclick="deleteMainPhoto(${photo.id}, '${photo.image_url}')">삭제</button>
-            `;
-            gallery.appendChild(galleryItem);
-        });
-    }
-
-    async function deleteMainPhoto(id, imageUrl) {
-        if (!confirm("이 메인 사진을 삭제하시겠습니까?")) return;
-
-        const filePath = imageUrl.split("/wedding-photos/")[1];
-
-        await supabase.storage
-            .from("wedding-photos")
-            .remove([filePath]);
-
-        await supabase
-            .from("photos")
-            .delete()
-            .eq("id", id);
-
-        showMainStatus("사진이 삭제되었습니다", "success");
-        loadMainGallery();
-    }
-
-    async function uploadImages() {
-        if (selectedFiles.length === 0) {
-            showStatus("파일을 선택해주세요", "error");
-            return;
-        }
-
-        const uploadBtn = document.getElementById("uploadBtn");
-        const progressBar = document.getElementById("progressBar");
-        const progressBarFill = document.getElementById("progressBarFill");
-
-        uploadBtn.disabled = true;
-        uploadBtn.textContent = "업로드 중...";
-        progressBar.style.display = "block";
-
-        let uploaded = 0;
-        const total = selectedFiles.length;
-
-        for (let i = 0; i < selectedFiles.length; i++) {
-            const file = selectedFiles[i];
-            const filePath = `wedding/${Date.now()}_${i}_${file.name}`;
-
-            const { data, error } = await supabase.storage
-                .from("wedding-photos")
-                .upload(filePath, file);
-
-            if (error) {
-                console.error("업로드 실패:", error);
-                continue;
-            }
-
-            const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/wedding-photos/${filePath}`;
-
-            await supabase.from("photos").insert([
-                {
-                    image_url: imageUrl,
-                    photo_type: 'admin'
-                }
-            ]);
-
-            uploaded++;
-            const progress = (uploaded / total) * 100;
-            progressBarFill.style.width = progress + "%";
-        }
-
-        uploadBtn.disabled = false;
-        uploadBtn.textContent = "업로드 하기";
-        progressBar.style.display = "none";
-        progressBarFill.style.width = "0%";
-
-        document.getElementById("fileInput").value = "";
-        document.getElementById("previewGrid").innerHTML = "";
-        selectedFiles = [];
-
-        showStatus(`${uploaded}개 사진이 업로드되었습니다!`, "success");
-        loadGallery();
-    }
-
-    function showStatus(message, type) {
-        const statusMessage = document.getElementById("statusMessage");
-        statusMessage.textContent = message;
-        statusMessage.className = `status-message ${type}`;
-        statusMessage.style.display = "block";
-
-        setTimeout(() => {
-            statusMessage.style.display = "none";
-        }, 3000);
-    }
-
-    async function loadGallery() {
-        const { data, error } = await supabase
-            .from("photos")
-            .select("*")
-            .eq("photo_type", "admin")
-            .order("created_at", { ascending: false });
-
-        const gallery = document.getElementById("gallery");
-        gallery.innerHTML = "";
 
         if (!data || data.length === 0) {
             gallery.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">업로드된 사진이 없습니다</p>';
@@ -653,34 +953,258 @@
             const galleryItem = document.createElement("div");
             galleryItem.className = "gallery-item";
             galleryItem.innerHTML = `
-                <img src="${photo.image_url}" alt="Wedding Photo" />
-                <button class="delete-btn" onclick="deletePhoto(${photo.id}, '${photo.image_url}')">삭제</button>
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" onchange="togglePhotoSelection('${type}', ${photo.id}, this.checked)">
+                </div>
+                <img src="${photo.image_url}" alt="Photo" onclick="openLightbox('${photo.image_url}')" />
+                <div class="photo-type-badge">${PHOTO_TYPE_LABELS[photo.photo_type] || photo.photo_type}</div>
             `;
             gallery.appendChild(galleryItem);
         });
+
+        updateBulkActions(type);
     }
 
-    async function deletePhoto(id, imageUrl) {
-        if (!confirm("이 사진을 삭제하시겠습니까?")) return;
+    // 전체 선택
+    function selectAll(type, checked) {
+        const checkboxes = document.querySelectorAll(`#${type}Gallery .checkbox-wrapper input[type="checkbox"]`);
+        checkboxes.forEach(cb => {
+            cb.checked = checked;
+            const photoId = parseInt(cb.parentElement.nextElementSibling.onclick.toString().match(/\d+/)[0]);
+            togglePhotoSelection(type, photoId, checked);
+        });
+    }
 
-        const filePath = imageUrl.split("/wedding-photos/")[1];
+    // 사진 선택 토글
+    function togglePhotoSelection(type, photoId, checked) {
+        if (checked) {
+            selectedPhotos[type].add(photoId);
+        } else {
+            selectedPhotos[type].delete(photoId);
+        }
+        updateBulkActions(type);
+    }
 
-        await supabase.storage
-            .from("wedding-photos")
-            .remove([filePath]);
+    // 일괄 작업 UI 업데이트
+    function updateBulkActions(type) {
+        const bulkActions = document.getElementById(type + 'BulkActions');
+        if (selectedPhotos[type].size > 0) {
+            bulkActions.classList.add('active');
+        } else {
+            bulkActions.classList.remove('active');
+        }
+    }
 
-        await supabase
+    // 영역 일괄 변경
+    async function bulkChangeType(currentType) {
+        const newType = document.getElementById(currentType + 'BulkType').value;
+
+        if (!newType) {
+            alert('변경할 영역을 선택해주세요');
+            return;
+        }
+
+        if (selectedPhotos[currentType].size === 0) {
+            alert('사진을 선택해주세요');
+            return;
+        }
+
+        if (!confirm(`선택한 ${selectedPhotos[currentType].size}개의 사진을 ${PHOTO_TYPE_LABELS[newType]} 영역으로 변경하시겠습니까?`)) {
+            return;
+        }
+
+        // 메인 사진 개수 제한 확인
+        if (newType === 'main') {
+            const { data: currentMainPhotos } = await supabaseClient
+                .from("photos")
+                .select("*")
+                .eq("photo_type", "main");
+
+            const currentCount = currentMainPhotos ? currentMainPhotos.length : 0;
+            const selectedCount = selectedPhotos[currentType].size;
+
+            if (currentCount + selectedCount > MAX_MAIN_PHOTOS) {
+                alert(`메인 사진은 최대 ${MAX_MAIN_PHOTOS}개까지만 등록 가능합니다. (현재: ${currentCount}개, 선택: ${selectedCount}개)`);
+                return;
+            }
+        }
+
+        for (const photoId of selectedPhotos[currentType]) {
+            await supabaseClient
+                .from("photos")
+                .update({ photo_type: newType })
+                .eq("id", photoId);
+        }
+
+        selectedPhotos[currentType].clear();
+        document.getElementById('selectAll' + currentType.charAt(0).toUpperCase() + currentType.slice(1)).checked = false;
+
+        alert('영역이 변경되었습니다');
+        loadGallery(currentType);
+    }
+
+    // 일괄 삭제
+    async function bulkDelete(type) {
+        if (selectedPhotos[type].size === 0) {
+            alert('사진을 선택해주세요');
+            return;
+        }
+
+        if (!confirm(`선택한 ${selectedPhotos[type].size}개의 사진을 삭제하시겠습니까?`)) {
+            return;
+        }
+
+        for (const photoId of selectedPhotos[type]) {
+            // 이미지 URL 가져오기
+            const { data } = await supabaseClient
+                .from("photos")
+                .select("image_url")
+                .eq("id", photoId)
+                .single();
+
+            if (data) {
+                const filePath = data.image_url.split("/wedding_photos/")[1];
+
+                // Storage에서 삭제
+                await supabaseClient.storage
+                    .from("wedding_photos")
+                    .remove([filePath]);
+
+                // DB에서 삭제
+                await supabaseClient
+                    .from("photos")
+                    .delete()
+                    .eq("id", photoId);
+            }
+        }
+
+        selectedPhotos[type].clear();
+        document.getElementById('selectAll' + type.charAt(0).toUpperCase() + type.slice(1)).checked = false;
+
+        alert('선택한 사진이 삭제되었습니다');
+        loadGallery(type);
+    }
+
+    // 라이트박스
+    function openLightbox(url) {
+        document.getElementById('lightboxImg').src = url;
+        document.getElementById('lightbox').classList.add('active');
+    }
+
+    function closeLightbox() {
+        document.getElementById('lightbox').classList.remove('active');
+    }
+
+    // 사용자 목록 로드
+    async function loadUserList() {
+        const { data, error } = await supabaseClient
             .from("photos")
-            .delete()
-            .eq("id", id);
+            .select("uploader_name")
+            .not("uploader_name", "is", null);
 
-        showStatus("사진이 삭제되었습니다", "success");
-        loadGallery();
+        if (!data) {
+            document.getElementById('usersGallery').innerHTML = '<p style="text-align:center;color:#999;padding:40px;">사용자 정보가 없습니다</p>';
+            return;
+        }
+
+        // 중복 제거 및 정렬
+        const uniqueUsers = [...new Set(data.map(photo => photo.uploader_name))].filter(name => name).sort();
+
+        const userFilter = document.getElementById('userFilter');
+        userFilter.innerHTML = '<option value="">사용자를 선택하세요</option>';
+
+        uniqueUsers.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user;
+            option.textContent = user;
+            userFilter.appendChild(option);
+        });
+
+        document.getElementById('usersGallery').innerHTML = '<p style="text-align:center;color:#999;padding:40px;">사용자를 선택하면 해당 사용자의 사진을 볼 수 있습니다</p>';
+    }
+
+    // 사용자별 사진 로드
+    async function loadUserPhotos() {
+        const selectedUser = document.getElementById('userFilter').value;
+
+        if (!selectedUser) {
+            document.getElementById('userPhotoStats').style.display = 'none';
+            document.getElementById('usersSelectAllWrapper').style.display = 'none';
+            document.getElementById('usersGallery').innerHTML = '<p style="text-align:center;color:#999;padding:40px;">사용자를 선택하면 해당 사용자의 사진을 볼 수 있습니다</p>';
+            return;
+        }
+
+        const { data, error } = await supabaseClient
+            .from("photos")
+            .select("*")
+            .eq("uploader_name", selectedUser)
+            .order("created_at", { ascending: false });
+
+        const gallery = document.getElementById('usersGallery');
+        const statsDiv = document.getElementById('userPhotoStats');
+        const selectAllWrapper = document.getElementById('usersSelectAllWrapper');
+
+        gallery.innerHTML = "";
+
+        if (!data || data.length === 0) {
+            statsDiv.style.display = 'none';
+            selectAllWrapper.style.display = 'none';
+            gallery.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">이 사용자의 사진이 없습니다</p>';
+            return;
+        }
+
+        // 통계 표시
+        document.getElementById('selectedUserName').textContent = selectedUser;
+        document.getElementById('userPhotoCount').textContent = data.length;
+        statsDiv.style.display = 'block';
+        selectAllWrapper.style.display = 'block';
+
+        data.forEach(photo => {
+            const galleryItem = document.createElement("div");
+            galleryItem.className = "gallery-item";
+            galleryItem.innerHTML = `
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" onchange="togglePhotoSelection('users', ${photo.id}, this.checked)">
+                </div>
+                <img src="${photo.image_url}" alt="Photo" onclick="openLightbox('${photo.image_url}')" />
+                <div class="photo-type-badge">${PHOTO_TYPE_LABELS[photo.photo_type] || photo.photo_type}</div>
+            `;
+            gallery.appendChild(galleryItem);
+        });
+
+        updateBulkActions('users');
+    }
+
+    // 이벤트 리스너 설정
+    function initEventListeners() {
+        // 로그인 버튼
+        const loginBtn = document.getElementById('loginBtn');
+        if (loginBtn) {
+            loginBtn.addEventListener('click', loginAdmin);
+        }
+
+        // 비밀번호 입력란에서 Enter 키
+        const passwordInput = document.getElementById('adminPassword');
+        if (passwordInput) {
+            passwordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    loginAdmin();
+                }
+            });
+        }
+
+        // 로그아웃 버튼
+        const logoutButton = document.getElementById('logoutBtn');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', logoutAdmin);
+        }
     }
 
     // 페이지 로드 시 실행
-    loadGallery();
-    loadMainGallery();
+    document.addEventListener('DOMContentLoaded', function() {
+        initEventListeners();
+        checkAuth();
+    });
 </script>
 </body>
 </html>

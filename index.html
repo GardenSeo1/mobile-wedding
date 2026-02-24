@@ -1034,6 +1034,13 @@
             축하의 마음을 담은 사진을 올려주세요
         </p>
 
+        <div style="margin-bottom: 15px;">
+            <input type="text" id="uploaderName" placeholder="이름을 입력해주세요"
+                   style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit; margin-bottom: 10px;">
+            <input type="password" id="uploaderPassword" placeholder="사진 삭제용 비밀번호 (4자 이상)"
+                   style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit;">
+        </div>
+
         <div class="upload-box">
             <input type="file" id="guestFileInput" accept="image/*" multiple onchange="previewImages()">
             <div class="upload-icon">📷</div>
@@ -1526,7 +1533,16 @@
             return;
         }
 
-        if (selectedFiles.length === 0) return;
+        const uploaderName = document.getElementById('uploaderName').value.trim();
+        if (!uploaderName) {
+            alert('이름을 입력해주세요');
+            return;
+        }
+
+        if (selectedFiles.length === 0) {
+            alert('사진을 선택해주세요');
+            return;
+        }
 
         const uploadBtn = document.getElementById('uploadBtn');
         const status = document.getElementById('uploadStatus');
@@ -1540,11 +1556,15 @@
             const filePath = 'guest/' + Date.now() + '_' + i + '_' + file.name;
 
             try {
-                const { error } = await supabaseClient.storage.from("wedding-photos").upload(filePath, file);
+                const { error } = await supabaseClient.storage.from("wedding_photos").upload(filePath, file);
 
                 if (!error) {
-                    const imageUrl = 'https://fupncptwrevxjlanbnsc.supabase.co/storage/v1/object/public/wedding-photos/' + filePath;
-                    await supabaseClient.from("photos").insert([{ image_url: imageUrl, photo_type: 'guest' }]);
+                    const imageUrl = 'https://fupncptwrevxjlanbnsc.supabase.co/storage/v1/object/public/wedding_photos/' + filePath;
+                    await supabaseClient.from("photos").insert([{
+                        image_url: imageUrl,
+                        photo_type: 'guest',
+                        uploader_name: uploaderName
+                    }]);
                     uploaded++;
                 }
             } catch (err) {
@@ -1555,6 +1575,7 @@
         uploadBtn.disabled = false;
         uploadBtn.textContent = '업로드하기';
         document.getElementById('guestFileInput').value = '';
+        document.getElementById('uploaderName').value = '';
         document.getElementById('previewGrid').innerHTML = '';
         selectedFiles = [];
 

@@ -240,6 +240,25 @@
             object-fit: cover;
         }
 
+        .photo-delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            font-size: 11px;
+            cursor: pointer;
+            z-index: 10;
+            font-family: inherit;
+        }
+
+        .photo-delete-btn:hover {
+            background: rgba(255, 0, 0, 1);
+        }
+
         /* 사진 업로드 */
         .upload-section {
             background: white;
@@ -1035,9 +1054,9 @@
         </p>
 
         <div style="margin-bottom: 15px;">
-            <input type="text" id="uploaderName" placeholder="이름을 입력해주세요"
+            <input type="text" id="uploaderName" placeholder="이름을 입력해주세요" oninput="checkUploadButtonState()"
                    style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit; margin-bottom: 10px;">
-            <input type="password" id="uploaderPassword" placeholder="사진 삭제용 비밀번호 (4자 이상)"
+            <input type="password" id="uploaderPassword" placeholder="사진 삭제용 비밀번호 (4자 이상)" oninput="checkUploadButtonState()"
                    style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit;">
         </div>
 
@@ -1467,7 +1486,11 @@
         }
 
         try {
-            let query = supabaseClient.from("photos").select("*").order("created_at", { ascending: false });
+            let query = supabaseClient
+                .from("photos")
+                .select("*")
+                .eq("is_visible", true)
+                .order("created_at", { ascending: false });
 
             if (currentTab !== 'all') {
                 query = query.eq("photo_type", currentTab);
@@ -1485,8 +1508,14 @@
             data.forEach(photo => {
                 const item = document.createElement('div');
                 item.className = 'gallery-item';
-                item.onclick = () => openLightbox(photo.image_url);
-                item.innerHTML = '<img src="' + photo.image_url + '" alt="">';
+
+                let html = '<img src="' + photo.image_url + '" alt="" onclick="openLightbox(\'' + photo.image_url + '\')">';
+
+                if (photo.photo_type === 'guest') {
+                    html += '<button class="photo-delete-btn" onclick="event.stopPropagation(); deletePhoto(' + photo.id + ', \'' + photo.image_url + '\')">삭제</button>';
+                }
+
+                item.innerHTML = html;
                 gallery.appendChild(item);
             });
         } catch (error) {
@@ -1504,7 +1533,12 @@
         const uploadBtn = document.getElementById('uploadBtn');
 
         previewGrid.innerHTML = '';
-        uploadBtn.disabled = files.length === 0;
+
+        // 파일이 있고, 이름과 비밀번호가 입력되었는지 확인
+        const hasFiles = files.length > 0;
+        const uploaderName = document.getElementById('uploaderName').value.trim();
+        const uploaderPassword = document.getElementById('uploaderPassword').value.trim();
+        uploadBtn.disabled = !(hasFiles && uploaderName && uploaderPassword && uploaderPassword.length >= 4);
 
         files.forEach((file, index) => {
             const reader = new FileReader();
@@ -1516,6 +1550,15 @@
             };
             reader.readAsDataURL(file);
         });
+    }
+
+    // 업로드 버튼 활성화 체크
+    function checkUploadButtonState() {
+        const uploadBtn = document.getElementById('uploadBtn');
+        const hasFiles = selectedFiles.length > 0;
+        const uploaderName = document.getElementById('uploaderName').value.trim();
+        const uploaderPassword = document.getElementById('uploaderPassword').value.trim();
+        uploadBtn.disabled = !(hasFiles && uploaderName && uploaderPassword && uploaderPassword.length >= 4);
     }
 
     function removePreview(index) {
@@ -1539,6 +1582,12 @@
             return;
         }
 
+        const uploaderPassword = document.getElementById('uploaderPassword').value.trim();
+        if (!uploaderPassword || uploaderPassword.length < 4) {
+            alert('비밀번호는 4자 이상 입력해주세요');
+            return;
+        }
+
         if (selectedFiles.length === 0) {
             alert('사진을 선택해주세요');
             return;
@@ -1551,24 +1600,46 @@
         uploadBtn.textContent = '업로드 중...';
 
         let uploaded = 0;
+        let failed = 0;
+
         for (let i = 0; i < selectedFiles.length; i++) {
             const file = selectedFiles[i];
-            const filePath = 'guest/' + Date.now() + '_' + i + '_' + file.name;
+            const timestamp = Date.now();
+            const filePath = 'guest/' + timestamp + '_' + i + '_' + file.name;
 
             try {
-                const { error } = await supabaseClient.storage.from("wedding_photos").upload(filePath, file);
+                // 1. Storage에 파일 업로드
+                const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                    .from("wedding_photos")
+                    .upload(filePath, file);
 
-                if (!error) {
-                    const imageUrl = 'https://fupncptwrevxjlanbnsc.supabase.co/storage/v1/object/public/wedding_photos/' + filePath;
-                    await supabaseClient.from("photos").insert([{
-                        image_url: imageUrl,
-                        photo_type: 'guest',
-                        uploader_name: uploaderName
-                    }]);
-                    uploaded++;
+                if (uploadError) {
+                    console.error('Storage 업로드 실패:', uploadError);
+                    failed++;
+                    continue;
                 }
+
+                // 2. DB에 레코드 추가
+                const imageUrl = 'https://fupncptwrevxjlanbnsc.supabase.co/storage/v1/object/public/wedding_photos/' + filePath;
+                const { error: insertError } = await supabaseClient.from("photos").insert([{
+                    image_url: imageUrl,
+                    photo_type: 'guest',
+                    uploader_name: uploaderName,
+                    password: uploaderPassword
+                }]);
+
+                if (insertError) {
+                    console.error('DB 삽입 실패:', insertError);
+                    // Storage에서 업로드된 파일 삭제
+                    await supabaseClient.storage.from('wedding_photos').remove([filePath]);
+                    failed++;
+                    continue;
+                }
+
+                uploaded++;
             } catch (err) {
-                console.error('업로드 실패:', err);
+                console.error('업로드 중 오류:', err);
+                failed++;
             }
         }
 
@@ -1576,15 +1647,96 @@
         uploadBtn.textContent = '업로드하기';
         document.getElementById('guestFileInput').value = '';
         document.getElementById('uploaderName').value = '';
+        document.getElementById('uploaderPassword').value = '';
         document.getElementById('previewGrid').innerHTML = '';
         selectedFiles = [];
 
-        status.className = 'status-message success';
-        status.textContent = uploaded + '개의 사진이 업로드되었습니다! 💕';
+        // 결과 메시지 표시
+        if (uploaded > 0 && failed === 0) {
+            status.className = 'status-message success';
+            status.textContent = uploaded + '개의 사진이 업로드되었습니다! 💕';
+        } else if (uploaded > 0 && failed > 0) {
+            status.className = 'status-message success';
+            status.textContent = uploaded + '개 업로드 성공, ' + failed + '개 실패했습니다.';
+        } else {
+            status.className = 'status-message error';
+            status.textContent = '사진 업로드에 실패했습니다. 다시 시도해주세요.';
+        }
         status.style.display = 'block';
-        setTimeout(() => status.style.display = 'none', 3000);
+        setTimeout(() => status.style.display = 'none', 4000);
 
-        loadGallery();
+        if (uploaded > 0) {
+            loadGallery();
+        }
+    }
+
+    // 사진 삭제
+    async function deletePhoto(photoId, imageUrl) {
+        const password = prompt('사진 업로드 시 입력한 비밀번호를 입력해주세요:');
+
+        if (!password) {
+            return;
+        }
+
+        if (!supabaseClient) {
+            alert('데이터베이스 연결에 실패했습니다.');
+            return;
+        }
+
+        try {
+            // DB에서 사진 정보와 비밀번호 확인
+            const { data, error: selectError } = await supabaseClient
+                .from('photos')
+                .select('password, image_url, uploader_name')
+                .eq('id', photoId)
+                .single();
+
+            if (selectError) {
+                console.error('사진 정보 조회 실패:', selectError);
+                alert('사진 정보를 찾을 수 없습니다.');
+                return;
+            }
+
+            if (!data) {
+                alert('사진 정보를 찾을 수 없습니다.');
+                return;
+            }
+
+            // 비밀번호 확인
+            if (data.password !== password) {
+                alert('비밀번호가 일치하지 않습니다.');
+                return;
+            }
+
+            // Storage에서 파일 삭제
+            const filePath = imageUrl.replace('https://fupncptwrevxjlanbnsc.supabase.co/storage/v1/object/public/wedding_photos/', '');
+            const { error: storageError } = await supabaseClient.storage
+                .from('wedding_photos')
+                .remove([filePath]);
+
+            if (storageError) {
+                console.error('Storage 삭제 실패:', storageError);
+                // Storage 삭제 실패해도 DB 레코드는 삭제 시도
+            }
+
+            // DB에서 레코드 삭제
+            const { error: deleteError } = await supabaseClient
+                .from('photos')
+                .delete()
+                .eq('id', photoId);
+
+            if (deleteError) {
+                console.error('DB 삭제 실패:', deleteError);
+                alert('사진 삭제에 실패했습니다.');
+                return;
+            }
+
+            showToast('사진이 삭제되었습니다 ✓');
+            loadGallery();
+        } catch (err) {
+            console.error('삭제 중 오류:', err);
+            alert('사진 삭제에 실패했습니다. 다시 시도해주세요.');
+        }
     }
 
     // 방명록 제출
@@ -1720,6 +1872,7 @@
                 .from("photos")
                 .select("*")
                 .eq("photo_type", "main")
+                .eq("is_visible", true)
                 .order("created_at", { ascending: true });
 
             const wrapper = document.getElementById("mainSwiperWrapper");

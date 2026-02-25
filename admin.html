@@ -294,6 +294,36 @@
             cursor: pointer;
             margin-right: 8px;
         }
+        /* 노출 상태 배지 */
+        .visibility-badge {
+            position: absolute;
+            bottom: 30px;
+            right: 5px;
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .visibility-badge.hidden {
+            background: rgba(244, 67, 54, 0.9);
+        }
+        .visibility-info {
+            background: #e3f2fd;
+            border: 1px solid #2196F3;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            color: #1565c0;
+            font-size: 14px;
+            text-align: center;
+        }
+        .visibility-warning {
+            background: #fff3e0;
+            border: 1px solid #ff9800;
+            color: #e65100;
+        }
         /* 로그인 화면 */
         .login-overlay {
             position: fixed;
@@ -420,6 +450,8 @@
         <button class="tab-btn" onclick="switchTab('guest')">👥 게스트 사진</button>
         <button class="tab-btn" onclick="switchTab('all')">🖼️ 전체 사진</button>
         <button class="tab-btn" onclick="switchTab('users')">👤 사용자별 보기</button>
+        <button class="tab-btn" onclick="switchTab('guestbook')">💌 방명록 관리</button>
+        <button class="tab-btn" onclick="switchTab('rsvp')">📋 참석 관리</button>
     </div>
 
     <!-- 메인 사진 탭 -->
@@ -460,6 +492,16 @@
                     <input type="checkbox" id="selectAllMain" onchange="selectAll('main', this.checked)">
                     전체 선택
                 </label>
+            </div>
+
+            <div class="visibility-info" id="mainVisibilityInfo">
+                현재 노출중인 사진: <span id="mainVisibleCount">0</span>/5
+            </div>
+
+            <div class="bulk-actions" id="mainVisibilityActions" style="margin-bottom: 15px;">
+                <span class="bulk-actions-label">선택한 사진 노출 설정:</span>
+                <button class="action-btn" onclick="bulkSetVisibility('main', true)">✓ 노출하기</button>
+                <button class="action-btn" style="background: linear-gradient(135deg, #fbc02d 0%, #f57c00 100%);" onclick="bulkSetVisibility('main', false)">✕ 숨기기</button>
             </div>
 
             <div class="bulk-actions" id="mainBulkActions">
@@ -513,6 +555,16 @@
                     <input type="checkbox" id="selectAllAdmin" onchange="selectAll('admin', this.checked)">
                     전체 선택
                 </label>
+            </div>
+
+            <div class="visibility-info" id="adminVisibilityInfo">
+                현재 노출중인 사진: <span id="adminVisibleCount">0</span>/20
+            </div>
+
+            <div class="bulk-actions" id="adminVisibilityActions" style="margin-bottom: 15px;">
+                <span class="bulk-actions-label">선택한 사진 노출 설정:</span>
+                <button class="action-btn" onclick="bulkSetVisibility('admin', true)">✓ 노출하기</button>
+                <button class="action-btn" style="background: linear-gradient(135deg, #fbc02d 0%, #f57c00 100%);" onclick="bulkSetVisibility('admin', false)">✕ 숨기기</button>
             </div>
 
             <div class="bulk-actions" id="adminBulkActions">
@@ -655,6 +707,150 @@
             <div id="usersGallery" class="gallery-grid"></div>
         </div>
     </div>
+
+    <!-- 방명록 관리 탭 -->
+    <div id="guestbook-tab" class="tab-content">
+        <div class="upload-section">
+            <div class="section-title">방명록 관리</div>
+
+            <!-- 통계 -->
+            <div class="visibility-info" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center;">
+                <div>
+                    <div style="font-size: 24px; font-weight: 600; color: #764ba2;" id="guestbookTotalCount">0</div>
+                    <div style="font-size: 12px; color: #666;">총 방명록</div>
+                </div>
+                <div>
+                    <div style="font-size: 24px; font-weight: 600; color: #764ba2;" id="guestbookTodayCount">0</div>
+                    <div style="font-size: 12px; color: #666;">오늘 작성</div>
+                </div>
+                <div>
+                    <div style="font-size: 24px; font-weight: 600; color: #764ba2;" id="guestbookRecentName">-</div>
+                    <div style="font-size: 12px; color: #666;">최근 작성자</div>
+                </div>
+            </div>
+
+            <!-- 검색 -->
+            <div style="margin: 20px 0;">
+                <input type="text" id="guestbookSearchInput" placeholder="이름으로 검색..."
+                       oninput="searchGuestbook()"
+                       style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+            </div>
+
+            <!-- 테이블 -->
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th style="padding: 12px; text-align: left; font-size: 13px; color: #666; border-bottom: 2px solid #dee2e6;">작성자</th>
+                            <th style="padding: 12px; text-align: left; font-size: 13px; color: #666; border-bottom: 2px solid #dee2e6;">메시지</th>
+                            <th style="padding: 12px; text-align: left; font-size: 13px; color: #666; border-bottom: 2px solid #dee2e6;">작성일</th>
+                            <th style="padding: 12px; text-align: center; font-size: 13px; color: #666; border-bottom: 2px solid #dee2e6; width: 80px;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="guestbookTableBody">
+                        <tr>
+                            <td colspan="4" style="padding: 40px; text-align: center; color: #999;">로딩 중...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- RSVP 관리 탭 -->
+    <div id="rsvp-tab" class="tab-content">
+        <div class="upload-section">
+            <div class="section-title">참석 여부 관리</div>
+
+            <!-- 통계 대시보드 -->
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
+                <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <div style="font-size: 14px; color: #666; margin-bottom: 10px;">참석 인원</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 28px; font-weight: 600; color: #4caf50;" id="rsvpAttendCount">0</div>
+                            <div style="font-size: 11px; color: #999;">참석</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 28px; font-weight: 600; color: #ff9800;" id="rsvpAbsentCount">0</div>
+                            <div style="font-size: 11px; color: #999;">불참</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <div style="font-size: 14px; color: #666; margin-bottom: 10px;">측별 인원</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 28px; font-weight: 600; color: #5f8b9b;" id="rsvpGroomCount">0</div>
+                            <div style="font-size: 11px; color: #999;">신랑측</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 28px; font-weight: 600; color: #BB7273;" id="rsvpBrideCount">0</div>
+                            <div style="font-size: 11px; color: #999;">신부측</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 20px; font-weight: 600; color: #764ba2;" id="rsvpTotalCount">0</div>
+                    <div style="font-size: 11px; color: #666;">총 응답</div>
+                </div>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 20px; font-weight: 600; color: #764ba2;" id="rsvpMealCount">0</div>
+                    <div style="font-size: 11px; color: #666;">식사 인원</div>
+                </div>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 20px; font-weight: 600; color: #764ba2;" id="rsvpCompanionsCount">0</div>
+                    <div style="font-size: 11px; color: #666;">동행 인원</div>
+                </div>
+            </div>
+
+            <!-- 필터/검색 -->
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <select id="rsvpSideFilter" onchange="filterRsvp()"
+                        style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                    <option value="all">전체</option>
+                    <option value="groom">신랑측</option>
+                    <option value="bride">신부측</option>
+                </select>
+                <select id="rsvpAttendanceFilter" onchange="filterRsvp()"
+                        style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                    <option value="all">전체</option>
+                    <option value="yes">참석</option>
+                    <option value="no">불참</option>
+                </select>
+                <input type="text" id="rsvpSearchInput" placeholder="이름으로 검색..."
+                       oninput="filterRsvp()"
+                       style="flex: 2; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+            </div>
+
+            <!-- 테이블 -->
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th style="padding: 12px; text-align: left;">이름</th>
+                            <th style="padding: 12px; text-align: center;">측</th>
+                            <th style="padding: 12px; text-align: center;">참석</th>
+                            <th style="padding: 12px; text-align: center;">식사</th>
+                            <th style="padding: 12px; text-align: center;">동행</th>
+                            <th style="padding: 12px; text-align: left;">메시지</th>
+                            <th style="padding: 12px; text-align: center;">작성일</th>
+                            <th style="padding: 12px; text-align: center; width: 80px;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rsvpTableBody">
+                        <tr>
+                            <td colspan="8" style="padding: 40px; text-align: center; color: #999;">로딩 중...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- 라이트박스 -->
@@ -685,6 +881,12 @@
     };
 
     const MAX_MAIN_PHOTOS = 5;
+    const MAX_ADMIN_VISIBLE_PHOTOS = 20;
+    const PHOTO_TYPE_LABELS = {
+        main: '메인',
+        admin: '웨딩',
+        guest: '게스트'
+    };
     const PHOTO_TYPE_LABELS = {
         main: '메인',
         admin: '웨딩',
@@ -791,6 +993,10 @@
 
         if (tabName === 'users') {
             loadUserList();
+        } else if (tabName === 'guestbook') {
+            loadGuestbookAdmin();
+        } else if (tabName === 'rsvp') {
+            loadRsvpAdmin();
         } else {
             loadGallery(tabName);
         }
@@ -952,17 +1158,25 @@
         data.forEach(photo => {
             const galleryItem = document.createElement("div");
             galleryItem.className = "gallery-item";
+
+            const itemStyle = photo.is_visible ? '' : 'opacity: 0.4; border: 2px solid #ff6b6b;';
+            const visibilityBadge = photo.is_visible
+                ? '<div class="visibility-badge">노출중</div>'
+                : '<div class="visibility-badge hidden">숨김</div>';
+
             galleryItem.innerHTML = `
                 <div class="checkbox-wrapper">
                     <input type="checkbox" onchange="togglePhotoSelection('${type}', ${photo.id}, this.checked)">
                 </div>
-                <img src="${photo.image_url}" alt="Photo" onclick="openLightbox('${photo.image_url}')" />
+                <img src="${photo.image_url}" alt="Photo" onclick="openLightbox('${photo.image_url}')" style="${itemStyle}" />
                 <div class="photo-type-badge">${PHOTO_TYPE_LABELS[photo.photo_type] || photo.photo_type}</div>
+                ${visibilityBadge}
             `;
             gallery.appendChild(galleryItem);
         });
 
         updateBulkActions(type);
+        updateVisibilityCount(type);
     }
 
     // 전체 선택
@@ -1085,6 +1299,93 @@
         loadGallery(type);
     }
 
+    // 노출 가능 개수 확인
+    async function checkVisibilityLimit(type, requestedCount) {
+        const { data } = await supabaseClient
+            .from("photos")
+            .select("id")
+            .eq("photo_type", type)
+            .eq("is_visible", true);
+
+        const currentVisible = data ? data.length : 0;
+
+        if (type === 'main') {
+            return {
+                canAdd: currentVisible + requestedCount <= MAX_MAIN_PHOTOS,
+                current: currentVisible,
+                max: MAX_MAIN_PHOTOS,
+                available: MAX_MAIN_PHOTOS - currentVisible
+            };
+        } else if (type === 'admin') {
+            return {
+                canAdd: currentVisible + requestedCount <= MAX_ADMIN_VISIBLE_PHOTOS,
+                current: currentVisible,
+                max: MAX_ADMIN_VISIBLE_PHOTOS,
+                available: MAX_ADMIN_VISIBLE_PHOTOS - currentVisible
+            };
+        } else {
+            return { canAdd: true, current: currentVisible, max: Infinity, available: Infinity };
+        }
+    }
+
+    // 노출 상태 일괄 변경
+    async function bulkSetVisibility(type, isVisible) {
+        if (selectedPhotos[type].size === 0) {
+            alert('사진을 선택해주세요');
+            return;
+        }
+
+        // 노출하려는 경우 제한 확인
+        if (isVisible) {
+            const limit = await checkVisibilityLimit(type, selectedPhotos[type].size);
+
+            if (!limit.canAdd) {
+                alert(`${type === 'main' ? '메인' : '웨딩'} 사진은 최대 ${limit.max}개까지만 노출 가능합니다.\n현재 노출: ${limit.current}개, 선택: ${selectedPhotos[type].size}개\n(${limit.available}개만 추가 가능)`);
+                return;
+            }
+        }
+
+        const action = isVisible ? '노출' : '숨김';
+        if (!confirm(`선택한 ${selectedPhotos[type].size}개의 사진을 ${action} 상태로 변경하시겠습니까?`)) {
+            return;
+        }
+
+        try {
+            for (const photoId of selectedPhotos[type]) {
+                await supabaseClient
+                    .from("photos")
+                    .update({ is_visible: isVisible })
+                    .eq("id", photoId);
+            }
+
+            selectedPhotos[type].clear();
+            document.getElementById('selectAll' + type.charAt(0).toUpperCase() + type.slice(1)).checked = false;
+
+            alert(`${action} 상태가 변경되었습니다`);
+            loadGallery(type);
+        } catch (error) {
+            console.error('노출 상태 변경 실패:', error);
+            alert('노출 상태 변경에 실패했습니다');
+        }
+    }
+
+    // 노출 개수 업데이트
+    async function updateVisibilityCount(type) {
+        if (type !== 'main' && type !== 'admin') return;
+
+        const { data } = await supabaseClient
+            .from("photos")
+            .select("id")
+            .eq("photo_type", type)
+            .eq("is_visible", true);
+
+        const count = data ? data.length : 0;
+        const countSpan = document.getElementById(`${type}VisibleCount`);
+        if (countSpan) {
+            countSpan.textContent = count;
+        }
+    }
+
     // 라이트박스
     function openLightbox(url) {
         document.getElementById('lightboxImg').src = url;
@@ -1173,6 +1474,245 @@
         });
 
         updateBulkActions('users');
+    }
+
+    // 방명록 관리
+    let allGuestbookData = [];
+
+    async function loadGuestbookAdmin() {
+        try {
+            const { data, error } = await supabaseClient
+                .from("guestbook")
+                .select("*")
+                .order("created_at", { ascending: false });
+
+            if (error) throw error;
+
+            allGuestbookData = data || [];
+
+            // 통계
+            const total = data.length;
+            const today = new Date().toDateString();
+            const todayCount = data.filter(item =>
+                new Date(item.created_at).toDateString() === today
+            ).length;
+            const recentName = data.length > 0 ? data[0].name : '-';
+
+            document.getElementById('guestbookTotalCount').textContent = total;
+            document.getElementById('guestbookTodayCount').textContent = todayCount;
+            document.getElementById('guestbookRecentName').textContent = recentName;
+
+            renderGuestbookTable(data);
+        } catch (error) {
+            console.error('방명록 로드 실패:', error);
+        }
+    }
+
+    function renderGuestbookTable(data) {
+        const tbody = document.getElementById('guestbookTableBody');
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="padding: 40px; text-align: center; color: #999;">방명록이 없습니다</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = '';
+        data.forEach(item => {
+            const date = new Date(item.created_at).toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            const row = document.createElement('tr');
+            row.style.borderBottom = '1px solid #f0f0f0';
+            row.innerHTML = `
+                <td style="padding: 12px; font-size: 13px; font-weight: 600; color: #333;">${item.name}</td>
+                <td style="padding: 12px; font-size: 13px; color: #555; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.message}">${item.message}</td>
+                <td style="padding: 12px; font-size: 12px; color: #999;">${date}</td>
+                <td style="padding: 12px; text-align: center;">
+                    <button onclick="deleteGuestbookAdmin(${item.id})"
+                            style="padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                        삭제
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    async function searchGuestbook() {
+        const searchTerm = document.getElementById('guestbookSearchInput').value.toLowerCase();
+
+        if (!searchTerm) {
+            renderGuestbookTable(allGuestbookData);
+            return;
+        }
+
+        const filtered = allGuestbookData.filter(item =>
+            item.name.toLowerCase().includes(searchTerm) ||
+            item.message.toLowerCase().includes(searchTerm)
+        );
+
+        renderGuestbookTable(filtered);
+    }
+
+    async function deleteGuestbookAdmin(id) {
+        if (!confirm('이 방명록을 삭제하시겠습니까?')) return;
+
+        try {
+            const { error } = await supabaseClient
+                .from("guestbook")
+                .delete()
+                .eq("id", id);
+
+            if (error) throw error;
+
+            alert('방명록이 삭제되었습니다');
+            allGuestbookData = [];
+            loadGuestbookAdmin();
+        } catch (error) {
+            console.error('방명록 삭제 실패:', error);
+            alert('삭제에 실패했습니다');
+        }
+    }
+
+    // RSVP 관리
+    let allRsvpData = [];
+
+    async function loadRsvpAdmin() {
+        try {
+            const { data, error } = await supabaseClient
+                .from("rsvp")
+                .select("*")
+                .order("created_at", { ascending: false });
+
+            if (error) throw error;
+
+            allRsvpData = data || [];
+            calculateRsvpStats(allRsvpData);
+            renderRsvpTable(allRsvpData);
+        } catch (error) {
+            console.error('RSVP 로드 실패:', error);
+        }
+    }
+
+    function calculateRsvpStats(data) {
+        const total = data.length;
+        const attendCount = data.filter(r => r.attendance === 'yes').length;
+        const absentCount = data.filter(r => r.attendance === 'no').length;
+        const groomCount = data.filter(r => r.side === 'groom').length;
+        const brideCount = data.filter(r => r.side === 'bride').length;
+        const mealCount = data.filter(r => r.meal === 'yes').length;
+        const companionsCount = data.reduce((sum, r) => sum + (parseInt(r.companions) || 0), 0);
+
+        document.getElementById('rsvpTotalCount').textContent = total;
+        document.getElementById('rsvpAttendCount').textContent = attendCount;
+        document.getElementById('rsvpAbsentCount').textContent = absentCount;
+        document.getElementById('rsvpGroomCount').textContent = groomCount;
+        document.getElementById('rsvpBrideCount').textContent = brideCount;
+        document.getElementById('rsvpMealCount').textContent = mealCount;
+        document.getElementById('rsvpCompanionsCount').textContent = companionsCount;
+    }
+
+    function renderRsvpTable(data) {
+        const tbody = document.getElementById('rsvpTableBody');
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="padding: 40px; text-align: center; color: #999;">RSVP가 없습니다</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = '';
+        data.forEach(item => {
+            const date = new Date(item.created_at).toLocaleString('ko-KR', {
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            const sideLabel = item.side === 'groom' ? '신랑측' : '신부측';
+            const sideColor = item.side === 'groom' ? '#5f8b9b' : '#BB7273';
+            const attendLabel = item.attendance === 'yes' ? '참석' : '불참';
+            const attendColor = item.attendance === 'yes' ? '#4caf50' : '#ff9800';
+            const mealLabel = item.meal === 'yes' ? 'O' : 'X';
+            const companionsText = item.companions === '0' ? '-' : item.companions + '명';
+
+            const row = document.createElement('tr');
+            row.style.borderBottom = '1px solid #f0f0f0';
+            row.innerHTML = `
+                <td style="padding: 12px; font-weight: 600;">${item.name}</td>
+                <td style="padding: 12px; text-align: center;">
+                    <span style="padding: 4px 10px; background: ${sideColor}; color: white; border-radius: 12px; font-size: 11px; font-weight: 600;">
+                        ${sideLabel}
+                    </span>
+                </td>
+                <td style="padding: 12px; text-align: center;">
+                    <span style="padding: 4px 10px; background: ${attendColor}; color: white; border-radius: 12px; font-size: 11px; font-weight: 600;">
+                        ${attendLabel}
+                    </span>
+                </td>
+                <td style="padding: 12px; text-align: center;">${mealLabel}</td>
+                <td style="padding: 12px; text-align: center;">${companionsText}</td>
+                <td style="padding: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.message || '-'}">${item.message || '-'}</td>
+                <td style="padding: 12px; text-align: center; font-size: 11px; color: #999;">${date}</td>
+                <td style="padding: 12px; text-align: center;">
+                    <button onclick="deleteRsvpAdmin(${item.id})"
+                            style="padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                        삭제
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function filterRsvp() {
+        const sideFilter = document.getElementById('rsvpSideFilter').value;
+        const attendanceFilter = document.getElementById('rsvpAttendanceFilter').value;
+        const searchTerm = document.getElementById('rsvpSearchInput').value.toLowerCase();
+
+        let filtered = [...allRsvpData];
+
+        if (sideFilter !== 'all') {
+            filtered = filtered.filter(r => r.side === sideFilter);
+        }
+
+        if (attendanceFilter !== 'all') {
+            filtered = filtered.filter(r => r.attendance === attendanceFilter);
+        }
+
+        if (searchTerm) {
+            filtered = filtered.filter(r =>
+                r.name.toLowerCase().includes(searchTerm) ||
+                (r.message && r.message.toLowerCase().includes(searchTerm))
+            );
+        }
+
+        calculateRsvpStats(filtered);
+        renderRsvpTable(filtered);
+    }
+
+    async function deleteRsvpAdmin(id) {
+        if (!confirm('이 RSVP를 삭제하시겠습니까?')) return;
+
+        try {
+            const { error } = await supabaseClient
+                .from("rsvp")
+                .delete()
+                .eq("id", id);
+
+            if (error) throw error;
+
+            alert('RSVP가 삭제되었습니다');
+            loadRsvpAdmin();
+        } catch (error) {
+            console.error('RSVP 삭제 실패:', error);
+            alert('삭제에 실패했습니다');
+        }
     }
 
     // 이벤트 리스너 설정

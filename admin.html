@@ -423,6 +423,30 @@
             background: #764ba2;
             color: white;
         }
+        .person-group {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        .person-group-header {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ddd;
+        }
+        .person-group-count {
+            font-size: 14px;
+            color: #666;
+            font-weight: normal;
+            margin-left: 10px;
+        }
+        .action-btn.active {
+            background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
@@ -487,21 +511,34 @@
         <div class="upload-section">
             <div class="section-title">업로드된 메인 사진 목록</div>
 
+            <div class="visibility-info" id="mainVisibilityInfo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; align-items: center;">
+                <div>
+                    현재 노출중인 사진: <span id="mainVisibleCount">0</span>/<span id="mainMaxCount">5</span>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <label style="font-size: 12px; color: #666; white-space: nowrap;">최대 개수:</label>
+                    <input type="number" id="mainMaxInput" min="1" max="20" value="5"
+                           style="width: 60px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                    <button class="action-btn" onclick="updateMaxLimit('main')" style="padding: 6px 12px; font-size: 12px;">저장</button>
+                </div>
+            </div>
+
+            <div class="visibility-info" style="background: #fff3e0; border-color: #ff9800; color: #e65100; font-size: 13px; margin-top: 10px;">
+                💡 사진을 클릭하여 노출 상태를 변경하세요. 변경 후 '저장' 버튼을 눌러주세요.
+            </div>
+
+            <div id="mainSaveButtonWrapper" style="display: none; margin: 15px 0;">
+                <button class="action-btn" onclick="saveVisibilityChanges('main')"
+                        style="width: 100%; padding: 15px; background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%); font-size: 15px; font-weight: 600;">
+                    💾 변경사항 저장
+                </button>
+            </div>
+
             <div class="select-all-wrapper">
                 <label>
                     <input type="checkbox" id="selectAllMain" onchange="selectAll('main', this.checked)">
-                    전체 선택
+                    전체 선택 (일괄 작업용)
                 </label>
-            </div>
-
-            <div class="visibility-info" id="mainVisibilityInfo">
-                현재 노출중인 사진: <span id="mainVisibleCount">0</span>/5
-            </div>
-
-            <div class="bulk-actions" id="mainVisibilityActions" style="margin-bottom: 15px;">
-                <span class="bulk-actions-label">선택한 사진 노출 설정:</span>
-                <button class="action-btn" onclick="bulkSetVisibility('main', true)">✓ 노출하기</button>
-                <button class="action-btn" style="background: linear-gradient(135deg, #fbc02d 0%, #f57c00 100%);" onclick="bulkSetVisibility('main', false)">✕ 숨기기</button>
             </div>
 
             <div class="bulk-actions" id="mainBulkActions">
@@ -550,21 +587,34 @@
         <div class="upload-section">
             <div class="section-title">업로드된 웨딩 사진 목록</div>
 
+            <div class="visibility-info" id="adminVisibilityInfo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; align-items: center;">
+                <div>
+                    현재 노출중인 사진: <span id="adminVisibleCount">0</span>/<span id="adminMaxCount">20</span>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <label style="font-size: 12px; color: #666; white-space: nowrap;">최대 개수:</label>
+                    <input type="number" id="adminMaxInput" min="1" max="20" value="20"
+                           style="width: 60px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                    <button class="action-btn" onclick="updateMaxLimit('admin')" style="padding: 6px 12px; font-size: 12px;">저장</button>
+                </div>
+            </div>
+
+            <div class="visibility-info" style="background: #fff3e0; border-color: #ff9800; color: #e65100; font-size: 13px; margin-top: 10px;">
+                💡 사진을 클릭하여 노출 상태를 변경하세요. 변경 후 '저장' 버튼을 눌러주세요.
+            </div>
+
+            <div id="adminSaveButtonWrapper" style="display: none; margin: 15px 0;">
+                <button class="action-btn" onclick="saveVisibilityChanges('admin')"
+                        style="width: 100%; padding: 15px; background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%); font-size: 15px; font-weight: 600;">
+                    💾 변경사항 저장
+                </button>
+            </div>
+
             <div class="select-all-wrapper">
                 <label>
                     <input type="checkbox" id="selectAllAdmin" onchange="selectAll('admin', this.checked)">
-                    전체 선택
+                    전체 선택 (일괄 작업용)
                 </label>
-            </div>
-
-            <div class="visibility-info" id="adminVisibilityInfo">
-                현재 노출중인 사진: <span id="adminVisibleCount">0</span>/20
-            </div>
-
-            <div class="bulk-actions" id="adminVisibilityActions" style="margin-bottom: 15px;">
-                <span class="bulk-actions-label">선택한 사진 노출 설정:</span>
-                <button class="action-btn" onclick="bulkSetVisibility('admin', true)">✓ 노출하기</button>
-                <button class="action-btn" style="background: linear-gradient(135deg, #fbc02d 0%, #f57c00 100%);" onclick="bulkSetVisibility('admin', false)">✕ 숨기기</button>
             </div>
 
             <div class="bulk-actions" id="adminBulkActions">
@@ -612,6 +662,18 @@
 
         <div class="upload-section">
             <div class="section-title">업로드된 게스트 사진 목록</div>
+
+            <!-- 뷰 모드 토글 -->
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; justify-content: center;">
+                <button class="action-btn" id="guestViewAllBtn" onclick="switchGuestViewMode('all')"
+                        style="flex: 1; max-width: 200px;">
+                    📋 전체보기
+                </button>
+                <button class="action-btn" id="guestViewByPersonBtn" onclick="switchGuestViewMode('byPerson')"
+                        style="flex: 1; max-width: 200px; background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">
+                    👥 인원별보기
+                </button>
+            </div>
 
             <div class="select-all-wrapper">
                 <label>
@@ -887,11 +949,21 @@
         admin: '웨딩',
         guest: '게스트'
     };
-    const PHOTO_TYPE_LABELS = {
-        main: '메인',
-        admin: '웨딩',
-        guest: '게스트'
+
+    // 최대 개수 설정 (동적 변경 가능)
+    let maxLimits = {
+        main: 5,
+        admin: 20
     };
+
+    // 노출 상태 변경 사항 추적
+    let pendingVisibilityChanges = {
+        main: new Map(), // photoId -> newVisibilityState
+        admin: new Map()
+    };
+
+    // 게스트 뷰 모드
+    let guestViewMode = 'all'; // 'all' or 'byPerson'
 
     // 로그인/로그아웃 기능
     async function loginAdmin() {
@@ -997,6 +1069,9 @@
             loadGuestbookAdmin();
         } else if (tabName === 'rsvp') {
             loadRsvpAdmin();
+        } else if (tabName === 'guest') {
+            // 게스트 탭은 별도 로드 함수 사용
+            loadGuestGallery();
         } else {
             loadGallery(tabName);
         }
@@ -1155,23 +1230,50 @@
             return;
         }
 
+        // pending 변경사항 초기화
+        if (type === 'main' || type === 'admin') {
+            pendingVisibilityChanges[type].clear();
+            updateSaveButtonVisibility(type);
+        }
+
         data.forEach(photo => {
             const galleryItem = document.createElement("div");
             galleryItem.className = "gallery-item";
 
-            const itemStyle = photo.is_visible ? '' : 'opacity: 0.4; border: 2px solid #ff6b6b;';
-            const visibilityBadge = photo.is_visible
-                ? '<div class="visibility-badge">노출중</div>'
-                : '<div class="visibility-badge hidden">숨김</div>';
+            // 데이터 속성 추가
+            galleryItem.dataset.photoId = photo.id;
+            galleryItem.dataset.dbVisibility = photo.is_visible;
 
-            galleryItem.innerHTML = `
-                <div class="checkbox-wrapper">
-                    <input type="checkbox" onchange="togglePhotoSelection('${type}', ${photo.id}, this.checked)">
-                </div>
-                <img src="${photo.image_url}" alt="Photo" onclick="openLightbox('${photo.image_url}')" style="${itemStyle}" />
-                <div class="photo-type-badge">${PHOTO_TYPE_LABELS[photo.photo_type] || photo.photo_type}</div>
-                ${visibilityBadge}
-            `;
+            // 메인/웨딩 탭은 클릭으로 토글, 다른 탭은 체크박스 사용
+            if (type === 'main' || type === 'admin') {
+                const itemStyle = photo.is_visible
+                    ? 'border: 3px solid #4caf50;'
+                    : 'opacity: 0.4; border: 2px solid #ff6b6b;';
+                const visibilityBadge = photo.is_visible
+                    ? '<div class="visibility-badge">노출중</div>'
+                    : '<div class="visibility-badge hidden">숨김</div>';
+
+                galleryItem.innerHTML = `
+                    <img src="${photo.image_url}" alt="Photo" onclick="togglePhotoVisibility('${type}', ${photo.id}, ${photo.is_visible})" style="${itemStyle}; cursor: pointer;" />
+                    <div class="photo-type-badge">${PHOTO_TYPE_LABELS[photo.photo_type] || photo.photo_type}</div>
+                    ${visibilityBadge}
+                `;
+            } else {
+                const itemStyle = photo.is_visible ? '' : 'opacity: 0.4; border: 2px solid #ff6b6b;';
+                const visibilityBadge = photo.is_visible
+                    ? '<div class="visibility-badge">노출중</div>'
+                    : '<div class="visibility-badge hidden">숨김</div>';
+
+                galleryItem.innerHTML = `
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" onchange="togglePhotoSelection('${type}', ${photo.id}, this.checked)">
+                    </div>
+                    <img src="${photo.image_url}" alt="Photo" onclick="openLightbox('${photo.image_url}')" style="${itemStyle}" />
+                    <div class="photo-type-badge">${PHOTO_TYPE_LABELS[photo.photo_type] || photo.photo_type}</div>
+                    ${visibilityBadge}
+                `;
+            }
+
             gallery.appendChild(galleryItem);
         });
 
@@ -1386,6 +1488,181 @@
         }
     }
 
+    // 사진 클릭으로 노출 상태 토글
+    function togglePhotoVisibility(type, photoId, currentVisibility) {
+        if (type !== 'main' && type !== 'admin') return;
+
+        // 현재 DB 상태
+        const dbState = currentVisibility;
+
+        // 보류 중인 변경사항이 있는지 확인
+        const hasPendingChange = pendingVisibilityChanges[type].has(photoId);
+
+        let newState;
+        if (hasPendingChange) {
+            // 이미 변경사항이 있으면 토글 (DB 상태로 돌아가거나 다시 변경)
+            const pendingState = pendingVisibilityChanges[type].get(photoId);
+            if (pendingState === dbState) {
+                // DB 상태와 같으면 변경사항 제거
+                pendingVisibilityChanges[type].delete(photoId);
+                newState = dbState;
+            } else {
+                // DB 상태와 다르면 다시 토글
+                newState = !pendingState;
+                if (newState === dbState) {
+                    pendingVisibilityChanges[type].delete(photoId);
+                } else {
+                    pendingVisibilityChanges[type].set(photoId, newState);
+                }
+            }
+        } else {
+            // 변경사항이 없으면 새로 추가
+            newState = !dbState;
+
+            // 노출하려는 경우 최대 개수 확인
+            if (newState === true) {
+                const currentVisibleCount = getCurrentVisibleCount(type);
+                if (currentVisibleCount >= maxLimits[type]) {
+                    alert(`이미 최대 ${maxLimits[type]}개의 사진이 노출중입니다.\n\n다른 사진을 숨기거나 최대 개수를 조정한 후 다시 시도해주세요.`);
+                    return;
+                }
+            }
+
+            pendingVisibilityChanges[type].set(photoId, newState);
+        }
+
+        // UI 업데이트
+        updatePhotoVisibilityUI(type);
+        updateSaveButtonVisibility(type);
+    }
+
+    // 현재 노출 중인 사진 개수 계산 (pending 변경사항 포함)
+    function getCurrentVisibleCount(type) {
+        const galleryElement = document.getElementById(`${type}Gallery`);
+        const photos = galleryElement.querySelectorAll('.gallery-item');
+
+        let count = 0;
+        photos.forEach(photoElement => {
+            const photoId = parseInt(photoElement.dataset.photoId);
+            const dbVisibility = photoElement.dataset.dbVisibility === 'true';
+
+            // pending 변경사항 확인
+            const hasPending = pendingVisibilityChanges[type].has(photoId);
+            const currentVisibility = hasPending
+                ? pendingVisibilityChanges[type].get(photoId)
+                : dbVisibility;
+
+            if (currentVisibility) count++;
+        });
+
+        return count;
+    }
+
+    // 사진 노출 상태 UI 업데이트
+    function updatePhotoVisibilityUI(type) {
+        const galleryElement = document.getElementById(`${type}Gallery`);
+        const photos = galleryElement.querySelectorAll('.gallery-item');
+
+        photos.forEach(photoElement => {
+            const photoId = parseInt(photoElement.dataset.photoId);
+            const dbVisibility = photoElement.dataset.dbVisibility === 'true';
+            const img = photoElement.querySelector('img');
+            const badge = photoElement.querySelector('.visibility-badge');
+
+            // pending 변경사항 확인
+            const hasPending = pendingVisibilityChanges[type].has(photoId);
+            const currentVisibility = hasPending
+                ? pendingVisibilityChanges[type].get(photoId)
+                : dbVisibility;
+
+            // 이미지 스타일 업데이트
+            if (currentVisibility) {
+                img.style.opacity = '1';
+                img.style.border = '3px solid #4caf50';
+                badge.textContent = '노출중';
+                badge.className = 'visibility-badge';
+            } else {
+                img.style.opacity = '0.4';
+                img.style.border = '2px solid #ff6b6b';
+                badge.textContent = '숨김';
+                badge.className = 'visibility-badge hidden';
+            }
+
+            // pending 표시
+            if (hasPending) {
+                img.style.boxShadow = '0 0 0 3px #ffc107';
+                badge.textContent += ' (변경중)';
+            } else {
+                img.style.boxShadow = 'none';
+            }
+        });
+    }
+
+    // 저장 버튼 표시/숨김
+    function updateSaveButtonVisibility(type) {
+        const saveButtonWrapper = document.getElementById(`${type}SaveButtonWrapper`);
+        if (!saveButtonWrapper) return;
+
+        if (pendingVisibilityChanges[type].size > 0) {
+            saveButtonWrapper.style.display = 'block';
+        } else {
+            saveButtonWrapper.style.display = 'none';
+        }
+    }
+
+    // 노출 상태 변경사항 저장
+    async function saveVisibilityChanges(type) {
+        if (pendingVisibilityChanges[type].size === 0) {
+            alert('변경사항이 없습니다');
+            return;
+        }
+
+        if (!confirm(`${pendingVisibilityChanges[type].size}개 사진의 노출 상태를 저장하시겠습니까?`)) {
+            return;
+        }
+
+        try {
+            for (const [photoId, newVisibility] of pendingVisibilityChanges[type].entries()) {
+                await supabaseClient
+                    .from("photos")
+                    .update({ is_visible: newVisibility })
+                    .eq("id", photoId);
+            }
+
+            pendingVisibilityChanges[type].clear();
+            alert('변경사항이 저장되었습니다');
+            loadGallery(type);
+        } catch (error) {
+            console.error('저장 실패:', error);
+            alert('저장에 실패했습니다');
+        }
+    }
+
+    // 최대 노출 개수 변경
+    async function updateMaxLimit(type) {
+        const inputElement = document.getElementById(`${type}MaxInput`);
+        const newLimit = parseInt(inputElement.value);
+
+        if (isNaN(newLimit) || newLimit < 1 || newLimit > 20) {
+            alert('1~20 사이의 숫자를 입력해주세요');
+            return;
+        }
+
+        const currentVisibleCount = getCurrentVisibleCount(type);
+        if (currentVisibleCount > newLimit) {
+            alert(`현재 ${currentVisibleCount}개의 사진이 노출중입니다.\n최대 개수를 ${newLimit}개로 줄이려면 먼저 ${currentVisibleCount - newLimit}개의 사진을 숨겨주세요.`);
+            return;
+        }
+
+        if (!confirm(`최대 노출 개수를 ${newLimit}개로 변경하시겠습니까?`)) {
+            return;
+        }
+
+        maxLimits[type] = newLimit;
+        document.getElementById(`${type}MaxCount`).textContent = newLimit;
+        alert('최대 개수가 변경되었습니다');
+    }
+
     // 라이트박스
     function openLightbox(url) {
         document.getElementById('lightboxImg').src = url;
@@ -1394,6 +1671,123 @@
 
     function closeLightbox() {
         document.getElementById('lightbox').classList.remove('active');
+    }
+
+    // 게스트 뷰 모드 전환
+    function switchGuestViewMode(mode) {
+        guestViewMode = mode;
+
+        // 버튼 상태 업데이트
+        const allBtn = document.getElementById('guestViewAllBtn');
+        const byPersonBtn = document.getElementById('guestViewByPersonBtn');
+
+        if (mode === 'all') {
+            allBtn.classList.add('active');
+            byPersonBtn.classList.remove('active');
+        } else {
+            allBtn.classList.remove('active');
+            byPersonBtn.classList.add('active');
+        }
+
+        // 갤러리 다시 로드
+        loadGuestGallery();
+    }
+
+    // 게스트 갤러리 로드 (전체/인원별)
+    async function loadGuestGallery() {
+        const { data, error } = await supabaseClient
+            .from("photos")
+            .select("*")
+            .eq("photo_type", "guest")
+            .order("created_at", { ascending: false });
+
+        const gallery = document.getElementById('guestGallery');
+        gallery.innerHTML = "";
+
+        if (!data || data.length === 0) {
+            gallery.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">업로드된 게스트 사진이 없습니다</p>';
+            return;
+        }
+
+        if (guestViewMode === 'all') {
+            // 전체보기: 일반 그리드 표시
+            data.forEach(photo => {
+                const galleryItem = document.createElement("div");
+                galleryItem.className = "gallery-item";
+
+                const itemStyle = photo.is_visible ? '' : 'opacity: 0.4; border: 2px solid #ff6b6b;';
+                const visibilityBadge = photo.is_visible
+                    ? '<div class="visibility-badge">노출중</div>'
+                    : '<div class="visibility-badge hidden">숨김</div>';
+
+                galleryItem.innerHTML = `
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" onchange="togglePhotoSelection('guest', ${photo.id}, this.checked)">
+                    </div>
+                    <img src="${photo.image_url}" alt="Photo" onclick="openLightbox('${photo.image_url}')" style="${itemStyle}" />
+                    <div class="photo-type-badge">${PHOTO_TYPE_LABELS[photo.photo_type] || photo.photo_type}</div>
+                    ${visibilityBadge}
+                `;
+                gallery.appendChild(galleryItem);
+            });
+        } else {
+            // 인원별보기: 업로더별로 그룹화
+            const groupedByPerson = {};
+
+            data.forEach(photo => {
+                const uploaderName = photo.uploader_name || '알 수 없음';
+                if (!groupedByPerson[uploaderName]) {
+                    groupedByPerson[uploaderName] = [];
+                }
+                groupedByPerson[uploaderName].push(photo);
+            });
+
+            // 이름순 정렬
+            const sortedNames = Object.keys(groupedByPerson).sort();
+
+            sortedNames.forEach(name => {
+                const photos = groupedByPerson[name];
+
+                // 그룹 컨테이너 생성
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'person-group';
+
+                // 그룹 헤더
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'person-group-header';
+                headerDiv.innerHTML = `${name}<span class="person-group-count">${photos.length}개</span>`;
+                groupDiv.appendChild(headerDiv);
+
+                // 그룹 갤러리
+                const groupGallery = document.createElement('div');
+                groupGallery.className = 'gallery-grid';
+
+                photos.forEach(photo => {
+                    const galleryItem = document.createElement("div");
+                    galleryItem.className = "gallery-item";
+
+                    const itemStyle = photo.is_visible ? '' : 'opacity: 0.4; border: 2px solid #ff6b6b;';
+                    const visibilityBadge = photo.is_visible
+                        ? '<div class="visibility-badge">노출중</div>'
+                        : '<div class="visibility-badge hidden">숨김</div>';
+
+                    galleryItem.innerHTML = `
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" onchange="togglePhotoSelection('guest', ${photo.id}, this.checked)">
+                        </div>
+                        <img src="${photo.image_url}" alt="Photo" onclick="openLightbox('${photo.image_url}')" style="${itemStyle}" />
+                        <div class="photo-type-badge">${PHOTO_TYPE_LABELS[photo.photo_type] || photo.photo_type}</div>
+                        ${visibilityBadge}
+                    `;
+                    groupGallery.appendChild(galleryItem);
+                });
+
+                groupDiv.appendChild(groupGallery);
+                gallery.appendChild(groupDiv);
+            });
+        }
+
+        updateBulkActions('guest');
     }
 
     // 사용자 목록 로드
@@ -1744,6 +2138,12 @@
     document.addEventListener('DOMContentLoaded', function() {
         initEventListeners();
         checkAuth();
+
+        // 게스트 뷰 모드 기본값 설정
+        const guestViewAllBtn = document.getElementById('guestViewAllBtn');
+        if (guestViewAllBtn) {
+            guestViewAllBtn.classList.add('active');
+        }
     });
 </script>
 </body>

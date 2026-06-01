@@ -112,7 +112,7 @@ All dependencies are loaded via CDN in the HTML files:
 - id: auto-increment
 - side: text ('groom' or 'bride')
 - attendance: text ('yes' or 'no')
-- meal: text ('no' = 식사 안함, '1'-'11' = 식사 인원 수)
+- meal: text ('no' = 식사 안함, 'yes' = 1명 (레거시), '1'-'11' = 식사 인원 수)
 - name: text
 - companions: text ('0'-'10' = 동행인 수, 본인 제외)
 - message: text

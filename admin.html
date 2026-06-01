@@ -8,6 +8,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -99,6 +100,38 @@
         .gallery-item:hover {
             transform: scale(1.05);
         }
+        .gallery-item.sortable-drag {
+            opacity: 0.5;
+            cursor: grabbing !important;
+        }
+        .gallery-item.sortable-ghost {
+            opacity: 0.3;
+            background: #e3f2fd;
+        }
+        .gallery-item.visible-photo {
+            cursor: grab;
+        }
+        .gallery-item.visible-photo:active {
+            cursor: grabbing;
+        }
+        .gallery-item.deleted-photo {
+            opacity: 0.5;
+            position: relative;
+        }
+        .gallery-item.deleted-photo::after {
+            content: '삭제됨';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 0, 0, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 10;
+        }
         .preview-item img, .gallery-item img {
             width: 100%;
             height: 100%;
@@ -118,6 +151,41 @@
             font-size: 18px;
             line-height: 1;
             z-index: 10;
+        }
+        .preview-order-badge {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: rgba(67, 87, 58, 0.95);
+            color: white;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .preview-order-badge:hover {
+            background: rgba(67, 87, 58, 1);
+            transform: scale(1.1);
+        }
+        .preview-order-badge.selected {
+            background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
+            border-color: #ffd700;
+        }
+        .preview-item.clickable {
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        .preview-item.clickable:hover {
+            border-color: #43573a;
         }
         .checkbox-wrapper {
             position: absolute;
@@ -308,6 +376,71 @@
         }
         .visibility-badge.hidden {
             background: rgba(244, 67, 54, 0.9);
+        }
+        .display-order-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 40px;
+            height: 40px;
+            background: rgba(67, 87, 58, 0.95);
+            color: white;
+            border: 2px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+        .display-order-badge:hover {
+            background: rgba(67, 87, 58, 1);
+            transform: scale(1.1);
+        }
+        .display-order-badge.selected {
+            background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
+            border-color: #ffd700;
+        }
+        .display-order-badge.empty {
+            background: rgba(100, 100, 100, 0.5);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        .order-save-section {
+            background: #fff3e0;
+            border: 2px solid #ff9800;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .order-save-section.active {
+            display: block;
+        }
+        .order-save-section .info {
+            color: #e65100;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .order-save-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .order-save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(67, 160, 71, 0.4);
         }
         .visibility-info {
             background: #e3f2fd;
@@ -523,8 +656,17 @@
                 </div>
             </div>
 
-            <div class="visibility-info" style="background: #fff3e0; border-color: #ff9800; color: #e65100; font-size: 13px; margin-top: 10px;">
-                💡 사진을 클릭하여 노출 상태를 변경하세요. 변경 후 '저장' 버튼을 눌러주세요.
+            <div class="visibility-info" style="background: #e3f2fd; border-color: #2196F3; color: #1565c0; font-size: 13px; margin-top: 10px;">
+                🖱️ 노출중인 사진을 드래그하여 순서를 변경하세요 (1, 2, 3, ...)
+            </div>
+
+            <div id="mainOrderSaveSection" class="order-save-section">
+                <div class="info">
+                    💡 <span id="mainOrderCount">0</span>개 사진의 순서가 변경되었습니다
+                </div>
+                <button class="order-save-btn" onclick="saveDisplayOrder('main')">
+                    💾 순서 저장
+                </button>
             </div>
 
             <div id="mainSaveButtonWrapper" style="display: none; margin: 15px 0;">
@@ -600,8 +742,17 @@
                 </div>
             </div>
 
-            <div class="visibility-info" style="background: #fff3e0; border-color: #ff9800; color: #e65100; font-size: 13px; margin-top: 10px;">
-                💡 사진을 클릭하여 노출 상태를 변경하세요. 변경 후 '저장' 버튼을 눌러주세요.
+            <div class="visibility-info" style="background: #e3f2fd; border-color: #2196F3; color: #1565c0; font-size: 13px; margin-top: 10px;">
+                🖱️ 노출중인 사진을 드래그하여 순서를 변경하세요 (1, 2, 3, ...)
+            </div>
+
+            <div id="adminOrderSaveSection" class="order-save-section">
+                <div class="info">
+                    💡 <span id="adminOrderCount">0</span>개 사진의 순서가 변경되었습니다
+                </div>
+                <button class="order-save-btn" onclick="saveDisplayOrder('admin')">
+                    💾 순서 저장
+                </button>
             </div>
 
             <div id="adminSaveButtonWrapper" style="display: none; margin: 15px 0;">
@@ -803,11 +954,40 @@
                        style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
             </div>
 
+            <!-- 변경사항 저장 버튼 -->
+            <div id="guestbookSaveSection" style="margin-bottom: 15px; text-align: right; display: none;">
+                <div style="display: inline-block; background: #fff3cd; padding: 10px 15px; border-radius: 8px; margin-right: 10px; font-size: 13px; color: #856404;">
+                    ⚠️ 변경사항이 있습니다
+                </div>
+                <button onclick="saveGuestbookChanges()"
+                        style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
+                    💾 변경사항 저장
+                </button>
+            </div>
+
+            <!-- 노출 상태 범례 -->
+            <div style="margin-bottom: 15px; display: flex; gap: 15px; font-size: 12px; color: #666;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <div style="width: 12px; height: 12px; background: #4caf50; border-radius: 50%;"></div>
+                    <span>노출</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <div style="width: 12px; height: 12px; background: #f44336; border-radius: 50%;"></div>
+                    <span>미노출</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <div style="width: 12px; height: 12px; background: #999; border-radius: 50%;"></div>
+                    <span>미설정</span>
+                </div>
+            </div>
+
             <!-- 테이블 -->
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
                     <thead style="background: #f8f9fa;">
                         <tr>
+                            <th style="padding: 12px; text-align: center; font-size: 13px; color: #666; border-bottom: 2px solid #dee2e6; width: 60px;">순서</th>
+                            <th style="padding: 12px; text-align: center; font-size: 13px; color: #666; border-bottom: 2px solid #dee2e6; width: 80px;">상태</th>
                             <th style="padding: 12px; text-align: left; font-size: 13px; color: #666; border-bottom: 2px solid #dee2e6;">작성자</th>
                             <th style="padding: 12px; text-align: left; font-size: 13px; color: #666; border-bottom: 2px solid #dee2e6;">메시지</th>
                             <th style="padding: 12px; text-align: left; font-size: 13px; color: #666; border-bottom: 2px solid #dee2e6;">작성일</th>
@@ -816,7 +996,7 @@
                     </thead>
                     <tbody id="guestbookTableBody">
                         <tr>
-                            <td colspan="4" style="padding: 40px; text-align: center; color: #999;">로딩 중...</td>
+                            <td colspan="6" style="padding: 40px; text-align: center; color: #999;">로딩 중...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -945,6 +1125,12 @@
         guest: new Set(),
         all: new Set(),
         users: new Set()
+    };
+
+    // 순서 선택 상태 (클릭한 순서대로 photo ID 저장)
+    let displayOrderSelection = {
+        main: [],
+        admin: []
     };
 
     // 이전 노출 상태 저장 (복원용)
@@ -1091,6 +1277,9 @@
         }
     }
 
+    // 순서 선택 상태 저장
+    let uploadOrderSelection = {};
+
     // 사진 미리보기
     async function previewImages(type) {
         const fileInput = document.getElementById(type + 'FileInput');
@@ -1099,6 +1288,7 @@
         // 업로드 개수 제한 제거 - 자유롭게 업로드 가능
 
         selectedFiles[type] = files;
+        uploadOrderSelection[type] = []; // 순서 선택 초기화
 
         const previewGrid = document.getElementById(type + 'PreviewGrid');
         const uploadBtn = document.getElementById(type + 'UploadBtn');
@@ -1112,18 +1302,80 @@
 
         uploadBtn.disabled = false;
 
+        // 노출중인 사진 개수 확인
+        const { data: visiblePhotos } = await supabaseClient
+            .from("photos")
+            .select("id")
+            .eq("photo_type", type)
+            .eq("is_visible", true);
+
+        const hasVisiblePhotos = visiblePhotos && visiblePhotos.length > 0;
+
+        // 안내 메시지 표시
+        if (!hasVisiblePhotos) {
+            const infoDiv = document.createElement("div");
+            infoDiv.style.cssText = "grid-column: 1 / -1; background: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center; color: #1565c0; margin-bottom: 10px;";
+            infoDiv.innerHTML = "📌 노출할 사진을 클릭하여 순서를 정해주세요 (1, 2, 3, ...)";
+            previewGrid.appendChild(infoDiv);
+        }
+
         files.forEach((file, index) => {
             const reader = new FileReader();
             reader.onload = (e) => {
                 const previewItem = document.createElement("div");
-                previewItem.className = "preview-item";
+                previewItem.className = hasVisiblePhotos ? "preview-item" : "preview-item clickable";
+                previewItem.dataset.index = index;
+
+                const orderBadge = hasVisiblePhotos ? '' : `<div class="preview-order-badge" onclick="toggleUploadOrder('${type}', ${index})"></div>`;
+
                 previewItem.innerHTML = `
-                    <img src="${e.target.result}" alt="Preview" />
+                    ${orderBadge}
+                    <img src="${e.target.result}" alt="Preview" ${hasVisiblePhotos ? '' : `onclick="toggleUploadOrder('${type}', ${index})"`} />
                     <button class="remove-btn" onclick="removePreview('${type}', ${index})">&times;</button>
                 `;
                 previewGrid.appendChild(previewItem);
             };
             reader.readAsDataURL(file);
+        });
+    }
+
+    // 업로드 순서 토글
+    function toggleUploadOrder(type, index) {
+        const orderArray = uploadOrderSelection[type];
+        const existingIndex = orderArray.indexOf(index);
+
+        if (existingIndex !== -1) {
+            // 이미 선택됨 → 선택 해제
+            orderArray.splice(existingIndex, 1);
+        } else {
+            // 새로 선택
+            orderArray.push(index);
+        }
+
+        // UI 업데이트
+        updateOrderBadges(type);
+    }
+
+    // 순서 배지 UI 업데이트
+    function updateOrderBadges(type) {
+        const orderArray = uploadOrderSelection[type];
+        const previewGrid = document.getElementById(type + 'PreviewGrid');
+        const items = previewGrid.querySelectorAll('.preview-item');
+
+        items.forEach(item => {
+            const index = parseInt(item.dataset.index);
+            const badge = item.querySelector('.preview-order-badge');
+            if (!badge) return;
+
+            const orderPosition = orderArray.indexOf(index);
+
+            if (orderPosition !== -1) {
+                badge.textContent = orderPosition + 1;
+                badge.classList.add('selected');
+            } else {
+                badge.textContent = '';
+                badge.classList.remove('selected');
+            }
         });
     }
 
@@ -1152,6 +1404,18 @@
         uploadBtn.textContent = "업로드 중...";
         progressBar.style.display = "block";
 
+        // 노출중인 사진이 있는지 확인
+        const { data: visiblePhotos } = await supabaseClient
+            .from("photos")
+            .select("id")
+            .eq("photo_type", type)
+            .eq("is_visible", true);
+
+        const hasVisiblePhotos = visiblePhotos && visiblePhotos.length > 0;
+        const orderArray = uploadOrderSelection[type] || [];
+
+        console.log(`[업로드] 노출중인 사진 있음: ${hasVisiblePhotos}, 선택된 순서:`, orderArray);
+
         let uploaded = 0;
         const total = selectedFiles[type].length;
 
@@ -1170,10 +1434,18 @@
 
             const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/wedding_photos/${filePath}`;
 
+            // 노출 상태 및 순서 결정
+            const orderPosition = orderArray.indexOf(i);
+            const isVisible = !hasVisiblePhotos && orderPosition !== -1;
+            const displayOrder = isVisible ? (orderPosition + 1) : null;
+
             await supabaseClient.from("photos").insert([
                 {
                     image_url: imageUrl,
-                    photo_type: type
+                    photo_type: type,
+                    is_visible: isVisible,
+                    display_order: displayOrder,
+                    del_yn: 'N'
                 }
             ]);
 
@@ -1190,8 +1462,13 @@
         document.getElementById(type + 'FileInput').value = "";
         document.getElementById(type + 'PreviewGrid').innerHTML = "";
         selectedFiles[type] = [];
+        uploadOrderSelection[type] = [];
 
         showStatus(type, `${uploaded}개 사진이 업로드되었습니다!`, "success");
+
+        // 순서 재계산
+        await reorderVisiblePhotos(type);
+
         loadGallery(type);
     }
 
@@ -1208,13 +1485,37 @@
 
     // 갤러리 로드
     async function loadGallery(type) {
-        let query = supabaseClient.from("photos").select("*").order("created_at", { ascending: false });
+        let query = supabaseClient.from("photos").select("*");
 
         if (type !== 'all') {
             query = query.eq("photo_type", type);
         }
 
         const { data, error } = await query;
+
+        // 노출중인 사진은 display_order로 정렬, 없으면 맨 뒤로
+        if (data) {
+            data.sort((a, b) => {
+                const aVisible = a.is_visible !== false;
+                const bVisible = b.is_visible !== false;
+
+                // 둘 다 노출중이면 display_order로 정렬
+                if (aVisible && bVisible) {
+                    const aOrder = a.display_order || 9999;
+                    const bOrder = b.display_order || 9999;
+                    if (aOrder !== bOrder) return aOrder - bOrder;
+                    // 같은 순서면 created_at 최신순
+                    return new Date(b.created_at) - new Date(a.created_at);
+                }
+
+                // 노출중인 것이 먼저
+                if (aVisible && !bVisible) return -1;
+                if (!aVisible && bVisible) return 1;
+
+                // 둘 다 미노출이면 created_at 최신순
+                return new Date(b.created_at) - new Date(a.created_at);
+            });
+        }
 
         if (error) {
             console.error('갤러리 로드 에러:', error);
@@ -1246,29 +1547,82 @@
 
         data.forEach(photo => {
             const galleryItem = document.createElement("div");
-            galleryItem.className = "gallery-item";
 
             // is_visible 기본값 처리 (undefined/null이면 true)
-            const isVisible = photo.is_visible !== false;
+            const dbVisibility = photo.is_visible !== false;
+
+            // pending 변경사항이 있는지 확인
+            const photoId = photo.id;
+            const hasPendingChange = pendingVisibilityChanges[type] && pendingVisibilityChanges[type].has(photoId);
+            const currentVisibility = hasPendingChange ? pendingVisibilityChanges[type].get(photoId) : dbVisibility;
+
+            // del_yn 체크 (게스트가 삭제한 사진)
+            const isDeleted = photo.del_yn === 'Y';
+
+            // 노출중인 사진에만 draggable 클래스 추가
+            let className = "gallery-item";
+            if (currentVisibility && (type === 'main' || type === 'admin')) {
+                className += " visible-photo";
+            }
+            if (isDeleted) {
+                className += " deleted-photo";
+            }
+            galleryItem.className = className;
 
             // 데이터 속성 추가
             galleryItem.dataset.photoId = photo.id;
-            galleryItem.dataset.dbVisibility = isVisible;
+            galleryItem.dataset.dbVisibility = dbVisibility;
+            galleryItem.dataset.displayOrder = photo.display_order || 999;
 
-            // 모든 탭에 체크박스 추가
-            const itemStyle = isVisible
-                ? (type === 'main' || type === 'admin' ? 'border: 3px solid #4caf50;' : '')
-                : 'opacity: 0.4; border: 2px solid #ff6b6b;';
-            const visibilityBadge = isVisible
+            // 테두리 색상 결정
+            let borderColor = '#ddd';
+            let borderWidth = '2px';
+
+            if (hasPendingChange) {
+                // 변경사항이 있는 경우
+                if (dbVisibility && !currentVisibility) {
+                    // 노출 -> 미노출: 빨강
+                    borderColor = '#f44336';
+                    borderWidth = '3px';
+                } else if (!dbVisibility && currentVisibility) {
+                    // 미노출 -> 노출: 초록
+                    borderColor = '#4caf50';
+                    borderWidth = '3px';
+                }
+            } else {
+                // 변경사항 없는 경우
+                if (!dbVisibility) {
+                    // 기존 미노출: 회색
+                    borderColor = '#999';
+                    borderWidth = '2px';
+                } else {
+                    // 기존 노출: 초록
+                    borderColor = '#4caf50';
+                    borderWidth = '3px';
+                }
+            }
+
+            const itemStyle = `border: ${borderWidth} solid ${borderColor};`;
+            const visibilityBadge = currentVisibility
                 ? '<div class="visibility-badge">노출중</div>'
                 : '<div class="visibility-badge hidden">숨김</div>';
+
+            // 노출중인 사진에만 순서 배지 표시 (display_order 값 표시)
+            const orderNumber = photo.display_order || '';
+            const orderBadge = (currentVisibility && (type === 'main' || type === 'admin'))
+                ? `<div class="display-order-badge ${orderNumber ? 'selected' : 'empty'}">${orderNumber}</div>`
+                : '';
+
+            // 이미지 클릭 핸들러
+            const imageClickHandler = `togglePhotoCheckbox('${type}', ${photo.id})`;
 
             // 모든 탭에서 이미지 클릭 시 체크박스 토글
             galleryItem.innerHTML = `
                 <div class="checkbox-wrapper">
                     <input type="checkbox" data-photo-id="${photo.id}" onchange="togglePhotoSelection('${type}', ${photo.id}, this.checked)">
                 </div>
-                <img src="${photo.image_url}" alt="Photo" onclick="togglePhotoCheckbox('${type}', ${photo.id})" style="cursor: pointer; ${itemStyle}" />
+                ${orderBadge}
+                <img src="${photo.image_url}" alt="Photo" onclick="${imageClickHandler}" style="cursor: pointer; ${itemStyle}" />
                 <div class="photo-type-badge">${PHOTO_TYPE_LABELS[photo.photo_type] || photo.photo_type}</div>
                 ${visibilityBadge}
             `;
@@ -1279,6 +1633,66 @@
         updateBulkActions(type);
         updateVisibilityCount(type);
         updateSelectAllButton(type);
+
+        // 드래그 앤 드롭 초기화 (main, admin 탭만)
+        if (type === 'main' || type === 'admin') {
+            initializeSortable(type);
+            updateOrderSaveSection(type, false); // 초기 상태는 변경 없음
+        }
+    }
+
+    // Sortable.js 초기화
+    let sortableInstances = {};
+
+    function initializeSortable(type) {
+        const gallery = document.getElementById(type + 'Gallery');
+
+        // 기존 인스턴스가 있으면 제거
+        if (sortableInstances[type]) {
+            sortableInstances[type].destroy();
+        }
+
+        sortableInstances[type] = Sortable.create(gallery, {
+            animation: 200,
+            filter: '.gallery-item:not(.visible-photo)', // 노출중인 사진만 드래그 가능
+            ghostClass: 'sortable-ghost',
+            dragClass: 'sortable-drag',
+            onEnd: function(evt) {
+                console.log('[드래그 완료] 이전 인덱스:', evt.oldIndex, '→ 새 인덱스:', evt.newIndex);
+
+                // 순서가 변경되었으면 순서 재계산 및 저장 버튼 표시
+                if (evt.oldIndex !== evt.newIndex) {
+                    recalculateDisplayOrder(type);
+                    updateOrderSaveSection(type, true);
+                }
+            }
+        });
+
+        console.log(`[Sortable] ${type} 갤러리 초기화 완료`);
+    }
+
+    // 드래그 후 노출된 사진들의 display_order 재계산
+    function recalculateDisplayOrder(type) {
+        const gallery = document.getElementById(type + 'Gallery');
+        const visiblePhotos = gallery.querySelectorAll('.gallery-item.visible-photo');
+
+        console.log(`[순서 재계산] ${type}: 노출중인 사진 ${visiblePhotos.length}개`);
+
+        visiblePhotos.forEach((photoElement, index) => {
+            const newOrder = index + 1;
+            const orderBadge = photoElement.querySelector('.display-order-badge');
+
+            if (orderBadge) {
+                orderBadge.textContent = newOrder;
+                orderBadge.classList.remove('empty');
+                orderBadge.classList.add('selected');
+            }
+
+            // dataset 업데이트
+            photoElement.dataset.displayOrder = newOrder;
+
+            console.log(`[순서 재계산] Photo ID ${photoElement.dataset.photoId} → 순서: ${newOrder}`);
+        });
     }
 
     // 전체선택/전체해제 토글
@@ -1467,6 +1881,49 @@
         }
     }
 
+    // 노출중인 사진 순서 재계산 (1, 2, 3, 4, 5로 정렬)
+    async function reorderVisiblePhotos(type) {
+        console.log(`[순서 재계산] ${type} 타입의 노출중인 사진 순서 업데이트 중...`);
+
+        // 노출중인 사진들을 display_order 순으로 가져오기
+        const { data: visiblePhotos, error } = await supabaseClient
+            .from("photos")
+            .select("id, display_order")
+            .eq("photo_type", type)
+            .eq("is_visible", true)
+            .order("display_order", { ascending: true, nullsFirst: false })
+            .order("created_at", { ascending: false });
+
+        if (error) {
+            console.error('[순서 재계산 실패]', error);
+            return;
+        }
+
+        if (!visiblePhotos || visiblePhotos.length === 0) {
+            console.log('[순서 재계산] 노출중인 사진 없음');
+            return;
+        }
+
+        console.log(`[순서 재계산] ${visiblePhotos.length}개 사진 발견`);
+
+        // 1, 2, 3, 4, 5로 순서 재지정
+        for (let i = 0; i < visiblePhotos.length; i++) {
+            const photo = visiblePhotos[i];
+            const newOrder = i + 1;
+
+            if (photo.display_order !== newOrder) {
+                await supabaseClient
+                    .from("photos")
+                    .update({ display_order: newOrder })
+                    .eq("id", photo.id);
+
+                console.log(`[순서 재계산] Photo ${photo.id}: ${photo.display_order} → ${newOrder}`);
+            }
+        }
+
+        console.log('[순서 재계산] 완료');
+    }
+
     // 노출 상태 일괄 변경
     async function bulkSetVisibility(type, isVisible) {
         if (selectedPhotos[type].size === 0) {
@@ -1525,6 +1982,9 @@
             // 선택 해제
             selectedPhotos[type].clear();
 
+            // 순서 재계산
+            await reorderVisiblePhotos(type);
+
             // 갤러리 새로고침
             if (type === 'users') {
                 loadUserPhotos();
@@ -1536,6 +1996,141 @@
         } catch (error) {
             console.error('[bulkSetVisibility] 전체 실패:', error);
             alert('노출 상태 변경에 실패했습니다.\n\n에러: ' + error.message + '\n\nSupabase에서 다음 SQL을 실행했는지 확인해주세요:\nALTER TABLE photos ADD COLUMN IF NOT EXISTS is_visible boolean DEFAULT true;');
+        }
+    }
+
+    // 순서 선택 토글 (클릭한 순서대로 1, 2, 3, ...)
+    function toggleDisplayOrderSelection(type, photoId, event) {
+        event.stopPropagation(); // 이벤트 버블링 방지
+
+        const orderArray = displayOrderSelection[type];
+        const existingIndex = orderArray.indexOf(photoId);
+
+        if (existingIndex !== -1) {
+            // 이미 선택됨 → 선택 해제
+            orderArray.splice(existingIndex, 1);
+        } else {
+            // 새로 선택
+            orderArray.push(photoId);
+        }
+
+        console.log(`[순서 선택] ${type}:`, orderArray);
+
+        // UI 업데이트
+        updateOrderBadgesUI(type);
+        updateOrderSaveSection(type);
+    }
+
+    // 순서 배지 UI 업데이트
+    function updateOrderBadgesUI(type) {
+        const orderArray = displayOrderSelection[type];
+        const gallery = document.getElementById(type + 'Gallery');
+        const badges = gallery.querySelectorAll('.display-order-badge');
+
+        badges.forEach(badge => {
+            const photoId = parseInt(badge.dataset.photoId);
+            const orderPosition = orderArray.indexOf(photoId);
+
+            if (orderPosition !== -1) {
+                badge.textContent = orderPosition + 1;
+                badge.classList.add('selected');
+                badge.classList.remove('empty');
+            } else {
+                badge.textContent = '';
+                badge.classList.remove('selected');
+                badge.classList.add('empty');
+            }
+        });
+    }
+
+    // 순서 저장 섹션 업데이트
+    function updateOrderSaveSection(type, hasChanges) {
+        const saveSection = document.getElementById(type + 'OrderSaveSection');
+        const countSpan = document.getElementById(type + 'OrderCount');
+
+        if (!saveSection) return;
+
+        // 노출중인 사진 개수 계산
+        const gallery = document.getElementById(type + 'Gallery');
+        const visiblePhotos = gallery.querySelectorAll('.visible-photo');
+        const count = visiblePhotos.length;
+
+        if (countSpan) {
+            countSpan.textContent = count;
+        }
+
+        if (hasChanges && count > 0) {
+            saveSection.classList.add('active');
+        } else {
+            saveSection.classList.remove('active');
+        }
+    }
+
+    // 순서 저장 (드래그로 변경된 순서)
+    async function saveDisplayOrder(type) {
+        const gallery = document.getElementById(type + 'Gallery');
+        const visiblePhotos = gallery.querySelectorAll('.visible-photo');
+
+        if (visiblePhotos.length === 0) {
+            alert('노출중인 사진이 없습니다');
+            return;
+        }
+
+        if (!confirm(`${visiblePhotos.length}개 사진의 순서를 저장하시겠습니까?`)) {
+            return;
+        }
+
+        console.log(`[순서 저장] ${type}: ${visiblePhotos.length}개 사진`);
+
+        try {
+            // 현재 갤러리의 순서대로 display_order 업데이트
+            for (let i = 0; i < visiblePhotos.length; i++) {
+                const photoId = parseInt(visiblePhotos[i].dataset.photoId);
+                const newOrder = i + 1;
+
+                await supabaseClient
+                    .from("photos")
+                    .update({ display_order: newOrder })
+                    .eq("id", photoId);
+
+                console.log(`[순서 저장] Photo ${photoId} → 순서: ${newOrder}`);
+            }
+
+            alert('순서가 저장되었습니다!');
+
+            // 갤러리 새로고침
+            loadGallery(type);
+        } catch (error) {
+            console.error('[순서 저장 실패]', error);
+            alert('순서 저장에 실패했습니다: ' + error.message);
+        }
+    }
+
+    // 노출 순서 업데이트 (개별, 사용하지 않음 - 삭제 가능)
+    async function updateDisplayOrder(type, photoId, order) {
+        const orderValue = order ? parseInt(order) : null;
+
+        console.log(`[순서 변경] Photo ${photoId} → 순서: ${orderValue}`);
+
+        try {
+            const { data, error } = await supabaseClient
+                .from("photos")
+                .update({ display_order: orderValue })
+                .eq("id", photoId)
+                .select();
+
+            if (error) {
+                console.error('[순서 변경 실패]', error);
+                alert('순서 변경에 실패했습니다: ' + error.message);
+            } else {
+                console.log('[순서 변경 성공]', data);
+                // 순서 재계산 후 갤러리 새로고침
+                await reorderVisiblePhotos(type);
+                loadGallery(type);
+            }
+        } catch (error) {
+            console.error('[순서 변경 예외]', error);
+            alert('순서 변경 중 오류가 발생했습니다.');
         }
     }
 
@@ -1643,17 +2238,51 @@
                 ? pendingVisibilityChanges[type].get(photoId)
                 : dbVisibility;
 
+            // 테두리 색상 결정
+            let borderColor = '#ddd';
+            let borderWidth = '2px';
+
+            if (hasPending) {
+                // 변경사항이 있는 경우
+                if (dbVisibility && !currentVisibility) {
+                    // 노출 -> 미노출: 빨강
+                    borderColor = '#f44336';
+                    borderWidth = '3px';
+                } else if (!dbVisibility && currentVisibility) {
+                    // 미노출 -> 노출: 초록
+                    borderColor = '#4caf50';
+                    borderWidth = '3px';
+                }
+            } else {
+                // 변경사항 없는 경우
+                if (!dbVisibility) {
+                    // 기존 미노출: 회색
+                    borderColor = '#999';
+                    borderWidth = '2px';
+                } else {
+                    // 기존 노출: 초록
+                    borderColor = '#4caf50';
+                    borderWidth = '3px';
+                }
+            }
+
             // 이미지 스타일 업데이트
+            img.style.border = `${borderWidth} solid ${borderColor}`;
+
+            // 배지 업데이트
             if (currentVisibility) {
-                img.style.opacity = '1';
-                img.style.border = '3px solid #4caf50';
                 badge.textContent = '노출중';
                 badge.className = 'visibility-badge';
             } else {
-                img.style.opacity = '0.4';
-                img.style.border = '2px solid #ff6b6b';
                 badge.textContent = '숨김';
                 badge.className = 'visibility-badge hidden';
+            }
+
+            // visible-photo 클래스 업데이트
+            if (currentVisibility) {
+                photoElement.classList.add('visible-photo');
+            } else {
+                photoElement.classList.remove('visible-photo');
             }
 
             // pending 표시
@@ -1784,10 +2413,18 @@
             // 전체보기: 일반 그리드 표시
             data.forEach(photo => {
                 const galleryItem = document.createElement("div");
-                galleryItem.className = "gallery-item";
 
                 // is_visible 기본값 처리 (undefined/null이면 true)
                 const isVisible = photo.is_visible !== false;
+
+                // del_yn 체크 (게스트가 삭제한 사진)
+                const isDeleted = photo.del_yn === 'Y';
+
+                let className = "gallery-item";
+                if (isDeleted) {
+                    className += " deleted-photo";
+                }
+                galleryItem.className = className;
 
                 const itemStyle = isVisible ? '' : 'opacity: 0.4; border: 2px solid #ff6b6b;';
                 const visibilityBadge = isVisible
@@ -1840,10 +2477,18 @@
 
                 photos.forEach(photo => {
                     const galleryItem = document.createElement("div");
-                    galleryItem.className = "gallery-item";
 
                     // is_visible 기본값 처리 (undefined/null이면 true)
                     const isVisible = photo.is_visible !== false;
+
+                    // del_yn 체크 (게스트가 삭제한 사진)
+                    const isDeleted = photo.del_yn === 'Y';
+
+                    let className = "gallery-item";
+                    if (isDeleted) {
+                        className += " deleted-photo";
+                    }
+                    galleryItem.className = className;
 
                     const itemStyle = isVisible ? '' : 'opacity: 0.4; border: 2px solid #ff6b6b;';
                     const visibilityBadge = isVisible
@@ -1941,10 +2586,18 @@
 
         data.forEach(photo => {
             const galleryItem = document.createElement("div");
-            galleryItem.className = "gallery-item";
 
             // is_visible 기본값 처리 (undefined/null이면 true)
             const isVisible = photo.is_visible !== false;
+
+            // del_yn 체크 (게스트가 삭제한 사진)
+            const isDeleted = photo.del_yn === 'Y';
+
+            let className = "gallery-item";
+            if (isDeleted) {
+                className += " deleted-photo";
+            }
+            galleryItem.className = className;
 
             // 체크박스는 is_visible과 무관하게 항상 비활성화 상태로 시작
             galleryItem.innerHTML = `
@@ -1964,17 +2617,28 @@
 
     // 방명록 관리
     let allGuestbookData = [];
+    let originalGuestbookOrder = []; // 원본 순서 저장
+    let guestbookVisibilityChanges = new Map(); // 노출 상태 변경 추적 (id -> is_visible)
+
+    let guestbookSortable = null;
 
     async function loadGuestbookAdmin() {
         try {
             const { data, error } = await supabaseClient
                 .from("guestbook")
                 .select("*")
-                .order("created_at", { ascending: false });
+                .order("display_order", { ascending: true, nullsFirst: false })
+                .order("created_at", { ascending: true });
 
             if (error) throw error;
 
             allGuestbookData = data || [];
+
+            // 원본 순서 저장 (ID 배열)
+            originalGuestbookOrder = allGuestbookData.map(item => item.id);
+
+            // 변경사항 초기화
+            guestbookVisibilityChanges.clear();
 
             // 통계
             const total = data.length;
@@ -1989,21 +2653,139 @@
             document.getElementById('guestbookRecentName').textContent = recentName;
 
             renderGuestbookTable(data);
+            initGuestbookSortable();
+            updateGuestbookSaveButton(); // 저장 버튼 상태 업데이트
         } catch (error) {
             console.error('방명록 로드 실패:', error);
         }
+    }
+
+    function initGuestbookSortable() {
+        const tbody = document.getElementById('guestbookTableBody');
+
+        if (guestbookSortable) {
+            guestbookSortable.destroy();
+        }
+
+        if (typeof Sortable !== 'undefined') {
+            guestbookSortable = Sortable.create(tbody, {
+                animation: 200,
+                handle: 'tr',
+                ghostClass: 'sortable-ghost',
+                dragClass: 'sortable-drag',
+                onEnd: function(evt) {
+                    console.log('[방명록 드래그] 이전:', evt.oldIndex, '→ 새:', evt.newIndex);
+                    updateGuestbookOrderNumbers();
+                    updateGuestbookSaveButton();
+                }
+            });
+        }
+    }
+
+    function updateGuestbookOrderNumbers() {
+        const tbody = document.getElementById('guestbookTableBody');
+        const rows = tbody.querySelectorAll('tr');
+
+        rows.forEach((row, index) => {
+            const orderCell = row.querySelector('.order-number');
+            if (orderCell) {
+                orderCell.textContent = index + 1;
+            }
+        });
+    }
+
+    function toggleGuestbookVisibility(guestbookId) {
+        // 현재 상태 가져오기
+        const currentVisibility = guestbookVisibilityChanges.has(guestbookId)
+            ? guestbookVisibilityChanges.get(guestbookId)
+            : allGuestbookData.find(item => item.id === guestbookId)?.is_visible;
+
+        // 상태 순환: null(회색) -> Y(초록) -> N(빨강) -> null
+        let newVisibility;
+        if (!currentVisibility || currentVisibility === 'null') {
+            newVisibility = 'Y';
+        } else if (currentVisibility === 'Y') {
+            newVisibility = 'N';
+        } else {
+            newVisibility = null;
+        }
+
+        // 변경사항 저장
+        guestbookVisibilityChanges.set(guestbookId, newVisibility);
+
+        console.log(`[방명록] ID ${guestbookId} 상태 변경: ${currentVisibility} → ${newVisibility}`);
+
+        // UI 업데이트
+        updateGuestbookStatusBadge(guestbookId, newVisibility);
+        updateGuestbookSaveButton();
+    }
+
+    function updateGuestbookStatusBadge(guestbookId, visibility) {
+        const badge = document.querySelector(`.guestbook-status-badge[data-guestbook-id="${guestbookId}"]`);
+        if (!badge) return;
+
+        let statusColor, statusText, statusBg;
+        if (visibility === 'Y') {
+            statusColor = '#4caf50';
+            statusText = '노출';
+            statusBg = '#e8f5e9';
+        } else if (visibility === 'N') {
+            statusColor = '#f44336';
+            statusText = '미노출';
+            statusBg = '#ffebee';
+        } else {
+            statusColor = '#999';
+            statusText = '미설정';
+            statusBg = '#f5f5f5';
+        }
+
+        badge.style.background = statusBg;
+        badge.style.color = statusColor;
+        badge.style.borderColor = statusColor;
+        badge.textContent = statusText;
+    }
+
+    function updateGuestbookSaveButton() {
+        const tbody = document.getElementById('guestbookTableBody');
+        const rows = tbody.querySelectorAll('tr');
+        const saveSection = document.getElementById('guestbookSaveSection');
+
+        // 현재 순서 (ID 배열)
+        const currentOrder = Array.from(rows).map(row => parseInt(row.dataset.guestbookId));
+
+        // 순서 변경 체크
+        const orderChanged = !arraysEqual(originalGuestbookOrder, currentOrder);
+
+        // 노출 상태 변경 체크
+        const visibilityChanged = guestbookVisibilityChanges.size > 0;
+
+        // 변경사항이 있으면 저장 버튼 표시
+        if (orderChanged || visibilityChanged) {
+            saveSection.style.display = 'block';
+            console.log(`[방명록] 변경 감지 - 순서: ${orderChanged}, 노출: ${visibilityChanged}`);
+        } else {
+            saveSection.style.display = 'none';
+        }
+    }
+
+    function arraysEqual(arr1, arr2) {
+        if (arr1.length !== arr2.length) return false;
+        for (let i = 0; i < arr1.length; i++) {
+            if (arr1[i] !== arr2[i]) return false;
+        }
+        return true;
     }
 
     function renderGuestbookTable(data) {
         const tbody = document.getElementById('guestbookTableBody');
 
         if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="padding: 40px; text-align: center; color: #999;">방명록이 없습니다</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="padding: 40px; text-align: center; color: #999;">방명록이 없습니다</td></tr>';
             return;
         }
 
         tbody.innerHTML = '';
-        data.forEach(item => {
+        data.forEach((item, index) => {
             const date = new Date(item.created_at).toLocaleString('ko-KR', {
                 year: 'numeric',
                 month: '2-digit',
@@ -2012,19 +2794,79 @@
                 minute: '2-digit'
             });
 
+            // 현재 노출 상태 (변경사항이 있으면 그것 사용, 없으면 DB 값)
+            const currentVisibility = guestbookVisibilityChanges.has(item.id)
+                ? guestbookVisibilityChanges.get(item.id)
+                : item.is_visible;
+
+            // 상태에 따른 색상 및 텍스트
+            let statusColor, statusText, statusBg;
+            if (currentVisibility === 'Y') {
+                statusColor = '#4caf50';
+                statusText = '노출';
+                statusBg = '#e8f5e9';
+            } else if (currentVisibility === 'N') {
+                statusColor = '#f44336';
+                statusText = '미노출';
+                statusBg = '#ffebee';
+            } else {
+                statusColor = '#999';
+                statusText = '미설정';
+                statusBg = '#f5f5f5';
+            }
+
             const row = document.createElement('tr');
             row.style.borderBottom = '1px solid #f0f0f0';
-            row.innerHTML = `
-                <td style="padding: 12px; font-size: 13px; font-weight: 600; color: #333;">${item.name}</td>
-                <td style="padding: 12px; font-size: 13px; color: #555; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.message}">${item.message}</td>
-                <td style="padding: 12px; font-size: 12px; color: #999;">${date}</td>
-                <td style="padding: 12px; text-align: center;">
-                    <button onclick="deleteGuestbookAdmin(${item.id})"
-                            style="padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer;">
-                        삭제
-                    </button>
-                </td>
+            row.dataset.guestbookId = item.id;
+            row.dataset.dbVisibility = item.is_visible || 'null';
+
+            const orderCell = document.createElement('td');
+            orderCell.className = 'order-number';
+            orderCell.style.cssText = 'padding: 12px; text-align: center; font-size: 16px; font-weight: 700; color: #764ba2; cursor: grab;';
+            orderCell.textContent = index + 1;
+
+            const statusCell = document.createElement('td');
+            statusCell.style.cssText = 'padding: 12px; text-align: center; cursor: pointer;';
+            statusCell.onclick = (e) => {
+                e.stopPropagation();
+                toggleGuestbookVisibility(item.id);
+            };
+            statusCell.innerHTML = `
+                <div class="guestbook-status-badge" data-guestbook-id="${item.id}"
+                     style="display: inline-block; padding: 6px 12px; background: ${statusBg}; color: ${statusColor};
+                            border-radius: 12px; font-size: 11px; font-weight: 600; border: 1px solid ${statusColor};">
+                    ${statusText}
+                </div>
             `;
+
+            const nameCell = document.createElement('td');
+            nameCell.style.cssText = 'padding: 12px; font-size: 13px; font-weight: 600; color: #333;';
+            nameCell.textContent = item.name;
+
+            const messageCell = document.createElement('td');
+            messageCell.style.cssText = 'padding: 12px; font-size: 13px; color: #555; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
+            messageCell.title = item.message;
+            messageCell.textContent = item.message;
+
+            const dateCell = document.createElement('td');
+            dateCell.style.cssText = 'padding: 12px; font-size: 12px; color: #999;';
+            dateCell.textContent = date;
+
+            const actionCell = document.createElement('td');
+            actionCell.style.cssText = 'padding: 12px; text-align: center;';
+            actionCell.innerHTML = `
+                <button onclick="deleteGuestbookAdmin(${item.id})"
+                        style="padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                    삭제
+                </button>
+            `;
+
+            row.appendChild(orderCell);
+            row.appendChild(statusCell);
+            row.appendChild(nameCell);
+            row.appendChild(messageCell);
+            row.appendChild(dateCell);
+            row.appendChild(actionCell);
             tbody.appendChild(row);
         });
     }
@@ -2043,6 +2885,60 @@
         );
 
         renderGuestbookTable(filtered);
+    }
+
+    async function saveGuestbookChanges() {
+        const tbody = document.getElementById('guestbookTableBody');
+        const rows = tbody.querySelectorAll('tr');
+
+        if (rows.length === 0) {
+            alert('저장할 방명록이 없습니다.');
+            return;
+        }
+
+        if (!confirm('변경사항을 저장하시겠습니까?')) {
+            return;
+        }
+
+        try {
+            // 1. 순서 및 노출 상태 저장
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const guestbookId = parseInt(row.dataset.guestbookId);
+                const newOrder = i + 1;
+
+                // 업데이트할 데이터 준비
+                const updateData = { display_order: newOrder };
+
+                // 노출 상태 변경이 있으면 추가
+                if (guestbookVisibilityChanges.has(guestbookId)) {
+                    updateData.is_visible = guestbookVisibilityChanges.get(guestbookId);
+                }
+
+                await supabaseClient
+                    .from("guestbook")
+                    .update(updateData)
+                    .eq("id", guestbookId);
+
+                console.log(`방명록 ${guestbookId} 저장:`, updateData);
+            }
+
+            // 2. 변경사항 초기화
+            originalGuestbookOrder = Array.from(rows).map(row => parseInt(row.dataset.guestbookId));
+            guestbookVisibilityChanges.clear();
+
+            // 3. 저장 버튼 숨기기
+            document.getElementById('guestbookSaveSection').style.display = 'none';
+
+            alert('변경사항이 저장되었습니다!');
+            console.log('[방명록] 변경사항 저장 완료');
+
+            // 4. 데이터 다시 로드
+            loadGuestbookAdmin();
+        } catch (error) {
+            console.error('변경사항 저장 실패:', error);
+            alert('변경사항 저장에 실패했습니다.');
+        }
     }
 
     async function deleteGuestbookAdmin(id) {

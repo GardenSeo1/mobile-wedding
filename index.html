@@ -426,12 +426,29 @@
             background: #fafaf8;
             padding: 20px;
             border-radius: 12px;
+            position: relative;
         }
 
         .guestbook-header {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 12px;
+        }
+
+        .guestbook-delete-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .guestbook-delete-btn:hover {
+            background: #ee5252;
         }
 
         .guestbook-name {
@@ -1196,7 +1213,6 @@
         <div class="gallery-tabs">
             <button class="gallery-tab active" onclick="switchTab('all')">전체</button>
             <button class="gallery-tab" onclick="switchTab('admin')">웨딩사진</button>
-            <button class="gallery-tab" onclick="switchTab('guest')">축하사진</button>
         </div>
         <div class="gallery-grid" id="gallery">
             <div class="gallery-item">SUB SAMPLE 1</div>
@@ -1218,7 +1234,7 @@
         <div style="margin-bottom: 15px;">
             <input type="text" id="uploaderName" placeholder="이름을 입력해주세요" oninput="checkUploadButtonState()"
                    style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit; margin-bottom: 10px;">
-            <input type="password" id="uploaderPassword" placeholder="사진 삭제용 비밀번호 (4자 이상)" oninput="checkUploadButtonState()"
+            <input type="password" id="uploaderPassword" placeholder="비밀번호 (4자 이상)" oninput="checkUploadButtonState()"
                    style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit;">
         </div>
 
@@ -1231,9 +1247,14 @@
 
         <div class="preview-grid" id="previewGrid"></div>
 
-        <button class="upload-btn" id="uploadBtn" onclick="uploadPhotos()" disabled>
-            업로드하기
-        </button>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button class="upload-btn" id="uploadBtn" onclick="uploadPhotos()" disabled style="flex: 1;">
+                📤 업로드하기
+            </button>
+            <button class="upload-btn" onclick="viewMyPhotos()" style="flex: 1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                🖼️ 내 사진 보기
+            </button>
+        </div>
 
         <div class="status-message" id="uploadStatus"></div>
     </section>
@@ -1345,14 +1366,14 @@
             </div>
             <div class="account-item">
                 <div class="account-info">
-                    <div class="bank">신랑 모 김활연 | 국민은행</div>
-                    <div class="number">123-456-789012</div>
+                    <div class="bank">신랑 모 김활연 | 새마을금고</div>
+                    <div class="number">9003-2549-1086-8</div>
                 </div>
-                <button class="copy-btn" onclick="copyAccount('123-456-789012')">복사</button>
+                <button class="copy-btn" onclick="copyAccount('9003-2549-1086-8')">복사</button>
             </div>
-            <a href="https://qr.kakaopay.com/YOUR_KAKAOPAY_CODE" class="kakaopay-btn" style="display: block; margin-top: 15px; padding: 12px; text-align: center; border-radius: 8px; text-decoration: none;">
-                💳 카카오페이 송금
-            </a>
+<!--            <a href="https://qr.kakaopay.com/Ej8sXYGlw" class="kakaopay-btn" style="display: block; margin-top: 15px; padding: 12px; text-align: center; border-radius: 8px; text-decoration: none;">-->
+<!--                💳 카카오페이 송금-->
+<!--            </a>-->
         </div>
 
         <div class="account-box">
@@ -1378,9 +1399,9 @@
 <!--                </div>-->
 <!--                <button class="copy-btn" onclick="copyAccount('1002-123-456789')">복사</button>-->
 <!--            </div>-->
-            <a href="https://qr.kakaopay.com/YOUR_KAKAOPAY_CODE" class="kakaopay-btn" style="display: block; margin-top: 15px; padding: 12px; text-align: center; border-radius: 8px; text-decoration: none;">
-                💳 카카오페이 송금
-            </a>
+<!--            <a href="https://qr.kakaopay.com/Ej9EHQCMh" class="kakaopay-btn" style="display: block; margin-top: 15px; padding: 12px; text-align: center; border-radius: 8px; text-decoration: none;">-->
+<!--                💳 카카오페이 송금-->
+<!--            </a>-->
         </div>
     </section>
 
@@ -1418,6 +1439,24 @@
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
     <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
     <img id="lightboxImg" src="" alt="">
+</div>
+
+<!-- 내 사진 보기 모달 -->
+<div class="modal" id="myPhotosModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">내가 올린 사진</div>
+            <button class="modal-close" onclick="closeMyPhotosModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="myPhotosGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 20px;">
+                <!-- 사진이 여기에 동적으로 로드됩니다 -->
+            </div>
+            <div id="myPhotosEmpty" style="display: none; text-align: center; padding: 40px; color: #999;">
+                업로드한 사진이 없습니다
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- RSVP 모달 -->
@@ -1522,7 +1561,7 @@
         "https://fupncptwrevxjlanbnsc.supabase.co",
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1cG5jcHR3cmV2eGpsYW5ibnNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3OTg4ODYsImV4cCI6MjA4NzM3NDg4Nn0.cjkLp94xTl56r8Q4ahy4Zx192yvBULPjNX33XJCoHzI"
     );
-    console.log('✅ Supabase 초기화 성공!');
+    //console.log('✅ Supabase 초기화 성공!');
 
     let selectedFiles = [];
     let currentTab = 'all';
@@ -1643,7 +1682,7 @@
     // 갤러리 로드
     async function loadGallery() {
         if (!supabaseClient) {
-            console.log('Supabase가 초기화되지 않았습니다.');
+            //console.log('Supabase가 초기화되지 않았습니다.');
             return;
         }
 
@@ -1652,9 +1691,14 @@
                 .from("photos")
                 .select("*")
                 .eq("is_visible", true)
+                .order("display_order", { ascending: true, nullsFirst: false })
                 .order("created_at", { ascending: false });
 
-            if (currentTab !== 'all') {
+            if (currentTab === 'all') {
+                // 전체 탭: guest 사진 제외 (main + admin만)
+                query = query.in("photo_type", ["main", "admin"]);
+            } else {
+                // 특정 탭: 해당 타입만
                 query = query.eq("photo_type", currentTab);
             }
 
@@ -1759,13 +1803,24 @@
         const status = document.getElementById('uploadStatus');
 
         uploadBtn.disabled = true;
-        uploadBtn.textContent = '업로드 중...';
 
         let uploaded = 0;
         let failed = 0;
+        const totalFiles = selectedFiles.length;
+
+        // 진행 상황 표시
+        status.className = 'status-message';
+        status.style.display = 'block';
 
         for (let i = 0; i < selectedFiles.length; i++) {
             const file = selectedFiles[i];
+            const currentIndex = i + 1;
+            const progress = Math.round((currentIndex / totalFiles) * 100);
+
+            // 진행률 표시
+            uploadBtn.textContent = `업로드 중... ${currentIndex}/${totalFiles} (${progress}%)`;
+            status.textContent = `사진 업로드 중... ${currentIndex}/${totalFiles}`;
+
             const timestamp = Date.now();
             const filePath = 'guest/' + timestamp + '_' + i + '_' + file.name;
 
@@ -1777,6 +1832,8 @@
 
                 if (uploadError) {
                     console.error('Storage 업로드 실패:', uploadError);
+                    console.error('파일명:', file.name, '파일 경로:', filePath);
+                    console.error('에러 상세:', JSON.stringify(uploadError));
                     failed++;
                     continue;
                 }
@@ -1787,11 +1844,13 @@
                     image_url: imageUrl,
                     photo_type: 'guest',
                     uploader_name: uploaderName,
-                    password: uploaderPassword
+                    password: uploaderPassword,
+                    del_yn: 'N'
                 }]);
 
                 if (insertError) {
                     console.error('DB 삽입 실패:', insertError);
+                    console.error('DB 에러 상세:', JSON.stringify(insertError));
                     // Storage에서 업로드된 파일 삭제
                     await supabaseClient.storage.from('wedding_photos').remove([filePath]);
                     failed++;
@@ -1801,12 +1860,13 @@
                 uploaded++;
             } catch (err) {
                 console.error('업로드 중 오류:', err);
+                console.error('파일명:', file.name);
                 failed++;
             }
         }
 
         uploadBtn.disabled = false;
-        uploadBtn.textContent = '업로드하기';
+        uploadBtn.textContent = '📤 업로드하기';
         document.getElementById('guestFileInput').value = '';
         document.getElementById('uploaderName').value = '';
         document.getElementById('uploaderPassword').value = '';
@@ -1822,14 +1882,15 @@
             status.textContent = uploaded + '개 업로드 성공, ' + failed + '개 실패했습니다.';
         } else {
             status.className = 'status-message error';
-            status.textContent = '사진 업로드에 실패했습니다. 다시 시도해주세요.';
+            status.textContent = '사진 업로드에 실패했습니다. 브라우저 콘솔(F12)을 확인해주세요.';
+            console.error('=== 업로드 실패 요약 ===');
+            console.error('전체:', totalFiles + '개');
+            console.error('실패:', failed + '개');
         }
         status.style.display = 'block';
-        setTimeout(() => status.style.display = 'none', 4000);
+        setTimeout(() => status.style.display = 'none', 7000);
 
-        if (uploaded > 0) {
-            loadGallery();
-        }
+        // guest 사진은 갤러리에 표시되지 않으므로 새로고침 불필요
     }
 
     // 사진 삭제
@@ -1901,6 +1962,153 @@
         }
     }
 
+    // 내 사진 보기
+    async function viewMyPhotos() {
+        const name = prompt('이름을 입력해주세요:');
+        if (!name || !name.trim()) {
+            return;
+        }
+
+        const password = prompt('비밀번호를 입력해주세요:');
+        if (!password || !password.trim()) {
+            return;
+        }
+
+        if (!supabaseClient) {
+            alert('데이터베이스 연결에 실패했습니다.');
+            return;
+        }
+
+        try {
+            // 이름과 비밀번호가 일치하는 사진 조회 (삭제되지 않은 것만)
+            const { data: photos, error } = await supabaseClient
+                .from('photos')
+                .select('*')
+                .eq('uploader_name', name.trim())
+                .eq('password', password.trim())
+                .eq('photo_type', 'guest')
+                .eq('del_yn', 'N')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('사진 조회 실패:', error);
+                alert('사진을 불러오는데 실패했습니다. 관리자에게 문의해주세요.');
+                return;
+            }
+
+            // 모달 열기
+            const modal = document.getElementById('myPhotosModal');
+            const grid = document.getElementById('myPhotosGrid');
+            const empty = document.getElementById('myPhotosEmpty');
+
+            // 조회는 성공했지만 사진이 없는 경우
+            if (!photos || photos.length === 0) {
+                grid.style.display = 'none';
+                empty.style.display = 'block';
+                empty.innerHTML = '<p style="font-size: 14px;">해당 이름과 비밀번호로<br>업로드한 사진이 없습니다</p>';
+            } else {
+                // 사진이 있는 경우
+                empty.style.display = 'none';
+                grid.style.display = 'grid';
+                grid.innerHTML = '';
+
+                photos.forEach(photo => {
+                    const item = document.createElement('div');
+                    item.style.position = 'relative';
+                    item.setAttribute('data-photo-id', photo.id); // 사진 ID 저장
+
+                    const img = document.createElement('img');
+                    img.src = photo.image_url;
+                    img.alt = '';
+                    img.style.cssText = 'width: 100%; height: 150px; object-fit: cover; border-radius: 8px; cursor: pointer;';
+                    img.onclick = () => openLightbox(photo.image_url);
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = '×';
+                    deleteBtn.style.cssText = 'position: absolute; top: 5px; right: 5px; background: rgba(255,0,0,0.8); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 16px; font-weight: bold;';
+                    deleteBtn.onclick = () => deleteMyPhoto(photo.id, photo.image_url, password.trim());
+
+                    item.appendChild(img);
+                    item.appendChild(deleteBtn);
+                    grid.appendChild(item);
+                });
+            }
+
+            modal.classList.add('active');
+        } catch (err) {
+            console.error('오류 발생:', err);
+            alert('사진을 불러오는데 실패했습니다.');
+        }
+    }
+
+    // 내 사진 모달 닫기
+    function closeMyPhotosModal() {
+        document.getElementById('myPhotosModal').classList.remove('active');
+    }
+
+    // 내 사진 삭제
+    async function deleteMyPhoto(photoId, imageUrl, password) {
+        if (!confirm('이 사진을 삭제하시겠습니까?')) {
+            return;
+        }
+
+        if (!supabaseClient) {
+            alert('데이터베이스 연결에 실패했습니다.');
+            return;
+        }
+
+        try {
+            // 비밀번호 재확인
+            const { data, error: selectError } = await supabaseClient
+                .from('photos')
+                .select('password')
+                .eq('id', photoId)
+                .single();
+
+            if (selectError || !data) {
+                alert('사진 정보를 찾을 수 없습니다.');
+                return;
+            }
+
+            if (data.password !== password) {
+                alert('비밀번호가 일치하지 않습니다.');
+                return;
+            }
+
+            // 실제 삭제 대신 del_yn을 'Y'로 업데이트 (관리자는 확인 가능)
+            const { error: updateError } = await supabaseClient
+                .from('photos')
+                .update({ del_yn: 'Y' })
+                .eq('id', photoId);
+
+            if (updateError) {
+                console.error('삭제 표시 실패:', updateError);
+                alert('사진 삭제에 실패했습니다.');
+                return;
+            }
+
+            // UI에서 해당 사진 제거
+            const grid = document.getElementById('myPhotosGrid');
+            const itemToRemove = grid.querySelector(`[data-photo-id="${photoId}"]`);
+            if (itemToRemove) {
+                itemToRemove.remove();
+            }
+
+            // 남은 사진이 없으면 empty 메시지 표시
+            if (grid.children.length === 0) {
+                grid.style.display = 'none';
+                const empty = document.getElementById('myPhotosEmpty');
+                empty.style.display = 'block';
+                empty.innerHTML = '<p style="font-size: 14px;">해당 이름과 비밀번호로<br>업로드한 사진이 없습니다</p>';
+            }
+
+            showToast('사진이 삭제되었습니다 ✓');
+        } catch (err) {
+            console.error('삭제 중 오류:', err);
+            alert('사진 삭제에 실패했습니다.');
+        }
+    }
+
     // 방명록 제출
     async function submitGuestbook() {
         if (!supabaseClient) {
@@ -1932,15 +2140,71 @@
         }
     }
 
-    // 방명록 로드
-    async function loadGuestbook() {
+    // 방명록 삭제
+    async function deleteGuestbookItem(itemId, itemName) {
+        const password = prompt(`"${itemName}"님의 방명록을 삭제하시려면\n작성 시 입력한 비밀번호를 입력해주세요:`);
+
+        if (!password || !password.trim()) {
+            return;
+        }
+
         if (!supabaseClient) {
-            console.log('Supabase가 초기화되지 않았습니다.');
+            alert('데이터베이스 연결에 실패했습니다.');
             return;
         }
 
         try {
-            const { data } = await supabaseClient.from("guestbook").select("*").order("created_at", { ascending: false });
+            // 비밀번호 확인
+            const { data, error: selectError } = await supabaseClient
+                .from('guestbook')
+                .select('password')
+                .eq('id', itemId)
+                .single();
+
+            if (selectError || !data) {
+                alert('방명록 정보를 찾을 수 없습니다.');
+                return;
+            }
+
+            if (data.password !== password.trim()) {
+                alert('비밀번호가 일치하지 않습니다.');
+                return;
+            }
+
+            // 삭제 실행
+            const { error: deleteError } = await supabaseClient
+                .from('guestbook')
+                .delete()
+                .eq('id', itemId);
+
+            if (deleteError) {
+                console.error('방명록 삭제 실패:', deleteError);
+                alert('방명록 삭제에 실패했습니다.');
+                return;
+            }
+
+            showToast('방명록이 삭제되었습니다 ✓');
+            loadGuestbook();
+        } catch (err) {
+            console.error('삭제 중 오류:', err);
+            alert('방명록 삭제에 실패했습니다.');
+        }
+    }
+
+    // 방명록 로드
+    async function loadGuestbook() {
+        if (!supabaseClient) {
+            //console.log('Supabase가 초기화되지 않았습니다.');
+            return;
+        }
+
+        try {
+            const { data } = await supabaseClient
+                .from("guestbook")
+                .select("*")
+                .eq("is_visible", "Y") // 노출 상태가 'Y'인 것만
+                .order("display_order", { ascending: true, nullsFirst: false })
+                .order("created_at", { ascending: true });
             const list = document.getElementById('guestbookList');
 
             if (!data || data.length === 0) {
@@ -1953,7 +2217,42 @@
                 const date = new Date(item.created_at).toLocaleDateString('ko-KR');
                 const div = document.createElement('div');
                 div.className = 'guestbook-item';
-                div.innerHTML = '<div class="guestbook-header"><div class="guestbook-name">' + item.name + '</div><div class="guestbook-date">' + date + '</div></div><div class="guestbook-message">' + item.message + '</div>';
+
+                // 헤더 생성
+                const header = document.createElement('div');
+                header.className = 'guestbook-header';
+
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'guestbook-name';
+                nameDiv.textContent = item.name;
+
+                const rightSection = document.createElement('div');
+                rightSection.style.display = 'flex';
+                rightSection.style.alignItems = 'center';
+                rightSection.style.gap = '10px';
+
+                const dateDiv = document.createElement('div');
+                dateDiv.className = 'guestbook-date';
+                dateDiv.textContent = date;
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'guestbook-delete-btn';
+                deleteBtn.textContent = '삭제';
+                deleteBtn.onclick = () => deleteGuestbookItem(item.id, item.name);
+
+                rightSection.appendChild(dateDiv);
+                rightSection.appendChild(deleteBtn);
+
+                header.appendChild(nameDiv);
+                header.appendChild(rightSection);
+
+                // 메시지 생성
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'guestbook-message';
+                messageDiv.textContent = item.message;
+
+                div.appendChild(header);
+                div.appendChild(messageDiv);
                 list.appendChild(div);
             });
         } catch (error) {
@@ -2011,7 +2310,7 @@
                 // 기본적으로 정보창 열어두기
                 infoWindow.open(map, marker);
 
-                console.log('✅ 네이버 지도 초기화 성공!');
+                //console.log('✅ 네이버 지도 초기화 성공!');
             } else {
                 // 네이버 지도 API가 로드되지 않은 경우 대체 텍스트 표시
                 document.getElementById('map').innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #999; font-size: 14px;">🗺️ 지도를 로드할 수 없습니다<br>아래 버튼으로 위치를 확인하세요</div>';
@@ -2025,7 +2324,7 @@
     // 메인 슬라이더 사진 로드
     async function loadMainSlider() {
         if (!supabaseClient) {
-            console.log('Supabase가 초기화되지 않았습니다.');
+            //console.log('Supabase가 초기화되지 않았습니다.');
             return;
         }
 
@@ -2060,7 +2359,7 @@
                 wrapper.appendChild(slide);
             });
 
-            console.log(`✅ 메인 사진 ${data.length}개 로드 완료!`);
+            //console.log(`✅ 메인 사진 ${data.length}개 로드 완료!`);
         } catch (error) {
             console.error('메인 슬라이더 로드 실패:', error);
         }
@@ -2084,7 +2383,7 @@
                     clickable: true,
                 },
             });
-            console.log('✅ Swiper 초기화 성공!');
+            //console.log('✅ Swiper 초기화 성공!');
         } else {
             console.error('❌ Swiper 라이브러리가 로드되지 않았습니다');
         }
@@ -2242,6 +2541,13 @@
             });
         }
 
+        const myPhotosModal = document.getElementById('myPhotosModal');
+        if (myPhotosModal) {
+            myPhotosModal.addEventListener('click', function(e) {
+                if (e.target === this) closeMyPhotosModal();
+            });
+        }
+
         // 초기화
         generateCalendar();
         updateDday();
@@ -2262,12 +2568,12 @@
                 once: true,
                 offset: 100
             });
-            console.log('✅ AOS 초기화 성공!');
+            //console.log('✅ AOS 초기화 성공!');
         } else {
             console.error('❌ AOS 라이브러리가 로드되지 않았습니다');
         }
 
-        console.log('페이지 로드 완료');
+        //console.log('페이지 로드 완료');
     }
 
     // 페이지 로드 후 초기화
@@ -2319,14 +2625,14 @@
         const tomorrow = new Date();
         tomorrow.setHours(24, 0, 0, 0); // 다음날 자정
         localStorage.setItem('hideRsvpPopup', tomorrow.getTime().toString());
-        console.log('[localStorage 저장] hideRsvpPopup 설정됨 (만료: ' + tomorrow.toLocaleString() + ')');
+        //console.log('[localStorage 저장] hideRsvpPopup 설정됨 (만료: ' + tomorrow.toLocaleString() + ')');
     }
 
     function shouldShowPopup() {
         const hideUntil = localStorage.getItem('hideRsvpPopup');
 
         if (!hideUntil) {
-            console.log('[localStorage] 저장된 값 없음 → 팝업 표시');
+            //console.log('[localStorage] 저장된 값 없음 → 팝업 표시');
             return true;
         }
 
@@ -2336,31 +2642,31 @@
         if (now > expiryTime) {
             // 만료됨
             localStorage.removeItem('hideRsvpPopup');
-            console.log('[localStorage] 만료됨 → 팝업 표시');
+            //console.log('[localStorage] 만료됨 → 팝업 표시');
             return true;
         }
 
-        console.log('[localStorage] 아직 유효함 → 팝업 숨김');
+        //console.log('[localStorage] 아직 유효함 → 팝업 숨김');
         return false;
     }
 
     // 팝업 열기
     function showRsvpPopup() {
-        console.log('[팝업] 표시');
+        //console.log('[팝업] 표시');
         const popup = document.getElementById('rsvpPopup');
         popup.classList.add('active');
     }
 
     // 팝업 닫기
     function closeRsvpPopup() {
-        console.log('[팝업] 닫기');
+        //console.log('[팝업] 닫기');
         const popup = document.getElementById('rsvpPopup');
         popup.classList.remove('active');
     }
 
     // 오늘 하루 보지 않기
     function closeRsvpPopupForToday() {
-        console.log('[팝업] 오늘 하루 보지 않기 클릭');
+        //console.log('[팝업] 오늘 하루 보지 않기 클릭');
         setHidePopup();
         closeRsvpPopup();
     }
@@ -2389,7 +2695,7 @@
 
     // 페이지 로드 시 팝업 표시 체크
     window.addEventListener('load', function() {
-        console.log('[페이지 로드] 팝업 표시 여부 확인');
+        //console.log('[페이지 로드] 팝업 표시 여부 확인');
 
         // localStorage 확인
         if (shouldShowPopup()) {

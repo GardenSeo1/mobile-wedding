@@ -93,7 +93,12 @@ All dependencies are loaded via CDN in the HTML files:
 -- photos table
 - id: auto-increment
 - image_url: text
-- photo_type: text ('admin' or 'guest')
+- photo_type: text ('main', 'admin', or 'guest')
+- uploader_name: text (게스트 사진 업로더 이름)
+- password: text (게스트 사진 업로더 비밀번호)
+- is_visible: boolean (메인 페이지 노출 여부, 기본값: false)
+- display_order: integer (노출 순서, 1-5)
+- del_yn: text ('Y' or 'N', 게스트가 삭제한 사진 표시, 기본값: 'N')
 - created_at: timestamp
 
 -- guestbook table
@@ -101,6 +106,8 @@ All dependencies are loaded via CDN in the HTML files:
 - name: text
 - password: text
 - message: text
+- display_order: integer (방명록 표시 순서)
+- is_visible: text ('Y' = 노출, 'N' = 미노출, NULL = 미설정)
 - created_at: timestamp
 
 -- rsvp table

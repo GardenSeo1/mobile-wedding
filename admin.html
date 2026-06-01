@@ -483,7 +483,7 @@
         <div class="upload-section">
             <div class="section-title">메인 슬라이더 사진 업로드</div>
             <div class="limit-info">
-                ⚠️ 메인 사진은 최대 5개까지 등록 가능합니다 (현재: <span id="mainPhotoCount">0</span>/5)
+                📷 메인 사진 업로드 (현재: <span id="mainPhotoCount">0</span>개)
             </div>
 
             <div class="file-input-wrapper">
@@ -491,7 +491,7 @@
                 <label class="file-input-label" for="mainFileInput">
                     <div style="font-size: 48px; margin-bottom: 10px;">📷</div>
                     <div>클릭하여 메인 사진을 선택하세요</div>
-                    <div style="font-size: 14px; color: #999; margin-top: 5px;">여러 장 선택 가능 (최대 5개)</div>
+                    <div style="font-size: 14px; color: #999; margin-top: 5px;">여러 장 선택 가능</div>
                 </label>
             </div>
 
@@ -535,14 +535,15 @@
             </div>
 
             <div class="select-all-wrapper">
-                <label>
-                    <input type="checkbox" id="selectAllMain" onchange="selectAll('main', this.checked)">
-                    전체 선택 (일괄 작업용)
-                </label>
+                <button class="action-btn" id="selectAllBtnMain" onclick="toggleSelectAll('main')" style="margin-bottom: 10px;">
+                    ☑️ 전체선택
+                </button>
             </div>
 
             <div class="bulk-actions" id="mainBulkActions">
                 <span class="bulk-actions-label">선택한 사진:</span>
+                <button class="action-btn" style="background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);" onclick="bulkSetVisibility('main', true)">노출</button>
+                <button class="action-btn" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);" onclick="bulkSetVisibility('main', false)">미노출</button>
                 <select id="mainBulkType">
                     <option value="">영역 선택</option>
                     <option value="main">메인 사진</option>
@@ -611,14 +612,15 @@
             </div>
 
             <div class="select-all-wrapper">
-                <label>
-                    <input type="checkbox" id="selectAllAdmin" onchange="selectAll('admin', this.checked)">
-                    전체 선택 (일괄 작업용)
-                </label>
+                <button class="action-btn" id="selectAllBtnAdmin" onclick="toggleSelectAll('admin')" style="margin-bottom: 10px;">
+                    ☑️ 전체선택
+                </button>
             </div>
 
             <div class="bulk-actions" id="adminBulkActions">
                 <span class="bulk-actions-label">선택한 사진:</span>
+                <button class="action-btn" style="background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);" onclick="bulkSetVisibility('admin', true)">✅ 노출</button>
+                <button class="action-btn" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);" onclick="bulkSetVisibility('admin', false)">🚫 미노출</button>
                 <select id="adminBulkType">
                     <option value="">영역 선택</option>
                     <option value="main">메인 사진</option>
@@ -676,14 +678,15 @@
             </div>
 
             <div class="select-all-wrapper">
-                <label>
-                    <input type="checkbox" id="selectAllGuest" onchange="selectAll('guest', this.checked)">
-                    전체 선택
-                </label>
+                <button class="action-btn" id="selectAllBtnGuest" onclick="toggleSelectAll('guest')" style="margin-bottom: 10px;">
+                    ☑️ 전체선택
+                </button>
             </div>
 
             <div class="bulk-actions" id="guestBulkActions">
                 <span class="bulk-actions-label">선택한 사진:</span>
+                <button class="action-btn" style="background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);" onclick="bulkSetVisibility('guest', true)">✅ 노출</button>
+                <button class="action-btn" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);" onclick="bulkSetVisibility('guest', false)">🚫 미노출</button>
                 <select id="guestBulkType">
                     <option value="">영역 선택</option>
                     <option value="main">메인 사진</option>
@@ -704,14 +707,15 @@
             <div class="section-title">전체 사진 목록 (모든 영역)</div>
 
             <div class="select-all-wrapper">
-                <label>
-                    <input type="checkbox" id="selectAllAll" onchange="selectAll('all', this.checked)">
-                    전체 선택
-                </label>
+                <button class="action-btn" id="selectAllBtnAll" onclick="toggleSelectAll('all')" style="margin-bottom: 10px;">
+                    ☑️ 전체선택
+                </button>
             </div>
 
             <div class="bulk-actions" id="allBulkActions">
                 <span class="bulk-actions-label">선택한 사진:</span>
+                <button class="action-btn" style="background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);" onclick="bulkSetVisibility('all', true)">✅ 노출</button>
+                <button class="action-btn" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);" onclick="bulkSetVisibility('all', false)">🚫 미노출</button>
                 <select id="allBulkType">
                     <option value="">영역 선택</option>
                     <option value="main">메인 사진</option>
@@ -748,14 +752,15 @@
             </div>
 
             <div class="select-all-wrapper" id="usersSelectAllWrapper" style="display: none;">
-                <label>
-                    <input type="checkbox" id="selectAllUsers" onchange="selectAll('users', this.checked)">
-                    전체 선택
-                </label>
+                <button class="action-btn" id="selectAllBtnUsers" onclick="toggleSelectAll('users')" style="margin-bottom: 10px;">
+                    ☑️ 전체선택
+                </button>
             </div>
 
             <div class="bulk-actions" id="usersBulkActions">
                 <span class="bulk-actions-label">선택한 사진:</span>
+                <button class="action-btn" style="background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);" onclick="bulkSetVisibility('users', true)">✅ 노출</button>
+                <button class="action-btn" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);" onclick="bulkSetVisibility('users', false)">🚫 미노출</button>
                 <select id="usersBulkType">
                     <option value="">영역 선택</option>
                     <option value="main">메인 사진</option>
@@ -942,6 +947,15 @@
         users: new Set()
     };
 
+    // 이전 노출 상태 저장 (복원용)
+    let previousVisiblePhotos = {
+        main: new Set(),
+        admin: new Set(),
+        guest: new Set(),
+        all: new Set(),
+        users: new Set()
+    };
+
     const MAX_MAIN_PHOTOS = 5;
     const MAX_ADMIN_VISIBLE_PHOTOS = 20;
     const PHOTO_TYPE_LABELS = {
@@ -1082,22 +1096,7 @@
         const fileInput = document.getElementById(type + 'FileInput');
         const files = Array.from(fileInput.files);
 
-        // 메인 사진 개수 제한 확인
-        if (type === 'main') {
-            const { data: currentPhotos } = await supabaseClient
-                .from("photos")
-                .select("*")
-                .eq("photo_type", "main");
-
-            const currentCount = currentPhotos ? currentPhotos.length : 0;
-            const availableSlots = MAX_MAIN_PHOTOS - currentCount;
-
-            if (files.length > availableSlots) {
-                showStatus(type, `최대 ${availableSlots}개까지만 추가할 수 있습니다. (현재 ${currentCount}/${MAX_MAIN_PHOTOS})`, "error");
-                fileInput.value = "";
-                return;
-            }
-        }
+        // 업로드 개수 제한 제거 - 자유롭게 업로드 가능
 
         selectedFiles[type] = files;
 
@@ -1217,6 +1216,12 @@
 
         const { data, error } = await query;
 
+        if (error) {
+            console.error('갤러리 로드 에러:', error);
+            alert('사진을 불러오는데 실패했습니다: ' + error.message);
+            return;
+        }
+
         const gallery = document.getElementById(type + 'Gallery');
         gallery.innerHTML = "";
 
@@ -1236,59 +1241,78 @@
             updateSaveButtonVisibility(type);
         }
 
+        // 선택된 사진 목록 초기화
+        selectedPhotos[type].clear();
+
         data.forEach(photo => {
             const galleryItem = document.createElement("div");
             galleryItem.className = "gallery-item";
 
+            // is_visible 기본값 처리 (undefined/null이면 true)
+            const isVisible = photo.is_visible !== false;
+
             // 데이터 속성 추가
             galleryItem.dataset.photoId = photo.id;
-            galleryItem.dataset.dbVisibility = photo.is_visible;
+            galleryItem.dataset.dbVisibility = isVisible;
 
-            // 메인/웨딩 탭은 클릭으로 토글, 다른 탭은 체크박스 사용
-            if (type === 'main' || type === 'admin') {
-                const itemStyle = photo.is_visible
-                    ? 'border: 3px solid #4caf50;'
-                    : 'opacity: 0.4; border: 2px solid #ff6b6b;';
-                const visibilityBadge = photo.is_visible
-                    ? '<div class="visibility-badge">노출중</div>'
-                    : '<div class="visibility-badge hidden">숨김</div>';
+            // 모든 탭에 체크박스 추가
+            const itemStyle = isVisible
+                ? (type === 'main' || type === 'admin' ? 'border: 3px solid #4caf50;' : '')
+                : 'opacity: 0.4; border: 2px solid #ff6b6b;';
+            const visibilityBadge = isVisible
+                ? '<div class="visibility-badge">노출중</div>'
+                : '<div class="visibility-badge hidden">숨김</div>';
 
-                galleryItem.innerHTML = `
-                    <img src="${photo.image_url}" alt="Photo" onclick="togglePhotoVisibility('${type}', ${photo.id}, ${photo.is_visible})" style="${itemStyle}; cursor: pointer;" />
-                    <div class="photo-type-badge">${PHOTO_TYPE_LABELS[photo.photo_type] || photo.photo_type}</div>
-                    ${visibilityBadge}
-                `;
-            } else {
-                const itemStyle = photo.is_visible ? '' : 'opacity: 0.4; border: 2px solid #ff6b6b;';
-                const visibilityBadge = photo.is_visible
-                    ? '<div class="visibility-badge">노출중</div>'
-                    : '<div class="visibility-badge hidden">숨김</div>';
-
-                galleryItem.innerHTML = `
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" onchange="togglePhotoSelection('${type}', ${photo.id}, this.checked)">
-                    </div>
-                    <img src="${photo.image_url}" alt="Photo" onclick="openLightbox('${photo.image_url}')" style="${itemStyle}" />
-                    <div class="photo-type-badge">${PHOTO_TYPE_LABELS[photo.photo_type] || photo.photo_type}</div>
-                    ${visibilityBadge}
-                `;
-            }
+            // 모든 탭에서 이미지 클릭 시 체크박스 토글
+            galleryItem.innerHTML = `
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" data-photo-id="${photo.id}" onchange="togglePhotoSelection('${type}', ${photo.id}, this.checked)">
+                </div>
+                <img src="${photo.image_url}" alt="Photo" onclick="togglePhotoCheckbox('${type}', ${photo.id})" style="cursor: pointer; ${itemStyle}" />
+                <div class="photo-type-badge">${PHOTO_TYPE_LABELS[photo.photo_type] || photo.photo_type}</div>
+                ${visibilityBadge}
+            `;
 
             gallery.appendChild(galleryItem);
         });
 
         updateBulkActions(type);
         updateVisibilityCount(type);
+        updateSelectAllButton(type);
     }
 
-    // 전체 선택
-    function selectAll(type, checked) {
+    // 전체선택/전체해제 토글
+    function toggleSelectAll(type) {
         const checkboxes = document.querySelectorAll(`#${type}Gallery .checkbox-wrapper input[type="checkbox"]`);
+        const totalCheckboxes = checkboxes.length;
+        const checkedCheckboxes = Array.from(checkboxes).filter(cb => cb.checked).length;
+
+        // 모두 선택되어 있으면 해제, 아니면 전체 선택
+        const shouldCheck = checkedCheckboxes < totalCheckboxes;
+
         checkboxes.forEach(cb => {
-            cb.checked = checked;
-            const photoId = parseInt(cb.parentElement.nextElementSibling.onclick.toString().match(/\d+/)[0]);
-            togglePhotoSelection(type, photoId, checked);
+            cb.checked = shouldCheck;
+            const photoId = parseInt(cb.dataset.photoId);
+            if (!isNaN(photoId)) {
+                if (shouldCheck) {
+                    selectedPhotos[type].add(photoId);
+                } else {
+                    selectedPhotos[type].delete(photoId);
+                }
+            }
         });
+
+        updateBulkActions(type);
+        updateSelectAllButton(type);
+    }
+
+    // 사진 클릭 시 체크박스 토글
+    function togglePhotoCheckbox(type, photoId) {
+        const checkbox = document.querySelector(`#${type}Gallery .checkbox-wrapper input[data-photo-id="${photoId}"]`);
+        if (checkbox) {
+            checkbox.checked = !checkbox.checked;
+            togglePhotoSelection(type, photoId, checkbox.checked);
+        }
     }
 
     // 사진 선택 토글
@@ -1299,6 +1323,25 @@
             selectedPhotos[type].delete(photoId);
         }
         updateBulkActions(type);
+        updateSelectAllButton(type);
+    }
+
+    // 전체선택 버튼 텍스트 업데이트
+    function updateSelectAllButton(type) {
+        const capitalizedType = type.charAt(0).toUpperCase() + type.slice(1);
+        const selectAllBtn = document.getElementById('selectAllBtn' + capitalizedType);
+        if (!selectAllBtn) return;
+
+        const checkboxes = document.querySelectorAll(`#${type}Gallery .checkbox-wrapper input[type="checkbox"]`);
+        const totalCheckboxes = checkboxes.length;
+        const checkedCheckboxes = Array.from(checkboxes).filter(cb => cb.checked).length;
+
+        // 모든 체크박스가 체크되어 있으면 "전체해제", 아니면 "전체선택"
+        if (totalCheckboxes > 0 && checkedCheckboxes === totalCheckboxes) {
+            selectAllBtn.innerHTML = '☐ 전체해제';
+        } else {
+            selectAllBtn.innerHTML = '☑️ 전체선택';
+        }
     }
 
     // 일괄 작업 UI 업데이트
@@ -1329,21 +1372,7 @@
             return;
         }
 
-        // 메인 사진 개수 제한 확인
-        if (newType === 'main') {
-            const { data: currentMainPhotos } = await supabaseClient
-                .from("photos")
-                .select("*")
-                .eq("photo_type", "main");
-
-            const currentCount = currentMainPhotos ? currentMainPhotos.length : 0;
-            const selectedCount = selectedPhotos[currentType].size;
-
-            if (currentCount + selectedCount > MAX_MAIN_PHOTOS) {
-                alert(`메인 사진은 최대 ${MAX_MAIN_PHOTOS}개까지만 등록 가능합니다. (현재: ${currentCount}개, 선택: ${selectedCount}개)`);
-                return;
-            }
-        }
+        // 업로드 개수 제한 제거 - 자유롭게 영역 변경 가능
 
         for (const photoId of selectedPhotos[currentType]) {
             await supabaseClient
@@ -1352,11 +1381,15 @@
                 .eq("id", photoId);
         }
 
-        selectedPhotos[currentType].clear();
-        document.getElementById('selectAll' + currentType.charAt(0).toUpperCase() + currentType.slice(1)).checked = false;
-
         alert('영역이 변경되었습니다');
-        loadGallery(currentType);
+
+        if (currentType === 'users') {
+            loadUserPhotos();
+        } else if (currentType === 'guest') {
+            loadGuestGallery();
+        } else {
+            loadGallery(currentType);
+        }
     }
 
     // 일괄 삭제
@@ -1394,11 +1427,15 @@
             }
         }
 
-        selectedPhotos[type].clear();
-        document.getElementById('selectAll' + type.charAt(0).toUpperCase() + type.slice(1)).checked = false;
-
         alert('선택한 사진이 삭제되었습니다');
-        loadGallery(type);
+
+        if (type === 'users') {
+            loadUserPhotos();
+        } else if (type === 'guest') {
+            loadGuestGallery();
+        } else {
+            loadGallery(type);
+        }
     }
 
     // 노출 가능 개수 확인
@@ -1438,7 +1475,7 @@
         }
 
         // 노출하려는 경우 제한 확인
-        if (isVisible) {
+        if (isVisible && (type === 'main' || type === 'admin')) {
             const limit = await checkVisibilityLimit(type, selectedPhotos[type].size);
 
             if (!limit.canAdd) {
@@ -1447,27 +1484,58 @@
             }
         }
 
-        const action = isVisible ? '노출' : '숨김';
+        const action = isVisible ? '노출' : '미노출';
         if (!confirm(`선택한 ${selectedPhotos[type].size}개의 사진을 ${action} 상태로 변경하시겠습니까?`)) {
             return;
         }
 
+        console.log(`[bulkSetVisibility] 시작 - type: ${type}, isVisible: ${isVisible}, 선택된 사진 수: ${selectedPhotos[type].size}`);
+        console.log('[bulkSetVisibility] 선택된 사진 IDs:', Array.from(selectedPhotos[type]));
+
         try {
+            let successCount = 0;
+            let failCount = 0;
+
             for (const photoId of selectedPhotos[type]) {
-                await supabaseClient
+                console.log(`[bulkSetVisibility] 업데이트 중 - Photo ID: ${photoId}, is_visible: ${isVisible}`);
+
+                const { data, error } = await supabaseClient
                     .from("photos")
                     .update({ is_visible: isVisible })
-                    .eq("id", photoId);
+                    .eq("id", photoId)
+                    .select();
+
+                if (error) {
+                    console.error(`[bulkSetVisibility] Photo ${photoId} 업데이트 실패:`, error);
+                    failCount++;
+                } else {
+                    console.log(`[bulkSetVisibility] Photo ${photoId} 업데이트 성공:`, data);
+                    successCount++;
+                }
             }
 
-            selectedPhotos[type].clear();
-            document.getElementById('selectAll' + type.charAt(0).toUpperCase() + type.slice(1)).checked = false;
+            console.log(`[bulkSetVisibility] 완료 - 성공: ${successCount}, 실패: ${failCount}`);
 
-            alert(`${action} 상태가 변경되었습니다`);
-            loadGallery(type);
+            if (failCount > 0) {
+                alert(`일부 사진 업데이트 실패\n성공: ${successCount}개, 실패: ${failCount}개\n\n콘솔을 확인해주세요.`);
+            } else {
+                alert(`${successCount}개 사진의 ${action} 상태가 변경되었습니다`);
+            }
+
+            // 선택 해제
+            selectedPhotos[type].clear();
+
+            // 갤러리 새로고침
+            if (type === 'users') {
+                loadUserPhotos();
+            } else if (type === 'guest') {
+                loadGuestGallery();
+            } else {
+                loadGallery(type);
+            }
         } catch (error) {
-            console.error('노출 상태 변경 실패:', error);
-            alert('노출 상태 변경에 실패했습니다');
+            console.error('[bulkSetVisibility] 전체 실패:', error);
+            alert('노출 상태 변경에 실패했습니다.\n\n에러: ' + error.message + '\n\nSupabase에서 다음 SQL을 실행했는지 확인해주세요:\nALTER TABLE photos ADD COLUMN IF NOT EXISTS is_visible boolean DEFAULT true;');
         }
     }
 
@@ -1709,25 +1777,33 @@
             return;
         }
 
+        // 선택된 사진 목록 초기화
+        selectedPhotos['guest'].clear();
+
         if (guestViewMode === 'all') {
             // 전체보기: 일반 그리드 표시
             data.forEach(photo => {
                 const galleryItem = document.createElement("div");
                 galleryItem.className = "gallery-item";
 
-                const itemStyle = photo.is_visible ? '' : 'opacity: 0.4; border: 2px solid #ff6b6b;';
-                const visibilityBadge = photo.is_visible
+                // is_visible 기본값 처리 (undefined/null이면 true)
+                const isVisible = photo.is_visible !== false;
+
+                const itemStyle = isVisible ? '' : 'opacity: 0.4; border: 2px solid #ff6b6b;';
+                const visibilityBadge = isVisible
                     ? '<div class="visibility-badge">노출중</div>'
                     : '<div class="visibility-badge hidden">숨김</div>';
 
+                // 체크박스는 is_visible과 무관하게 항상 비활성화 상태로 시작
                 galleryItem.innerHTML = `
                     <div class="checkbox-wrapper">
-                        <input type="checkbox" onchange="togglePhotoSelection('guest', ${photo.id}, this.checked)">
+                        <input type="checkbox" data-photo-id="${photo.id}" onchange="togglePhotoSelection('guest', ${photo.id}, this.checked)">
                     </div>
-                    <img src="${photo.image_url}" alt="Photo" onclick="openLightbox('${photo.image_url}')" style="${itemStyle}" />
+                    <img src="${photo.image_url}" alt="Photo" onclick="togglePhotoCheckbox('guest', ${photo.id})" style="cursor: pointer; ${itemStyle}" />
                     <div class="photo-type-badge">${PHOTO_TYPE_LABELS[photo.photo_type] || photo.photo_type}</div>
                     ${visibilityBadge}
                 `;
+
                 gallery.appendChild(galleryItem);
             });
         } else {
@@ -1766,19 +1842,24 @@
                     const galleryItem = document.createElement("div");
                     galleryItem.className = "gallery-item";
 
-                    const itemStyle = photo.is_visible ? '' : 'opacity: 0.4; border: 2px solid #ff6b6b;';
-                    const visibilityBadge = photo.is_visible
+                    // is_visible 기본값 처리 (undefined/null이면 true)
+                    const isVisible = photo.is_visible !== false;
+
+                    const itemStyle = isVisible ? '' : 'opacity: 0.4; border: 2px solid #ff6b6b;';
+                    const visibilityBadge = isVisible
                         ? '<div class="visibility-badge">노출중</div>'
                         : '<div class="visibility-badge hidden">숨김</div>';
 
+                    // 체크박스는 is_visible과 무관하게 항상 비활성화 상태로 시작
                     galleryItem.innerHTML = `
                         <div class="checkbox-wrapper">
-                            <input type="checkbox" onchange="togglePhotoSelection('guest', ${photo.id}, this.checked)">
+                            <input type="checkbox" data-photo-id="${photo.id}" onchange="togglePhotoSelection('guest', ${photo.id}, this.checked)">
                         </div>
-                        <img src="${photo.image_url}" alt="Photo" onclick="openLightbox('${photo.image_url}')" style="${itemStyle}" />
+                        <img src="${photo.image_url}" alt="Photo" onclick="togglePhotoCheckbox('guest', ${photo.id})" style="cursor: pointer; ${itemStyle}" />
                         <div class="photo-type-badge">${PHOTO_TYPE_LABELS[photo.photo_type] || photo.photo_type}</div>
                         ${visibilityBadge}
                     `;
+
                     groupGallery.appendChild(galleryItem);
                 });
 
@@ -1788,6 +1869,7 @@
         }
 
         updateBulkActions('guest');
+        updateSelectAllButton('guest');
     }
 
     // 사용자 목록 로드
@@ -1854,20 +1936,30 @@
         statsDiv.style.display = 'block';
         selectAllWrapper.style.display = 'block';
 
+        // 선택된 사진 목록 초기화
+        selectedPhotos['users'].clear();
+
         data.forEach(photo => {
             const galleryItem = document.createElement("div");
             galleryItem.className = "gallery-item";
+
+            // is_visible 기본값 처리 (undefined/null이면 true)
+            const isVisible = photo.is_visible !== false;
+
+            // 체크박스는 is_visible과 무관하게 항상 비활성화 상태로 시작
             galleryItem.innerHTML = `
                 <div class="checkbox-wrapper">
-                    <input type="checkbox" onchange="togglePhotoSelection('users', ${photo.id}, this.checked)">
+                    <input type="checkbox" data-photo-id="${photo.id}" onchange="togglePhotoSelection('users', ${photo.id}, this.checked)">
                 </div>
-                <img src="${photo.image_url}" alt="Photo" onclick="openLightbox('${photo.image_url}')" />
+                <img src="${photo.image_url}" alt="Photo" onclick="togglePhotoCheckbox('users', ${photo.id})" style="cursor: pointer;" />
                 <div class="photo-type-badge">${PHOTO_TYPE_LABELS[photo.photo_type] || photo.photo_type}</div>
             `;
+
             gallery.appendChild(galleryItem);
         });
 
         updateBulkActions('users');
+        updateSelectAllButton('users');
     }
 
     // 방명록 관리
@@ -2135,9 +2227,37 @@
     }
 
     // 페이지 로드 시 실행
+    // is_visible 컬럼 체크 및 생성
+    async function checkIsVisibleColumn() {
+        try {
+            console.log('[DB 체크] is_visible 컬럼 확인 중...');
+
+            // 첫 번째 사진 가져오기
+            const { data, error } = await supabaseClient
+                .from("photos")
+                .select("id, image_url, photo_type, is_visible")
+                .limit(1);
+
+            if (error) {
+                console.error('[DB 체크] 에러:', error);
+                if (error.message.includes('column') && error.message.includes('is_visible')) {
+                    alert('⚠️ 중요: photos 테이블에 is_visible 컬럼이 없습니다!\n\nSupabase SQL Editor에서 다음 명령을 실행해주세요:\n\nALTER TABLE photos ADD COLUMN IF NOT EXISTS is_visible boolean DEFAULT true;\nUPDATE photos SET is_visible = true WHERE is_visible IS NULL;');
+                }
+                return false;
+            }
+
+            console.log('[DB 체크] is_visible 컬럼 존재 확인:', data);
+            return true;
+        } catch (err) {
+            console.error('[DB 체크] 예외 발생:', err);
+            return false;
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         initEventListeners();
         checkAuth();
+        checkIsVisibleColumn(); // is_visible 컬럼 체크
 
         // 게스트 뷰 모드 기본값 설정
         const guestViewAllBtn = document.getElementById('guestViewAllBtn');

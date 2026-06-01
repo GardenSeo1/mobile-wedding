@@ -957,6 +957,168 @@
         html {
             scroll-behavior: smooth;
         }
+
+        /* 참석 안내 팝업 */
+        .rsvp-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 20000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .rsvp-popup.active {
+            display: flex;
+        }
+
+        .rsvp-popup-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 420px;
+            width: 100%;
+            padding: 40px 30px 30px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: popupSlideIn 0.3s ease-out;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        @keyframes popupSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .rsvp-popup-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .rsvp-popup-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #43573a;
+            margin-bottom: 20px;
+        }
+
+        .rsvp-popup-info {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .rsvp-popup-date {
+            font-size: 15px;
+            color: #43573a;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .rsvp-popup-time {
+            font-size: 24px;
+            font-weight: 700;
+            color: #43573a;
+            margin-bottom: 15px;
+        }
+
+        .rsvp-popup-location {
+            font-size: 15px;
+            color: #666;
+            line-height: 1.6;
+            padding-top: 12px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .rsvp-popup-location-name {
+            font-weight: 600;
+            color: #43573a;
+            margin-bottom: 4px;
+        }
+
+        .rsvp-popup-map-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            color: #43573a;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .rsvp-popup-map-link:hover {
+            background: #f0f0f0;
+            border-color: #43573a;
+        }
+
+        .rsvp-popup-message {
+            font-size: 15px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .rsvp-popup-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .rsvp-popup-btn {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .rsvp-popup-btn.primary {
+            background: linear-gradient(135deg, #43573a 0%, #5a7348 100%);
+            color: white;
+        }
+
+        .rsvp-popup-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(67, 87, 58, 0.3);
+        }
+
+        .rsvp-popup-btn.secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .rsvp-popup-btn.secondary:hover {
+            background: #e8e8e8;
+        }
+
+        .rsvp-popup-btn.tertiary {
+            background: transparent;
+            color: #999;
+            font-size: 13px;
+            padding: 10px;
+        }
+
+        .rsvp-popup-btn.tertiary:hover {
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -967,7 +1129,7 @@
         <h1>서정원 ❤️ 제시현</h1>
         <div class="venue">
             오후 2시<br>
-            라온 웨딩홀 23층 화이트홀
+            부산 라온 웨딩홀 23층 화이트홀
         </div>
     </div>
 
@@ -1131,12 +1293,12 @@
     </section>
 
     <!-- 오시는 길 -->
-    <section class="section" data-aos="fade-up">
+    <section id="location-section" class="section" data-aos="fade-up">
         <div class="section-title">LOCATION</div>
         <div id="map" class="map-container" style="background: white;">
             🗺️ 지도 영역
         </div>
-        <div class="location-name">라온 웨딩홀 23층 화이트홀</div>
+        <div class="location-name">부산 라온 웨딩홀 23층 화이트홀</div>
         <div class="location-address">
             부산광역시 부산진구 중앙대로 640<br>
             ABL부산타워 23층<br>
@@ -1204,18 +1366,18 @@
             </div>
             <div class="account-item">
                 <div class="account-info">
-                    <div class="bank">신부 부 제인수 | 우리은행</div>
-                    <div class="number">1002-123-456789</div>
+                    <div class="bank">신부 부 제인수 | 농협</div>
+                    <div class="number">352-0407-5999-23</div>
                 </div>
                 <button class="copy-btn" onclick="copyAccount('1002-123-456789')">복사</button>
             </div>
-            <div class="account-item">
-                <div class="account-info">
-                    <div class="bank">신부 모 정영옥 | 우리은행</div>
-                    <div class="number">1002-123-456789</div>
-                </div>
-                <button class="copy-btn" onclick="copyAccount('1002-123-456789')">복사</button>
-            </div>
+<!--            <div class="account-item">-->
+<!--                <div class="account-info">-->
+<!--                    <div class="bank">신부 모 정영옥 | 우리은행</div>-->
+<!--                    <div class="number">1002-123-456789</div>-->
+<!--                </div>-->
+<!--                <button class="copy-btn" onclick="copyAccount('1002-123-456789')">복사</button>-->
+<!--            </div>-->
             <a href="https://qr.kakaopay.com/YOUR_KAKAOPAY_CODE" class="kakaopay-btn" style="display: block; margin-top: 15px; padding: 12px; text-align: center; border-radius: 8px; text-decoration: none;">
                 💳 카카오페이 송금
             </a>
@@ -2115,5 +2277,139 @@
         initPage();
     }
 </script>
+
+<!-- 참석 여부 안내 팝업 -->
+<div id="rsvpPopup" class="rsvp-popup">
+    <div class="rsvp-popup-content">
+        <div class="rsvp-popup-icon">💌</div>
+        <div class="rsvp-popup-title">서정원 ❤️ 제시현</div>
+
+        <div class="rsvp-popup-info">
+            <div class="rsvp-popup-date">2026. 10. 04. SAT</div>
+            <div class="rsvp-popup-time">오후 2시</div>
+            <div class="rsvp-popup-location">
+                <div class="rsvp-popup-location-name">📍부산 라온 웨딩홀 23층 화이트홀</div>
+                <a href="#location-section" class="rsvp-popup-map-link" onclick="return scrollToLocation()">
+                    🗺️ 오시는 길 보기
+                </a>
+            </div>
+        </div>
+
+        <div class="rsvp-popup-message">
+            참석 여부를 알려주시면<br>
+            준비하는데 큰 도움이 됩니다.
+        </div>
+
+        <div class="rsvp-popup-buttons">
+            <button class="rsvp-popup-btn primary" onclick="openRsvpFromPopup()">
+                💌 참석 여부 전달하기
+            </button>
+            <button class="rsvp-popup-btn secondary" onclick="closeRsvpPopup()">
+                닫기
+            </button>
+            <button class="rsvp-popup-btn tertiary" onclick="closeRsvpPopupForToday()">
+                오늘 하루 보지 않기
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // localStorage 관리 함수 (쿠키 대신 사용)
+    function setHidePopup() {
+        const tomorrow = new Date();
+        tomorrow.setHours(24, 0, 0, 0); // 다음날 자정
+        localStorage.setItem('hideRsvpPopup', tomorrow.getTime().toString());
+        console.log('[localStorage 저장] hideRsvpPopup 설정됨 (만료: ' + tomorrow.toLocaleString() + ')');
+    }
+
+    function shouldShowPopup() {
+        const hideUntil = localStorage.getItem('hideRsvpPopup');
+
+        if (!hideUntil) {
+            console.log('[localStorage] 저장된 값 없음 → 팝업 표시');
+            return true;
+        }
+
+        const now = new Date().getTime();
+        const expiryTime = parseInt(hideUntil);
+
+        if (now > expiryTime) {
+            // 만료됨
+            localStorage.removeItem('hideRsvpPopup');
+            console.log('[localStorage] 만료됨 → 팝업 표시');
+            return true;
+        }
+
+        console.log('[localStorage] 아직 유효함 → 팝업 숨김');
+        return false;
+    }
+
+    // 팝업 열기
+    function showRsvpPopup() {
+        console.log('[팝업] 표시');
+        const popup = document.getElementById('rsvpPopup');
+        popup.classList.add('active');
+    }
+
+    // 팝업 닫기
+    function closeRsvpPopup() {
+        console.log('[팝업] 닫기');
+        const popup = document.getElementById('rsvpPopup');
+        popup.classList.remove('active');
+    }
+
+    // 오늘 하루 보지 않기
+    function closeRsvpPopupForToday() {
+        console.log('[팝업] 오늘 하루 보지 않기 클릭');
+        setHidePopup();
+        closeRsvpPopup();
+    }
+
+    // 팝업에서 RSVP 모달 열기
+    function openRsvpFromPopup() {
+        closeRsvpPopup();
+        openRsvpModal(); // 기존 RSVP 모달 열기 함수 호출
+    }
+
+    // 오시는 길 섹션으로 스크롤 (상단 여백 포함)
+    function scrollToLocation() {
+        closeRsvpPopup();
+        setTimeout(() => {
+            const locationSection = document.getElementById('location-section');
+            if (locationSection) {
+                const offsetTop = locationSection.offsetTop - 20; // 상단 20px 여백
+                window.scrollTo({
+                    top: offsetTop,
+                    behavior: 'smooth'
+                });
+            }
+        }, 300);
+        return false; // 기본 링크 동작 방지
+    }
+
+    // 페이지 로드 시 팝업 표시 체크
+    window.addEventListener('load', function() {
+        console.log('[페이지 로드] 팝업 표시 여부 확인');
+
+        // localStorage 확인
+        if (shouldShowPopup()) {
+            showRsvpPopup();
+        }
+    });
+
+    // 팝업 배경 클릭 시 닫기
+    document.addEventListener('DOMContentLoaded', function() {
+        const popup = document.getElementById('rsvpPopup');
+        if (popup) {
+            popup.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeRsvpPopup();
+                }
+            });
+        }
+    });
+</script>
+
 </body>
 </html>

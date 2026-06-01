@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>모바일 청첩장</title>
     <!-- CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
@@ -22,6 +23,9 @@
             color: #383737;
             background: #f5f3ed;
             line-height: 1.8;
+
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
         }
 
         .container {
@@ -84,6 +88,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            user-select: none;
         }
 
         .swiper-pagination-bullet {
@@ -238,6 +243,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            user-select: none;
         }
 
         .photo-delete-btn {
@@ -313,6 +319,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            user-select: none;
         }
 
         .preview-item .remove-btn {
@@ -1579,6 +1586,9 @@
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
 <script>
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+    });
     // Supabase 초기화
     const supabaseClient = window.supabase.createClient(
         "https://fupncptwrevxjlanbnsc.supabase.co",
@@ -1714,11 +1724,13 @@
                 .from("photos")
                 .select("*")
                 .eq("is_visible", true)
-                .order("display_order", { ascending: true, nullsFirst: false })
-                .order("created_at", { ascending: false });
+                .eq("del_yn", "N")
+                .neq("photo_type", "guest")
+                .order("photo_type", { ascending: false })
+                .order("display_order", { ascending: true });
 
             if (currentTab === 'all') {
-                // 전체 탭: guest 사진 제외 (main + admin만)
+                // 전체 탭: guest 사진 제외 (메인 + 웨딩만)
                 query = query.in("photo_type", ["main", "admin"]);
             } else {
                 // 특정 탭: 해당 타입만
@@ -1733,8 +1745,30 @@
                 return;
             }
 
+            // // 클라이언트 측 정렬: display_order 우선, null이면 최신순
+            // console.log(`[갤러리 로드 전] ${currentTab} 탭: ${data.length}개 사진`);
+            // data.forEach((photo, idx) => {
+            //     console.log(`  ${idx + 1}. Photo ID ${photo.id}: type=${photo.photo_type}, order=${photo.display_order}, created=${photo.created_at}`);
+            // });
+            //
+            // data.sort((a, b) => {
+            //     const aOrder = a.display_order || 9999;
+            //     const bOrder = b.display_order || 9999;
+            //     if (aOrder !== bOrder) return aOrder - bOrder;
+            //     // 같은 순서면 created_at 최신순
+            //     return new Date(b.created_at) - new Date(a.created_at);
+            // });
+            //
+            // console.log(`[갤러리 정렬 후] ${currentTab} 탭:`);
+            // data.forEach((photo, idx) => {
+            //     console.log(`  ${idx + 1}. Photo ID ${photo.id}: type=${photo.photo_type}, order=${photo.display_order}`);
+            // });
+
             gallery.innerHTML = '';
             data.forEach(photo => {
+                console.log(
+                    `photo_type=${photo.photo_type}, display_order=${photo.display_order}`
+                );
                 const item = document.createElement('div');
                 item.className = 'gallery-item';
 
@@ -2355,7 +2389,8 @@
                 .select("*")
                 .eq("photo_type", "main")
                 .eq("is_visible", true)
-                .order("created_at", { ascending: true });
+                .eq("del_yn", "N")
+                .order("display_order", { ascending: true });
 
             const wrapper = document.getElementById("mainSwiperWrapper");
 
@@ -2364,7 +2399,7 @@
                 wrapper.innerHTML = `
                     <div class="swiper-slide">
                         <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #999; font-size: 18px;">
-                            메인 사진을 등록해주세요
+                            등록된 메인사진이 없습니다.
                         </div>
                     </div>
                 `;

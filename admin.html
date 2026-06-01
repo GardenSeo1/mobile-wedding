@@ -851,8 +851,8 @@
 
             <div class="bulk-actions" id="adminBulkActions">
                 <span class="bulk-actions-label">선택한 사진:</span>
-                <button class="action-btn" style="background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);" onclick="bulkSetVisibility('admin', true)">✅ 노출</button>
-                <button class="action-btn" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);" onclick="bulkSetVisibility('admin', false)">🚫 미노출</button>
+                <button class="action-btn" style="background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);" onclick="bulkSetVisibility('admin', true)">노출</button>
+                <button class="action-btn" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);" onclick="bulkSetVisibility('admin', false)">미노출</button>
                 <select id="adminBulkType">
                     <option value="">영역 선택</option>
                     <option value="main">메인 사진</option>
@@ -2112,6 +2112,7 @@
     async function saveDisplayOrder(type) {
         const gallery = document.getElementById(type + 'Gallery');
         const visiblePhotos = gallery.querySelectorAll('.visible-photo');
+        const allPhotos = gallery.querySelectorAll('.gallery-item');
 
         if (visiblePhotos.length === 0) {
             alert('노출중인 사진이 없습니다');
@@ -2122,10 +2123,10 @@
             return;
         }
 
-        console.log(`[순서 저장] ${type}: ${visiblePhotos.length}개 사진`);
+        console.log(`[순서 저장] ${type}: 노출 ${visiblePhotos.length}개 / 전체 ${allPhotos.length}개 사진`);
 
         try {
-            // 현재 갤러리의 순서대로 display_order 업데이트
+            // 1. 노출중인 사진들의 순서대로 display_order 업데이트
             for (let i = 0; i < visiblePhotos.length; i++) {
                 const photoId = parseInt(visiblePhotos[i].dataset.photoId);
                 const newOrder = i + 1;
@@ -2136,6 +2137,19 @@
                     .eq("id", photoId);
 
                 console.log(`[순서 저장] Photo ${photoId} → 순서: ${newOrder}`);
+            }
+
+            // 2. 미노출 사진들의 display_order를 null로 설정
+            const hiddenPhotos = gallery.querySelectorAll('.gallery-item:not(.visible-photo)');
+            for (let i = 0; i < hiddenPhotos.length; i++) {
+                const photoId = parseInt(hiddenPhotos[i].dataset.photoId);
+
+                await supabaseClient
+                    .from("photos")
+                    .update({ display_order: null })
+                    .eq("id", photoId);
+
+                console.log(`[순서 저장] Photo ${photoId} → 순서: null (미노출)`);
             }
 
             alert('순서가 저장되었습니다!');
@@ -2362,9 +2376,16 @@
 
         try {
             for (const [photoId, newVisibility] of pendingVisibilityChanges[type].entries()) {
+                const updateData = { is_visible: newVisibility };
+
+                // is_visible이 false로 변경되면 display_order를 null로 설정
+                if (newVisibility === false) {
+                    updateData.display_order = null;
+                }
+
                 await supabaseClient
                     .from("photos")
-                    .update({ is_visible: newVisibility })
+                    .update(updateData)
                     .eq("id", photoId);
             }
 

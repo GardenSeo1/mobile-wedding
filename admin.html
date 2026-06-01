@@ -569,12 +569,93 @@
             margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 2px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .person-group-header:hover {
+            color: #764ba2;
+            cursor: pointer;
         }
         .person-group-count {
             font-size: 14px;
             color: #666;
             font-weight: normal;
             margin-left: 10px;
+        }
+        .person-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        .person-preview-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .person-preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .person-preview-more {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .person-preview-more:hover {
+            background: rgba(0,0,0,0.85);
+        }
+        .guest-photos-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 10000;
+            overflow-y: auto;
+        }
+        .guest-photos-modal.active {
+            display: block;
+        }
+        .guest-photos-modal-content {
+            max-width: 1200px;
+            margin: 50px auto;
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            position: relative;
+        }
+        .guest-photos-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .guest-photos-modal-close:hover {
+            background: #d32f2f;
         }
         .action-btn.active {
             background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
@@ -828,27 +909,16 @@
                 </button>
             </div>
 
-            <div class="select-all-wrapper">
-                <button class="action-btn" id="selectAllBtnGuest" onclick="toggleSelectAll('guest')" style="margin-bottom: 10px;">
-                    ☑️ 전체선택
-                </button>
-            </div>
-
-            <div class="bulk-actions" id="guestBulkActions">
-                <span class="bulk-actions-label">선택한 사진:</span>
-                <button class="action-btn" style="background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);" onclick="bulkSetVisibility('guest', true)">✅ 노출</button>
-                <button class="action-btn" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);" onclick="bulkSetVisibility('guest', false)">🚫 미노출</button>
-                <select id="guestBulkType">
-                    <option value="">영역 선택</option>
-                    <option value="main">메인 사진</option>
-                    <option value="admin">웨딩 사진</option>
-                    <option value="guest">게스트 사진</option>
-                </select>
-                <button class="action-btn" onclick="bulkChangeType('guest')">영역 변경</button>
-                <button class="action-btn" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" onclick="bulkDelete('guest')">선택 삭제</button>
-            </div>
-
             <div id="guestGallery" class="gallery-grid"></div>
+        </div>
+    </div>
+
+    <!-- 게스트 사진 전체보기 모달 -->
+    <div class="guest-photos-modal" id="guestPhotosModal">
+        <div class="guest-photos-modal-content">
+            <button class="guest-photos-modal-close" onclick="closeGuestPhotosModal()">×</button>
+            <h2 id="guestPhotosModalTitle" style="margin: 0 0 20px 0; color: #333;"></h2>
+            <div id="guestPhotosModalGrid" class="gallery-grid"></div>
         </div>
     </div>
 
@@ -954,40 +1024,12 @@
                        style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
             </div>
 
-            <!-- 변경사항 저장 버튼 -->
-            <div id="guestbookSaveSection" style="margin-bottom: 15px; text-align: right; display: none;">
-                <div style="display: inline-block; background: #fff3cd; padding: 10px 15px; border-radius: 8px; margin-right: 10px; font-size: 13px; color: #856404;">
-                    ⚠️ 변경사항이 있습니다
-                </div>
-                <button onclick="saveGuestbookChanges()"
-                        style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
-                    💾 변경사항 저장
-                </button>
-            </div>
-
-            <!-- 노출 상태 범례 -->
-            <div style="margin-bottom: 15px; display: flex; gap: 15px; font-size: 12px; color: #666;">
-                <div style="display: flex; align-items: center; gap: 5px;">
-                    <div style="width: 12px; height: 12px; background: #4caf50; border-radius: 50%;"></div>
-                    <span>노출</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 5px;">
-                    <div style="width: 12px; height: 12px; background: #f44336; border-radius: 50%;"></div>
-                    <span>미노출</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 5px;">
-                    <div style="width: 12px; height: 12px; background: #999; border-radius: 50%;"></div>
-                    <span>미설정</span>
-                </div>
-            </div>
 
             <!-- 테이블 -->
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
                     <thead style="background: #f8f9fa;">
                         <tr>
-                            <th style="padding: 12px; text-align: center; font-size: 13px; color: #666; border-bottom: 2px solid #dee2e6; width: 60px;">순서</th>
-                            <th style="padding: 12px; text-align: center; font-size: 13px; color: #666; border-bottom: 2px solid #dee2e6; width: 80px;">상태</th>
                             <th style="padding: 12px; text-align: left; font-size: 13px; color: #666; border-bottom: 2px solid #dee2e6;">작성자</th>
                             <th style="padding: 12px; text-align: left; font-size: 13px; color: #666; border-bottom: 2px solid #dee2e6;">메시지</th>
                             <th style="padding: 12px; text-align: left; font-size: 13px; color: #666; border-bottom: 2px solid #dee2e6;">작성일</th>
@@ -996,7 +1038,7 @@
                     </thead>
                     <tbody id="guestbookTableBody">
                         <tr>
-                            <td colspan="6" style="padding: 40px; text-align: center; color: #999;">로딩 중...</td>
+                            <td colspan="4" style="padding: 40px; text-align: center; color: #999;">로딩 중...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -2444,7 +2486,7 @@
                 gallery.appendChild(galleryItem);
             });
         } else {
-            // 인원별보기: 업로더별로 그룹화
+            // 인원별보기: 업로더별로 그룹화 (미리보기)
             const groupedByPerson = {};
 
             data.forEach(photo => {
@@ -2458,6 +2500,9 @@
             // 이름순 정렬
             const sortedNames = Object.keys(groupedByPerson).sort();
 
+            gallery.style.display = 'block';
+            gallery.style.gridTemplateColumns = '1fr';
+
             sortedNames.forEach(name => {
                 const photos = groupedByPerson[name];
 
@@ -2465,56 +2510,85 @@
                 const groupDiv = document.createElement('div');
                 groupDiv.className = 'person-group';
 
-                // 그룹 헤더
+                // 그룹 헤더 (클릭 가능)
                 const headerDiv = document.createElement('div');
                 headerDiv.className = 'person-group-header';
-                headerDiv.innerHTML = `${name}<span class="person-group-count">${photos.length}개</span>`;
+                headerDiv.innerHTML = `
+                    <span>${name} <span class="person-group-count">${photos.length}개</span></span>
+                    <span style="font-size: 14px; color: #764ba2;">전체보기 →</span>
+                `;
+                headerDiv.onclick = () => openGuestPhotosModal(name, photos);
                 groupDiv.appendChild(headerDiv);
 
-                // 그룹 갤러리
-                const groupGallery = document.createElement('div');
-                groupGallery.className = 'gallery-grid';
+                // 미리보기 그리드 (최대 4개만 표시)
+                const previewGrid = document.createElement('div');
+                previewGrid.className = 'person-preview-grid';
 
-                photos.forEach(photo => {
-                    const galleryItem = document.createElement("div");
+                const previewCount = Math.min(4, photos.length);
+                for (let i = 0; i < previewCount; i++) {
+                    const photo = photos[i];
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'person-preview-item';
 
-                    // is_visible 기본값 처리 (undefined/null이면 true)
-                    const isVisible = photo.is_visible !== false;
+                    const img = document.createElement('img');
+                    img.src = photo.image_url;
+                    img.alt = '';
+                    img.onclick = () => openLightbox(photo.image_url);
 
-                    // del_yn 체크 (게스트가 삭제한 사진)
-                    const isDeleted = photo.del_yn === 'Y';
+                    previewItem.appendChild(img);
+                    previewGrid.appendChild(previewItem);
+                }
 
-                    let className = "gallery-item";
-                    if (isDeleted) {
-                        className += " deleted-photo";
-                    }
-                    galleryItem.className = className;
+                // 더보기 표시 (4개 이상일 때)
+                if (photos.length > 4) {
+                    const moreItem = document.createElement('div');
+                    moreItem.className = 'person-preview-more';
+                    moreItem.textContent = `+${photos.length - 3}`;
+                    moreItem.onclick = () => openGuestPhotosModal(name, photos);
+                    previewGrid.appendChild(moreItem);
+                }
 
-                    const itemStyle = isVisible ? '' : 'opacity: 0.4; border: 2px solid #ff6b6b;';
-                    const visibilityBadge = isVisible
-                        ? '<div class="visibility-badge">노출중</div>'
-                        : '<div class="visibility-badge hidden">숨김</div>';
-
-                    // 체크박스는 is_visible과 무관하게 항상 비활성화 상태로 시작
-                    galleryItem.innerHTML = `
-                        <div class="checkbox-wrapper">
-                            <input type="checkbox" data-photo-id="${photo.id}" onchange="togglePhotoSelection('guest', ${photo.id}, this.checked)">
-                        </div>
-                        <img src="${photo.image_url}" alt="Photo" onclick="togglePhotoCheckbox('guest', ${photo.id})" style="cursor: pointer; ${itemStyle}" />
-                        <div class="photo-type-badge">${PHOTO_TYPE_LABELS[photo.photo_type] || photo.photo_type}</div>
-                        ${visibilityBadge}
-                    `;
-
-                    groupGallery.appendChild(galleryItem);
-                });
-
-                groupDiv.appendChild(groupGallery);
+                groupDiv.appendChild(previewGrid);
                 gallery.appendChild(groupDiv);
             });
         }
+    }
 
-        updateBulkActions('guest');
-        updateSelectAllButton('guest');
+    // 게스트 사진 전체보기 모달 열기
+    function openGuestPhotosModal(uploaderName, photos) {
+        const modal = document.getElementById('guestPhotosModal');
+        const title = document.getElementById('guestPhotosModalTitle');
+        const grid = document.getElementById('guestPhotosModalGrid');
+
+        title.textContent = `${uploaderName}님의 사진 (${photos.length}개)`;
+        grid.innerHTML = '';
+
+        photos.forEach(photo => {
+            const galleryItem = document.createElement("div");
+            galleryItem.className = "gallery-item";
+
+            // del_yn 체크
+            const isDeleted = photo.del_yn === 'Y';
+            if (isDeleted) {
+                galleryItem.classList.add('deleted-photo');
+            }
+
+            const img = document.createElement('img');
+            img.src = photo.image_url;
+            img.alt = '';
+            img.style.cursor = 'pointer';
+            img.onclick = () => openLightbox(photo.image_url);
+
+            galleryItem.appendChild(img);
+            grid.appendChild(galleryItem);
+        });
+
+        modal.classList.add('active');
+    }
+
+    // 게스트 사진 모달 닫기
+    function closeGuestPhotosModal() {
+        document.getElementById('guestPhotosModal').classList.remove('active');
     }
 
     // 사용자 목록 로드
@@ -2617,28 +2691,17 @@
 
     // 방명록 관리
     let allGuestbookData = [];
-    let originalGuestbookOrder = []; // 원본 순서 저장
-    let guestbookVisibilityChanges = new Map(); // 노출 상태 변경 추적 (id -> is_visible)
-
-    let guestbookSortable = null;
 
     async function loadGuestbookAdmin() {
         try {
             const { data, error } = await supabaseClient
                 .from("guestbook")
                 .select("*")
-                .order("display_order", { ascending: true, nullsFirst: false })
-                .order("created_at", { ascending: true });
+                .order("created_at", { ascending: false });
 
             if (error) throw error;
 
             allGuestbookData = data || [];
-
-            // 원본 순서 저장 (ID 배열)
-            originalGuestbookOrder = allGuestbookData.map(item => item.id);
-
-            // 변경사항 초기화
-            guestbookVisibilityChanges.clear();
 
             // 통계
             const total = data.length;
@@ -2653,8 +2716,6 @@
             document.getElementById('guestbookRecentName').textContent = recentName;
 
             renderGuestbookTable(data);
-            initGuestbookSortable();
-            updateGuestbookSaveButton(); // 저장 버튼 상태 업데이트
         } catch (error) {
             console.error('방명록 로드 실패:', error);
         }
@@ -2780,7 +2841,7 @@
         const tbody = document.getElementById('guestbookTableBody');
 
         if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="padding: 40px; text-align: center; color: #999;">방명록이 없습니다</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="padding: 40px; text-align: center; color: #999;">방명록이 없습니다</td></tr>';
             return;
         }
 
@@ -2794,79 +2855,19 @@
                 minute: '2-digit'
             });
 
-            // 현재 노출 상태 (변경사항이 있으면 그것 사용, 없으면 DB 값)
-            const currentVisibility = guestbookVisibilityChanges.has(item.id)
-                ? guestbookVisibilityChanges.get(item.id)
-                : item.is_visible;
-
-            // 상태에 따른 색상 및 텍스트
-            let statusColor, statusText, statusBg;
-            if (currentVisibility === 'Y') {
-                statusColor = '#4caf50';
-                statusText = '노출';
-                statusBg = '#e8f5e9';
-            } else if (currentVisibility === 'N') {
-                statusColor = '#f44336';
-                statusText = '미노출';
-                statusBg = '#ffebee';
-            } else {
-                statusColor = '#999';
-                statusText = '미설정';
-                statusBg = '#f5f5f5';
-            }
-
             const row = document.createElement('tr');
             row.style.borderBottom = '1px solid #f0f0f0';
-            row.dataset.guestbookId = item.id;
-            row.dataset.dbVisibility = item.is_visible || 'null';
-
-            const orderCell = document.createElement('td');
-            orderCell.className = 'order-number';
-            orderCell.style.cssText = 'padding: 12px; text-align: center; font-size: 16px; font-weight: 700; color: #764ba2; cursor: grab;';
-            orderCell.textContent = index + 1;
-
-            const statusCell = document.createElement('td');
-            statusCell.style.cssText = 'padding: 12px; text-align: center; cursor: pointer;';
-            statusCell.onclick = (e) => {
-                e.stopPropagation();
-                toggleGuestbookVisibility(item.id);
-            };
-            statusCell.innerHTML = `
-                <div class="guestbook-status-badge" data-guestbook-id="${item.id}"
-                     style="display: inline-block; padding: 6px 12px; background: ${statusBg}; color: ${statusColor};
-                            border-radius: 12px; font-size: 11px; font-weight: 600; border: 1px solid ${statusColor};">
-                    ${statusText}
-                </div>
-            `;
-
-            const nameCell = document.createElement('td');
-            nameCell.style.cssText = 'padding: 12px; font-size: 13px; font-weight: 600; color: #333;';
-            nameCell.textContent = item.name;
-
-            const messageCell = document.createElement('td');
-            messageCell.style.cssText = 'padding: 12px; font-size: 13px; color: #555; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
-            messageCell.title = item.message;
-            messageCell.textContent = item.message;
-
-            const dateCell = document.createElement('td');
-            dateCell.style.cssText = 'padding: 12px; font-size: 12px; color: #999;';
-            dateCell.textContent = date;
-
-            const actionCell = document.createElement('td');
-            actionCell.style.cssText = 'padding: 12px; text-align: center;';
-            actionCell.innerHTML = `
-                <button onclick="deleteGuestbookAdmin(${item.id})"
-                        style="padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer;">
+            row.innerHTML = `
+                <td style="padding: 12px; font-size: 13px; font-weight: 600; color: #333;">${item.name}</td>
+                <td style="padding: 12px; font-size: 13px; color: #555; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.message}">${item.message}</td>
+                <td style="padding: 12px; font-size: 12px; color: #999;">${date}</td>
+                <td style="padding: 12px; text-align: center;">
+                    <button onclick="deleteGuestbookAdmin(${item.id})"
+                            style="padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer;">
                     삭제
                 </button>
             `;
 
-            row.appendChild(orderCell);
-            row.appendChild(statusCell);
-            row.appendChild(nameCell);
-            row.appendChild(messageCell);
-            row.appendChild(dateCell);
-            row.appendChild(actionCell);
             tbody.appendChild(row);
         });
     }
@@ -2987,7 +2988,13 @@
         const absentCount = data.filter(r => r.attendance === 'no').length;
         const groomCount = data.filter(r => r.side === 'groom').length;
         const brideCount = data.filter(r => r.side === 'bride').length;
-        const mealCount = data.filter(r => r.meal === 'yes').length;
+        // meal이 'no'가 아닌 경우 인원 수를 합산
+        const mealCount = data.reduce((sum, r) => {
+            if (r.meal && r.meal !== 'no') {
+                return sum + parseInt(r.meal);
+            }
+            return sum;
+        }, 0);
         const companionsCount = data.reduce((sum, r) => sum + (parseInt(r.companions) || 0), 0);
 
         document.getElementById('rsvpTotalCount').textContent = total;
@@ -3020,7 +3027,7 @@
             const sideColor = item.side === 'groom' ? '#5f8b9b' : '#BB7273';
             const attendLabel = item.attendance === 'yes' ? '참석' : '불참';
             const attendColor = item.attendance === 'yes' ? '#4caf50' : '#ff9800';
-            const mealLabel = item.meal === 'yes' ? 'O' : 'X';
+            const mealLabel = item.meal === 'no' ? 'X' : item.meal + '명';
             const companionsText = item.companions === '0' ? '-' : item.companions + '명';
 
             const row = document.createElement('tr');

@@ -1497,32 +1497,55 @@
                 </div>
 
                 <div class="form-group">
-                    <label>식사 여부</label>
-                    <div class="radio-group">
-                        <div class="radio-option">
-                            <input type="radio" id="meal-yes" name="meal" value="yes">
-                            <label for="meal-yes">식사함</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" id="meal-no" name="meal" value="no">
-                            <label for="meal-no">식사 안함</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group">
                     <label>성함</label>
                     <input type="text" name="name" placeholder="이름을 입력해주세요" required>
                 </div>
 
                 <div class="form-group">
-                    <label>동행인 수</label>
-                    <select name="companions">
-                        <option value="0">없음</option>
+                    <label>동행인 수 (본인 제외)</label>
+                    <select name="companions" id="companionsSelect" onchange="updateMealCount()">
+                        <option value="0">없음 (본인만)</option>
                         <option value="1">1명</option>
                         <option value="2">2명</option>
                         <option value="3">3명</option>
-                        <option value="4">4명 이상</option>
+                        <option value="4">4명</option>
+                        <option value="5">5명</option>
+                        <option value="6">6명</option>
+                        <option value="7">7명</option>
+                        <option value="8">8명</option>
+                        <option value="9">9명</option>
+                        <option value="10">10명 이상</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>식사 여부</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="meal-yes" name="mealOption" value="yes" onchange="toggleMealCount()" checked>
+                            <label for="meal-yes">식사함</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="meal-no" name="mealOption" value="no" onchange="toggleMealCount()">
+                            <label for="meal-no">식사 안함</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" id="mealCountGroup">
+                    <label>식사 인원 (본인 포함)</label>
+                    <select name="meal" id="mealSelect">
+                        <option value="1" selected>1명</option>
+                        <option value="2">2명</option>
+                        <option value="3">3명</option>
+                        <option value="4">4명</option>
+                        <option value="5">5명</option>
+                        <option value="6">6명</option>
+                        <option value="7">7명</option>
+                        <option value="8">8명</option>
+                        <option value="9">9명</option>
+                        <option value="10">10명</option>
+                        <option value="11">11명 이상</option>
                     </select>
                 </div>
 
@@ -2202,9 +2225,7 @@
             const { data } = await supabaseClient
                 .from("guestbook")
                 .select("*")
-                .eq("is_visible", "Y") // 노출 상태가 'Y'인 것만
-                .order("display_order", { ascending: true, nullsFirst: false })
-                .order("created_at", { ascending: true });
+                .order("created_at", { ascending: false });
             const list = document.getElementById('guestbookList');
 
             if (!data || data.length === 0) {
@@ -2459,6 +2480,33 @@
         document.getElementById('rsvpModal').classList.remove('active');
     }
 
+    // 동행인 수 변경 시 식사 인원 자동 설정
+    function updateMealCount() {
+        const companions = parseInt(document.getElementById('companionsSelect').value);
+        const mealSelect = document.getElementById('mealSelect');
+        const mealYes = document.getElementById('meal-yes');
+
+        // 식사함이 선택된 경우에만 자동 설정
+        if (mealYes.checked) {
+            const mealCount = companions + 1; // 본인 포함
+            mealSelect.value = mealCount <= 11 ? mealCount.toString() : '11';
+        }
+    }
+
+    // 식사 여부에 따라 식사 인원 선택창 표시/숨김
+    function toggleMealCount() {
+        const mealYes = document.getElementById('meal-yes');
+        const mealCountGroup = document.getElementById('mealCountGroup');
+
+        if (mealYes.checked) {
+            mealCountGroup.style.display = 'block';
+            // 식사함 선택 시 동행인 수에 맞춰 자동 설정
+            updateMealCount();
+        } else {
+            mealCountGroup.style.display = 'none';
+        }
+    }
+
     async function submitRsvp(event) {
         event.preventDefault();
 
@@ -2469,11 +2517,12 @@
 
         const form = event.target;
         const formData = new FormData(form);
+        const mealOption = formData.get('mealOption');
 
         const rsvpData = {
             side: formData.get('side'),
             attendance: formData.get('attendance'),
-            meal: formData.get('meal'),
+            meal: mealOption === 'no' ? 'no' : formData.get('meal'), // 식사 안함이면 'no', 아니면 인원 수
             name: formData.get('name'),
             companions: formData.get('companions'),
             message: formData.get('message')
@@ -2484,6 +2533,9 @@
             alert('참석 여부가 전달되었습니다. 감사합니다! 💕');
             closeRsvpModal();
             form.reset();
+            // 폼 리셋 후 기본 상태로 되돌리기
+            document.getElementById('meal-yes').checked = true;
+            document.getElementById('mealCountGroup').style.display = 'block';
         } catch (error) {
             console.error('RSVP 제출 실패:', error);
             alert('제출에 실패했습니다. 다시 시도해주세요.');

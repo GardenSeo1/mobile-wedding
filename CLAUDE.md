@@ -106,17 +106,15 @@ All dependencies are loaded via CDN in the HTML files:
 - name: text
 - password: text
 - message: text
-- display_order: integer (방명록 표시 순서)
-- is_visible: text ('Y' = 노출, 'N' = 미노출, NULL = 미설정)
 - created_at: timestamp
 
 -- rsvp table
 - id: auto-increment
 - side: text ('groom' or 'bride')
 - attendance: text ('yes' or 'no')
-- meal: text ('yes' or 'no')
+- meal: text ('no' = 식사 안함, '1'-'11' = 식사 인원 수)
 - name: text
-- companions: text
+- companions: text ('0'-'10' = 동행인 수, 본인 제외)
 - message: text
 - created_at: timestamp
 ```

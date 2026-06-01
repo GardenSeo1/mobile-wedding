@@ -86,6 +86,19 @@
             gap: 15px;
             margin-top: 20px;
         }
+        /* 모바일 최적화: 한 화면에 더 많은 이미지 표시 */
+        @media (max-width: 768px) {
+            .preview-grid, .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 8px;
+            }
+        }
+        @media (max-width: 480px) {
+            .preview-grid, .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+                gap: 6px;
+            }
+        }
         .preview-item, .gallery-item {
             position: relative;
             aspect-ratio: 1;
@@ -409,6 +422,51 @@
             background: rgba(100, 100, 100, 0.5);
             border-color: rgba(255, 255, 255, 0.5);
         }
+        /* 모바일 배지 크기 조정 */
+        @media (max-width: 768px) {
+            .display-order-badge {
+                width: 30px;
+                height: 30px;
+                font-size: 14px;
+            }
+            .preview-order-badge {
+                width: 30px;
+                height: 30px;
+                font-size: 14px;
+            }
+            .visibility-badge {
+                font-size: 9px;
+                padding: 2px 6px;
+                bottom: 25px;
+            }
+            .remove-btn {
+                width: 24px;
+                height: 24px;
+                font-size: 14px;
+            }
+        }
+        @media (max-width: 480px) {
+            .display-order-badge {
+                width: 26px;
+                height: 26px;
+                font-size: 12px;
+            }
+            .preview-order-badge {
+                width: 26px;
+                height: 26px;
+                font-size: 12px;
+            }
+            .visibility-badge {
+                font-size: 8px;
+                padding: 2px 4px;
+                bottom: 20px;
+            }
+            .remove-btn {
+                width: 20px;
+                height: 20px;
+                font-size: 12px;
+            }
+        }
         .order-save-section {
             background: #fff3e0;
             border: 2px solid #ff9800;
@@ -701,11 +759,11 @@
             </div>
 
             <div class="file-input-wrapper">
-                <input type="file" id="mainFileInput" accept="image/*" multiple onchange="previewImages('main')" />
+                <input type="file" id="mainFileInput" accept="image/*,video/*" multiple onchange="previewImages('main')" />
                 <label class="file-input-label" for="mainFileInput">
                     <div style="font-size: 48px; margin-bottom: 10px;">📷</div>
-                    <div>클릭하여 메인 사진을 선택하세요</div>
-                    <div style="font-size: 14px; color: #999; margin-top: 5px;">여러 장 선택 가능</div>
+                    <div>클릭하여 메인 사진/동영상을 선택하세요</div>
+                    <div style="font-size: 14px; color: #999; margin-top: 5px;">여러 장 선택 가능 (이미지 자동 압축)</div>
                 </label>
             </div>
 
@@ -787,11 +845,11 @@
             <div class="section-title">웨딩 사진 업로드</div>
 
             <div class="file-input-wrapper">
-                <input type="file" id="adminFileInput" accept="image/*" multiple onchange="previewImages('admin')" />
+                <input type="file" id="adminFileInput" accept="image/*,video/*" multiple onchange="previewImages('admin')" />
                 <label class="file-input-label" for="adminFileInput">
                     <div style="font-size: 48px; margin-bottom: 10px;">📷</div>
-                    <div>클릭하여 웨딩 사진을 선택하세요</div>
-                    <div style="font-size: 14px; color: #999; margin-top: 5px;">여러 장 선택 가능</div>
+                    <div>클릭하여 웨딩 사진/동영상을 선택하세요</div>
+                    <div style="font-size: 14px; color: #999; margin-top: 5px;">여러 장 선택 가능 (이미지 자동 압축)</div>
                 </label>
             </div>
 
@@ -873,11 +931,11 @@
             <div class="section-title">게스트 사진 업로드</div>
 
             <div class="file-input-wrapper">
-                <input type="file" id="guestFileInput" accept="image/*" multiple onchange="previewImages('guest')" />
+                <input type="file" id="guestFileInput" accept="image/*,video/*" multiple onchange="previewImages('guest')" />
                 <label class="file-input-label" for="guestFileInput">
                     <div style="font-size: 48px; margin-bottom: 10px;">📷</div>
-                    <div>클릭하여 게스트 사진을 선택하세요</div>
-                    <div style="font-size: 14px; color: #999; margin-top: 5px;">여러 장 선택 가능</div>
+                    <div>클릭하여 게스트 사진/동영상을 선택하세요</div>
+                    <div style="font-size: 14px; color: #999; margin-top: 5px;">여러 장 선택 가능 (이미지 자동 압축)</div>
                 </label>
             </div>
 
@@ -1431,7 +1489,84 @@
         previewImages(type);
     }
 
-    // 사진 업로드
+    // 이미지 압축 함수 (모바일 청첩장용 최적화)
+    async function compressImage(file, maxWidth = 1920, maxHeight = 1920, quality = 0.8) {
+        // 동영상이면 압축하지 않고 원본 반환
+        if (file.type.startsWith('video/')) {
+            return file;
+        }
+
+        // 이미지가 아니면 원본 반환
+        if (!file.type.startsWith('image/')) {
+            return file;
+        }
+
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                const img = new Image();
+
+                img.onload = () => {
+                    // Canvas 생성
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    // 비율 유지하면서 리사이징
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height = (height * maxWidth) / width;
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width = (width * maxHeight) / height;
+                            height = maxHeight;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Canvas를 Blob으로 변환
+                    canvas.toBlob(
+                        (blob) => {
+                            if (blob) {
+                                // 압축된 파일이 원본보다 크면 원본 사용
+                                if (blob.size < file.size) {
+                                    const compressedFile = new File([blob], file.name, {
+                                        type: 'image/jpeg',
+                                        lastModified: Date.now()
+                                    });
+                                    console.log(`[압축] ${file.name}: ${(file.size / 1024).toFixed(1)}KB → ${(blob.size / 1024).toFixed(1)}KB (${Math.round((1 - blob.size / file.size) * 100)}% 감소)`);
+                                    resolve(compressedFile);
+                                } else {
+                                    console.log(`[압축 스킵] ${file.name}: 압축 효과 없음`);
+                                    resolve(file);
+                                }
+                            } else {
+                                reject(new Error('이미지 압축 실패'));
+                            }
+                        },
+                        'image/jpeg',
+                        quality
+                    );
+                };
+
+                img.onerror = () => reject(new Error('이미지 로드 실패'));
+                img.src = e.target.result;
+            };
+
+            reader.onerror = () => reject(new Error('파일 읽기 실패'));
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // 사진 업로드 (이미지 압축 + 병렬 업로드)
     async function uploadImages(type) {
         if (selectedFiles[type].length === 0) {
             showStatus(type, "파일을 선택해주세요", "error");
@@ -1443,75 +1578,121 @@
         const progressBarFill = document.getElementById(type + 'ProgressBarFill');
 
         uploadBtn.disabled = true;
-        uploadBtn.textContent = "업로드 중...";
+        uploadBtn.textContent = "압축 중...";
         progressBar.style.display = "block";
+        progressBarFill.style.width = "10%";
 
-        // 노출중인 사진이 있는지 확인
-        const { data: visiblePhotos } = await supabaseClient
-            .from("photos")
-            .select("id")
-            .eq("photo_type", type)
-            .eq("is_visible", true);
+        try {
+            // 1. 모든 파일 압축 (병렬 처리)
+            console.log('[압축 시작]', selectedFiles[type].length, '개 파일');
+            const compressionPromises = selectedFiles[type].map((file) =>
+                compressImage(file).catch(err => {
+                    console.error(`[압축 실패] ${file.name}:`, err);
+                    return file; // 압축 실패시 원본 사용
+                })
+            );
 
-        const hasVisiblePhotos = visiblePhotos && visiblePhotos.length > 0;
-        const orderArray = uploadOrderSelection[type] || [];
+            const compressedFiles = await Promise.all(compressionPromises);
+            console.log('[압축 완료]');
 
-        console.log(`[업로드] 노출중인 사진 있음: ${hasVisiblePhotos}, 선택된 순서:`, orderArray);
+            uploadBtn.textContent = "업로드 중...";
+            progressBarFill.style.width = "20%";
 
-        let uploaded = 0;
-        const total = selectedFiles[type].length;
+            // 노출중인 사진이 있는지 확인
+            const { data: visiblePhotos } = await supabaseClient
+                .from("photos")
+                .select("id")
+                .eq("photo_type", type)
+                .eq("is_visible", true);
 
-        for (let i = 0; i < selectedFiles[type].length; i++) {
-            const file = selectedFiles[type][i];
-            const filePath = `${type}/${Date.now()}_${i}_${file.name}`;
+            const hasVisiblePhotos = visiblePhotos && visiblePhotos.length > 0;
+            const orderArray = uploadOrderSelection[type] || [];
 
-            const { data, error } = await supabaseClient.storage
-                .from("wedding_photos")
-                .upload(filePath, file);
+            console.log(`[업로드] 노출중인 사진 있음: ${hasVisiblePhotos}, 선택된 순서:`, orderArray);
 
-            if (error) {
-                console.error("업로드 실패:", error);
-                continue;
+            let uploaded = 0;
+            const failed = 0;
+            const total = compressedFiles.length;
+
+            // 2. 병렬 업로드 (한 번에 3개씩)
+            const CONCURRENT_UPLOADS = 3;
+
+            for (let i = 0; i < compressedFiles.length; i += CONCURRENT_UPLOADS) {
+                const batch = compressedFiles.slice(i, i + CONCURRENT_UPLOADS);
+                const batchStartIndex = i;
+
+                const batchPromises = batch.map(async (file, batchIdx) => {
+                    const fileIndex = batchStartIndex + batchIdx;
+                    const originalFile = selectedFiles[type][fileIndex];
+                    const timestamp = Date.now();
+                    const filePath = `${type}/${timestamp}_${fileIndex}_${originalFile.name}`;
+
+                    try {
+                        const { data, error } = await supabaseClient.storage
+                            .from("wedding_photos")
+                            .upload(filePath, file);
+
+                        if (error) {
+                            console.error("[업로드 실패]", originalFile.name, error);
+                            return { success: false };
+                        }
+
+                        const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/wedding_photos/${filePath}`;
+
+                        // 노출 상태 및 순서 결정
+                        const orderPosition = orderArray.indexOf(fileIndex);
+                        const isVisible = !hasVisiblePhotos && orderPosition !== -1;
+                        const displayOrder = isVisible ? (orderPosition + 1) : null;
+
+                        await supabaseClient.from("photos").insert([
+                            {
+                                image_url: imageUrl,
+                                photo_type: type,
+                                is_visible: isVisible,
+                                display_order: displayOrder,
+                                del_yn: 'N'
+                            }
+                        ]);
+
+                        return { success: true };
+                    } catch (err) {
+                        console.error("[업로드 오류]", originalFile.name, err);
+                        return { success: false };
+                    }
+                });
+
+                const batchResults = await Promise.all(batchPromises);
+                uploaded += batchResults.filter(r => r.success).length;
+
+                // 진행률 업데이트 (20% ~ 100%)
+                const progress = 20 + ((uploaded / total) * 80);
+                progressBarFill.style.width = progress + "%";
             }
 
-            const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/wedding_photos/${filePath}`;
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = "업로드 하기";
+            progressBar.style.display = "none";
+            progressBarFill.style.width = "0%";
 
-            // 노출 상태 및 순서 결정
-            const orderPosition = orderArray.indexOf(i);
-            const isVisible = !hasVisiblePhotos && orderPosition !== -1;
-            const displayOrder = isVisible ? (orderPosition + 1) : null;
+            document.getElementById(type + 'FileInput').value = "";
+            document.getElementById(type + 'PreviewGrid').innerHTML = "";
+            selectedFiles[type] = [];
+            uploadOrderSelection[type] = [];
 
-            await supabaseClient.from("photos").insert([
-                {
-                    image_url: imageUrl,
-                    photo_type: type,
-                    is_visible: isVisible,
-                    display_order: displayOrder,
-                    del_yn: 'N'
-                }
-            ]);
+            showStatus(type, `${uploaded}개 파일이 업로드되었습니다!`, "success");
 
-            uploaded++;
-            const progress = (uploaded / total) * 100;
-            progressBarFill.style.width = progress + "%";
+            // 순서 재계산
+            await reorderVisiblePhotos(type);
+
+            loadGallery(type);
+        } catch (err) {
+            console.error('[업로드 전체 실패]', err);
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = "업로드 하기";
+            progressBar.style.display = "none";
+            progressBarFill.style.width = "0%";
+            showStatus(type, "업로드 중 오류가 발생했습니다", "error");
         }
-
-        uploadBtn.disabled = false;
-        uploadBtn.textContent = "업로드 하기";
-        progressBar.style.display = "none";
-        progressBarFill.style.width = "0%";
-
-        document.getElementById(type + 'FileInput').value = "";
-        document.getElementById(type + 'PreviewGrid').innerHTML = "";
-        selectedFiles[type] = [];
-        uploadOrderSelection[type] = [];
-
-        showStatus(type, `${uploaded}개 사진이 업로드되었습니다!`, "success");
-
-        // 순서 재계산
-        await reorderVisiblePhotos(type);
-
-        loadGallery(type);
     }
 
     function showStatus(type, message, statusType) {
@@ -1699,6 +1880,11 @@
             filter: '.gallery-item:not(.visible-photo)', // 노출중인 사진만 드래그 가능
             ghostClass: 'sortable-ghost',
             dragClass: 'sortable-drag',
+            // 모바일 터치 지원 강화
+            touchStartThreshold: 3, // 3px 이동 후 드래그 시작
+            forceFallback: false, // HTML5 DnD 사용 (모바일에서 더 부드러움)
+            delay: 0, // 즉시 드래그 시작
+            delayOnTouchOnly: true, // 터치에서만 약간의 지연
             onEnd: function(evt) {
                 console.log('[드래그 완료] 이전 인덱스:', evt.oldIndex, '→ 새 인덱스:', evt.newIndex);
 
@@ -1902,21 +2088,39 @@
             .eq("photo_type", type)
             .eq("is_visible", true);
 
-        const currentVisible = data ? data.length : 0;
+        let currentVisible = data ? data.length : 0;
 
-        if (type === 'main') {
+        // pending 변경사항 반영
+        if (pendingVisibilityChanges[type]) {
+            const galleryElement = document.getElementById(`${type}Gallery`);
+            if (galleryElement) {
+                const photos = galleryElement.querySelectorAll('.gallery-item');
+                photos.forEach(photoElement => {
+                    const photoId = parseInt(photoElement.dataset.photoId);
+                    const dbVisibility = photoElement.dataset.dbVisibility === 'true';
+
+                    if (pendingVisibilityChanges[type].has(photoId)) {
+                        const pendingVisibility = pendingVisibilityChanges[type].get(photoId);
+                        // DB 상태와 pending 상태가 다르면 조정
+                        if (dbVisibility && !pendingVisibility) {
+                            currentVisible--; // 노출에서 미노출로 변경
+                        } else if (!dbVisibility && pendingVisibility) {
+                            currentVisible++; // 미노출에서 노출로 변경
+                        }
+                    }
+                });
+            }
+        }
+
+        // 동적으로 설정된 maxLimits 사용
+        const maxLimit = maxLimits[type] || (type === 'main' ? MAX_MAIN_PHOTOS : MAX_ADMIN_VISIBLE_PHOTOS);
+
+        if (type === 'main' || type === 'admin') {
             return {
-                canAdd: currentVisible + requestedCount <= MAX_MAIN_PHOTOS,
+                canAdd: currentVisible + requestedCount <= maxLimit,
                 current: currentVisible,
-                max: MAX_MAIN_PHOTOS,
-                available: MAX_MAIN_PHOTOS - currentVisible
-            };
-        } else if (type === 'admin') {
-            return {
-                canAdd: currentVisible + requestedCount <= MAX_ADMIN_VISIBLE_PHOTOS,
-                current: currentVisible,
-                max: MAX_ADMIN_VISIBLE_PHOTOS,
-                available: MAX_ADMIN_VISIBLE_PHOTOS - currentVisible
+                max: maxLimit,
+                available: maxLimit - currentVisible
             };
         } else {
             return { canAdd: true, current: currentVisible, max: Infinity, available: Infinity };

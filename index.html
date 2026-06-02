@@ -2803,29 +2803,39 @@
         const startDate = '20261004T140000';
         const endDate = '20261004T150000';
 
-        // Google Calendar URL
-        const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
-
-        // ICS 파일 생성 (iOS/Outlook)
+        // ICS 파일 생성 (iOS/Android 기본 캘린더)
         const icsContent = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
+            'PRODID:-//Wedding Invitation//KO',
+            'CALSCALE:GREGORIAN',
+            'METHOD:PUBLISH',
             'BEGIN:VEVENT',
-            'URL:' + window.location.href,
+            'UID:' + Date.now() + '@wedding-invitation',
+            'DTSTAMP:' + startDate,
             'DTSTART:' + startDate,
             'DTEND:' + endDate,
             'SUMMARY:' + title,
             'DESCRIPTION:' + details,
             'LOCATION:' + location,
+            'STATUS:CONFIRMED',
+            'SEQUENCE:0',
+            'BEGIN:VALARM',
+            'TRIGGER:-PT1H',
+            'ACTION:DISPLAY',
+            'DESCRIPTION:결혼식 1시간 전',
+            'END:VALARM',
             'END:VEVENT',
             'END:VCALENDAR'
-        ].join('\n');
+        ].join('\r\n');
 
-        // 모바일인 경우 Google Calendar로, 데스크톱인 경우 선택 가능하도록
-        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            window.open(googleUrl, '_blank');
-        } else {
-            // ICS 파일 다운로드
+        // 플랫폼 감지
+        const userAgent = navigator.userAgent.toLowerCase();
+        const isIOS = /iphone|ipad|ipod/.test(userAgent);
+        const isAndroid = /android/.test(userAgent);
+
+        if (isIOS) {
+            // iOS: ICS 파일 다운로드 → 자동으로 애플 캘린더에 추가 옵션 표시
             const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
@@ -2833,6 +2843,34 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+
+            // 사용자에게 안내
+            setTimeout(() => {
+                alert('다운로드된 파일을 열면 캘린더에 일정이 추가됩니다.');
+            }, 500);
+        } else if (isAndroid) {
+            // Android: 구글 캘린더 + ICS 옵션 제공
+            const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
+
+            // 선택 모달 표시
+            const choice = confirm('구글 캘린더로 추가하시겠습니까?\n\n확인: 구글 캘린더\n취소: 기본 캘린더(ICS 다운로드)');
+
+            if (choice) {
+                // 구글 캘린더
+                window.open(googleUrl, '_blank');
+            } else {
+                // 기본 캘린더 (삼성 캘린더 등)
+                const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = 'wedding_invitation.ics';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        } else {
+            // 데스크톱: 모바일 전용 안내
+            alert('이 기능은 모바일에서만 가능합니다.\n\n모바일 기기에서 접속해주세요.');
         }
     }
 

@@ -196,29 +196,6 @@
         }
 
         /* 갤러리 */
-        .gallery-tabs {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .gallery-tab {
-            padding: 8px 20px;
-            border: 1px solid #ddd;
-            background: white;
-            border-radius: 20px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .gallery-tab.active {
-            background: #43573a;
-            color: white;
-            border-color: #43573a;
-        }
-
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -1328,10 +1305,6 @@
     <!-- 갤러리 -->
     <section class="section" data-aos="fade-up">
         <div class="section-title">GALLERY</div>
-        <div class="gallery-tabs">
-            <button class="gallery-tab active" onclick="switchTab('all')">전체</button>
-            <button class="gallery-tab" onclick="switchTab('admin')">웨딩사진</button>
-        </div>
         <div class="gallery-grid" id="gallery">
             <div class="gallery-item">SUB SAMPLE 1</div>
             <div class="gallery-item">SUB SAMPLE 2</div>
@@ -1821,15 +1794,6 @@
         }
     }
 
-    // 갤러리 탭 전환
-    function switchTab(tab) {
-        currentTab = tab;
-        document.querySelectorAll('.gallery-tab').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        event.target.classList.add('active');
-        loadGallery();
-    }
 
     // 갤러리 로드
     async function loadGallery() {
@@ -1839,24 +1803,15 @@
         }
 
         try {
-            let query = supabaseClient
+            // main과 admin 사진을 함께 표시 (정렬: main > admin > display_order)
+            const { data } = await supabaseClient
                 .from("photos")
                 .select("*")
                 .eq("is_visible", true)
                 .eq("del_yn", "N")
-                .neq("photo_type", "guest")
-                .order("photo_type", { ascending: false })
+                .in("photo_type", ["main", "admin"])
+                .order("photo_type", { ascending: false })  // main이 admin보다 먼저
                 .order("display_order", { ascending: true });
-
-            if (currentTab === 'all') {
-                // 전체 탭: guest 사진 제외 (메인 + 웨딩만)
-                query = query.in("photo_type", ["main", "admin"]);
-            } else {
-                // 특정 탭: 해당 타입만
-                query = query.eq("photo_type", currentTab);
-            }
-
-            const { data } = await query;
             const gallery = document.getElementById("gallery");
 
             if (!data || data.length === 0) {
@@ -1889,9 +1844,6 @@
             currentGalleryPhotos = data.map(photo => photo.image_url);
 
             data.forEach((photo, index) => {
-                console.log(
-                    `photo_type=${photo.photo_type}, display_order=${photo.display_order}`
-                );
                 const item = document.createElement('div');
                 item.className = 'gallery-item';
 
@@ -2008,10 +1960,10 @@
                                         type: 'image/jpeg',
                                         lastModified: Date.now()
                                     });
-                                    console.log(`[압축] ${file.name}: ${(file.size / 1024).toFixed(1)}KB → ${(blob.size / 1024).toFixed(1)}KB (${Math.round((1 - blob.size / file.size) * 100)}% 감소)`);
+                                    // console.log(`[압축] ${file.name}: ${(file.size / 1024).toFixed(1)}KB → ${(blob.size / 1024).toFixed(1)}KB (${Math.round((1 - blob.size / file.size) * 100)}% 감소)`);
                                     resolve(compressedFile);
                                 } else {
-                                    console.log(`[압축 스킵] ${file.name}: 압축 효과 없음`);
+                                    // console.log(`[압축 스킵] ${file.name}: 압축 효과 없음`);
                                     resolve(file);
                                 }
                             } else {
@@ -2073,7 +2025,7 @@
 
         try {
             // 1. 모든 파일 압축 (병렬 처리)
-            console.log('[압축 시작] 총', totalFiles, '개 파일');
+            // console.log('[압축 시작] 총', totalFiles, '개 파일');
             const compressionPromises = selectedFiles.map((file, index) =>
                 compressImage(file).catch(err => {
                     console.error(`[압축 실패] ${file.name}:`, err);
@@ -2082,7 +2034,7 @@
             );
 
             const compressedFiles = await Promise.all(compressionPromises);
-            console.log('[압축 완료]');
+            // console.log('[압축 완료]');
 
             uploadBtn.textContent = '업로드 중...';
             status.textContent = '파일 업로드 중...';

@@ -1714,6 +1714,7 @@
     let currentTab = 'all';
     let currentGalleryPhotos = []; // 현재 갤러리의 전체 사진 배열
     let currentLightboxIndex = 0; // 현재 라이트박스에서 보는 사진 인덱스
+    let savedScrollPosition = 0; // 모달 열기 전 스크롤 위치 저장
 
     // 달력 생성
     function generateCalendar() {
@@ -2815,21 +2816,19 @@
 
     // 모달 열기/닫기 시 body 스크롤 제어
     function lockBodyScroll() {
+        savedScrollPosition = window.scrollY; // 현재 스크롤 위치 저장
         document.body.style.overflow = 'hidden';
         document.body.style.position = 'fixed';
         document.body.style.width = '100%';
-        document.body.style.top = `-${window.scrollY}px`;
+        document.body.style.top = `-${savedScrollPosition}px`;
     }
 
     function unlockBodyScroll() {
-        const scrollY = document.body.style.top;
         document.body.style.overflow = '';
         document.body.style.position = '';
         document.body.style.width = '';
         document.body.style.top = '';
-        if (scrollY) {
-            window.scrollTo(0, parseInt(scrollY || '0') * -1);
-        }
+        window.scrollTo(0, savedScrollPosition); // 저장된 위치로 복원
     }
 
     // RSVP 모달

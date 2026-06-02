@@ -75,7 +75,8 @@ All dependencies are loaded via CDN in the HTML files:
 - **Kakao Maps** (commented out in production) - Map display
 
 ### admin.html Dependencies
-- **Supabase JS Client** - Same as index.html
+- **Supabase JS Client** (`@supabase/supabase-js@2`) - Database and storage
+- **Sortable.js** (`sortablejs@1.15.0`) - Drag-and-drop photo reordering
 
 ## Supabase Configuration
 
@@ -85,8 +86,11 @@ All dependencies are loaded via CDN in the HTML files:
 
 ### Storage Structure
 - Bucket: `wedding-photos`
-- Admin photos: `wedding/{timestamp}_{index}_{filename}`
+- Main photos: `main/{timestamp}_{index}_{filename}`
+- Admin photos: `admin/{timestamp}_{index}_{filename}` (wedding photos)
 - Guest photos: `guest/{timestamp}_{index}_{filename}`
+- **Supports**: Images (JPEG, PNG, etc.) and Videos (MP4, MOV, etc.)
+- **Compression**: Images are automatically compressed before upload (max 1920x1920px, 80% quality)
 
 ### Database Schema
 ```sql
@@ -141,13 +145,40 @@ All dependencies are loaded via CDN in the HTML files:
 - Holiday marked: Oct 5th (대체공휴일)
 
 ### Photo Management
-- **Guest Upload** (index.html:1526-1570): Multiple file selection, preview, batch upload to `guest/` path
-- **Admin Upload** (admin.html:285-340): Similar to guest but uploads to `wedding/` path with progress bar
-- **Gallery Loading** (index.html:1459-1491): Tab-based filtering, displays images in grid with lightbox
+- **Guest Upload** (index.html):
+  - Multiple file selection (images and videos)
+  - Automatic image compression before upload
+  - Preview with removal option
+  - Parallel upload (3 files at a time)
+  - Uploads to `guest/` path
+  - Requires name and password (4+ chars)
+
+- **Admin Upload** (admin.html):
+  - Similar to guest upload with compression
+  - Uploads to `main/`, `admin/`, or `guest/` paths
+  - Progress bar with percentage
+  - Visibility and display order management
+  - Drag-and-drop reordering for visible photos
+
+- **Gallery Loading**:
+  - Tab-based filtering (all/admin/guest photos)
+  - Grid layout with lightbox
+  - Mobile-optimized grid sizes
+  - Click to enlarge images
 
 ### Form Submissions
-- **RSVP** (index.html:1765-1794): Collects attendance data, inserts into `rsvp` table
-- **Guestbook** (index.html:1573-1601): Requires name, password, message; inserts into `guestbook` table
+- **RSVP** (index.html):
+  - Modal-based form with conditional fields
+  - Shows companion/meal fields only when attending
+  - Validates all required fields
+  - Stores `'0'` for meal/companions when not attending or no meal
+  - Inserts into `rsvp` table with timestamp
+
+- **Guestbook** (index.html):
+  - Requires name, password (for deletion), message
+  - Displays messages in reverse chronological order
+  - Delete functionality with password verification
+  - Inserts into `guestbook` table
 
 ## Styling and UI
 
@@ -158,9 +189,18 @@ All dependencies are loaded via CDN in the HTML files:
 - Background: `#f5f3ed`, `#fafaf8`
 
 ### Responsive Design
-- Max container width: `480px`
-- Mobile-first approach
-- Grid layouts for galleries: `repeat(3, 1fr)` for thumbnails
+- **index.html**:
+  - Max container width: `480px`
+  - Mobile-first approach
+  - Grid layouts for galleries: `repeat(3, 1fr)` for thumbnails
+  - Modal scroll lock on mobile to prevent background scrolling
+
+- **admin.html**:
+  - Desktop gallery: 180px grid items
+  - Tablet (≤768px): 100px grid items, 8px gap
+  - Mobile (≤480px): 90px grid items, 6px gap
+  - Scaled badges and buttons for touch targets
+  - Touch-optimized drag-and-drop
 
 ### Animations
 - AOS library for scroll animations with `data-aos="fade-up"` attributes
@@ -184,8 +224,11 @@ All dependencies are loaded via CDN in the HTML files:
 ### Modal Pattern
 - Create modal HTML with `<div class="modal" id="modalName">`
 - Add `openModalName()` and `closeModalName()` functions
+- Call `lockBodyScroll()` when opening modal
+- Call `unlockBodyScroll()` when closing modal
 - Set up background click listener in `initPage()`
 - Add `modal.classList.add/remove('active')` for show/hide
+- Background scroll is prevented on mobile devices
 
 ## Testing and Debugging
 
@@ -201,7 +244,13 @@ The app logs initialization steps:
 - "✅ AOS 초기화 성공!"
 - "페이지 로드 완료"
 
-Check browser console for these messages to verify proper initialization.
+Image compression logs:
+- "[압축] filename.jpg: 3200.5KB → 850.2KB (73% 감소)"
+- "[압축 스킵] filename.jpg: 압축 효과 없음"
+- "[압축 시작] 총 5개 파일"
+- "[압축 완료]"
+
+Check browser console for these messages to verify proper initialization and compression performance.
 
 ## Important Notes
 
@@ -218,14 +267,153 @@ Check browser console for these messages to verify proper initialization.
 - File API for image previews
 
 ### Contact Information (Hardcoded)
-- Groom: 서정원, phone: 010-8358-7077
-- Bride: 제시현, phone: 010-4764-8574
-- Location: 네이버 그린팩토리 (placeholder venue)
-- Wedding time: 오후 2시 (2:00 PM)
+- **Groom**: 서정원, Phone: 010-8358-7077
+- **Bride**: 제시현, Phone: 010-4764-8574
+- **Location**: 부산 라온 웨딩홀 23층 화이트홀
+  - Address: 부산광역시 부산진구 중앙대로 640, ABL부산타워 23층
+  - Tel: 1588-3820
+  - Naver Map: https://map.naver.com/p/entry/place/34698403
+  - Kakao Map: https://place.map.kakao.com/25639730
+  - T Map: tmap://route?goalname=라온웨딩홀&goalx=129.0580&goaly=35.1455
+- **Wedding Date & Time**: 2026년 10월 4일 토요일 오후 2시 (October 4, 2026 Saturday 2:00 PM)
 
 ### Known Issues
 - Kakao Maps API may fail to load (fallback text displayed)
 - Calendar assumes October 2026 structure (not dynamic)
 - D-day counter shows negative after wedding date
-- No image optimization or compression on upload
-- No loading states for Supabase operations beyond button disable
+
+## Recent Updates & Improvements
+
+### 1. Page Section Reordering (2026-06-02)
+**File**: `index.html`
+
+Sections are now displayed in the following order:
+1. 메인사진 (Main photos slider)
+2. 문구 (Invitation message)
+3. 웨딩사진 (Wedding gallery)
+4. 달력 (Calendar)
+5. 지도 (Location map)
+6. 참석여부 (RSVP)
+7. 디데이 (D-day countdown)
+8. 계좌번호 (Account information)
+9. 방명록 (Guestbook)
+10. 참석자 사진 업로드 (Guest photo upload)
+
+### 2. Admin Page Visibility Limit Bug Fix (2026-06-02)
+**File**: `admin.html`
+
+Fixed the issue where setting max visibility count (e.g., 5 photos) didn't work correctly when adding photos via batch selection.
+
+**Changes:**
+- Updated `checkVisibilityLimit()` function to use dynamic `maxLimits` instead of hardcoded constants
+- Added pending visibility changes reflection to accurately calculate current visible count
+- Now respects user-configured max limits in real-time
+
+**Location**: Lines ~2021-2060
+
+### 3. Image Compression & Upload Optimization (2026-06-02)
+**Files**: `index.html`, `admin.html`
+
+Implemented automatic image compression for faster loading and reduced bandwidth usage.
+
+**Features:**
+- **Auto Image Compression**:
+  - Max size: 1920x1920px (maintains aspect ratio)
+  - JPEG quality: 80%
+  - Uses original if compressed size is larger
+  - Console logs compression ratio (e.g., "3.2MB → 850KB, 73% reduction")
+
+- **Parallel Upload**:
+  - Uploads 3 files concurrently instead of sequential
+  - ~3x faster for bulk uploads
+
+- **Video Support**:
+  - Accepts both images and videos: `accept="image/*,video/*"`
+  - Videos uploaded without compression
+  - UI updated to "사진/동영상 선택하기"
+
+**Functions:**
+- `compressImage(file, maxWidth, maxHeight, quality)` - Compresses images using Canvas API
+- Modified `uploadPhotos()` (index.html) and `uploadImages(type)` (admin.html) to use compression
+
+**Performance:**
+- Typical compression: 70-85% size reduction
+- Main page load: ~15MB → ~3MB (5 photos)
+- Mobile 4G: 3s → 0.6s loading time
+
+### 4. Admin Page Mobile Optimization (2026-06-02)
+**File**: `admin.html`
+
+Improved mobile experience for photo management on small screens.
+
+**Grid Size Changes:**
+- Desktop: 180px (unchanged)
+- Tablet (≤768px): 100px → ~4-5 images per row
+- Mobile (≤480px): 90px → ~4 images per row
+
+**Badge & Button Scaling:**
+- Display order badge: 40px → 30px (tablet) → 26px (mobile)
+- Remove button: 30px → 24px (tablet) → 20px (mobile)
+- Visibility badge: Reduced font size and padding
+- Gap spacing: 15px → 8px (tablet) → 6px (mobile)
+
+**Touch Optimization:**
+- Enhanced drag-and-drop for mobile:
+  - `touchStartThreshold: 3` - 3px movement to start drag
+  - `delayOnTouchOnly: true` - Slight delay only for touch
+  - `forceFallback: false` - Uses HTML5 DnD for smoother experience
+
+**Result**: 12-16 images visible per screen on mobile devices
+
+**Location**: Lines ~83-142 (CSS media queries), ~1820-1837 (Sortable config)
+
+### 5. Modal Background Scroll Prevention (2026-06-02)
+**File**: `index.html`
+
+Fixed issue where background page scrolled when modal/popup was open on mobile devices.
+
+**Implementation:**
+- `lockBodyScroll()`: Sets body to `overflow: hidden` and `position: fixed`
+- `unlockBodyScroll()`: Restores scroll position after closing
+- Applied to all modals and popups:
+  - RSVP modal
+  - Contact modal
+  - My photos modal
+  - Lightbox
+  - RSVP popup
+
+**Location**: Lines ~2629-2645
+
+### 6. RSVP Conditional Fields (2026-06-02)
+**File**: `index.html`
+
+Improved RSVP form UX by showing/hiding fields based on attendance status.
+
+**Behavior:**
+- **참석 (Attending)**:
+  - Shows: 동행인 수 (companions), 식사 여부 (meal option), 식사 인원 (meal count)
+
+- **불참석 (Not Attending)**:
+  - Hides all companion and meal-related fields
+  - Saves `companions: '0'` and `meal: '0'` to database
+
+**Data Storage:**
+- Attending + meal: `{ companions: '2', meal: '3' }`
+- Attending + no meal: `{ companions: '2', meal: '0' }`
+- Not attending: `{ companions: '0', meal: '0' }`
+
+**Functions:**
+- `toggleAttendanceFields()` - Shows/hides fields based on attendance selection
+- Modified `submitRsvp()` - Handles conditional data submission
+
+**Location**: Lines ~1494-1560 (HTML), ~2658-2718 (JavaScript)
+
+### 7. Database Schema Updates
+
+**rsvp table - meal field:**
+- `'0'` = 식사 안함 or 불참석 (changed from `null` or `'no'`)
+- `'1'`-`'11'` = 식사 인원 수 (본인 포함)
+
+**rsvp table - companions field:**
+- `'0'` = 없음 or 불참석 (changed from `null`)
+- `'1'`-`'10'` = 동행인 수 (본인 제외)

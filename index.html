@@ -2795,15 +2795,20 @@
         }
     }
 
-    // 캘린더에 저장
     function addToCalendar() {
         const title = '서정원 ❤️ 제시현 결혼식';
         const location = '부산광역시 부산진구 중앙대로 640 ABL부산타워 23층 라온웨딩홀 화이트홀';
         const details = '저희 결혼식에 초대합니다';
-        const startDate = '20261004T140000';
-        const endDate = '20261004T150000';
 
-        // ICS 파일 생성 (iOS/Android 기본 캘린더)
+        // KST 2026-10-04 14:00 ~ 15:00
+        const startDate = '20261004T050000Z';
+        const endDate = '20261004T060000Z';
+
+        const dtStamp = new Date()
+            .toISOString()
+            .replace(/[-:]/g, '')
+            .replace(/.\d{3}/, '');
+
         const icsContent = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
@@ -2811,13 +2816,13 @@
             'CALSCALE:GREGORIAN',
             'METHOD:PUBLISH',
             'BEGIN:VEVENT',
-            'UID:' + Date.now() + '@wedding-invitation',
-            'DTSTAMP:' + startDate,
-            'DTSTART:' + startDate,
-            'DTEND:' + endDate,
-            'SUMMARY:' + title,
-            'DESCRIPTION:' + details,
-            'LOCATION:' + location,
+            `UID:${Date.now()}@wedding-invitation`,
+            `DTSTAMP:${dtStamp}`,
+            `DTSTART:${startDate}`,
+            `DTEND:${endDate}`,
+            `SUMMARY:${title}`,
+            `DESCRIPTION:${details}`,
+            `LOCATION:${location}`,
             'STATUS:CONFIRMED',
             'SEQUENCE:0',
             'BEGIN:VALARM',
@@ -2829,23 +2834,24 @@
             'END:VCALENDAR'
         ].join('\r\n');
 
-        // 플랫폼 감지
-        const userAgent = navigator.userAgent.toLowerCase();
-        const isIOS = /iphone|ipad|ipod/.test(userAgent);
-        const isAndroid = /android/.test(userAgent);
+        const blob = new Blob(
+            [icsContent],
+            { type: 'text/calendar;charset=utf-8' }
+        );
 
-        if (isIOS) {
-            // iOS: Data URI로 바로 캘린더 앱 열기 (파일 다운로드 없음)
-            const dataUri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(icsContent);
-            window.location.href = dataUri;
-        } else if (isAndroid) {
-            // Android: 구글 캘린더로 바로 이동
-            const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
-            window.open(googleUrl, '_blank');
-        } else {
-            // 데스크톱: 모바일 전용 안내
-            alert('이 기능은 모바일에서만 가능합니다.\n\n모바일 기기에서 접속해주세요.');
-        }
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'wedding.ics';
+
+        document.body.appendChild(link);
+        link.click();
+
+        setTimeout(() => {
+            URL.revokeObjectURL(url);
+            document.body.removeChild(link);
+        }, 1000);
     }
 
     // 모달 열기/닫기 시 body 스크롤 제어

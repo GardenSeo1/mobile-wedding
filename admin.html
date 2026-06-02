@@ -109,6 +109,8 @@
         .gallery-item {
             cursor: pointer;
             transition: transform 0.2s;
+            touch-action: manipulation; /* 빠른 터치 응답, 더블탭 줌 방지 */
+            -webkit-tap-highlight-color: rgba(0,0,0,0.1); /* 터치 피드백 */
         }
         .gallery-item:hover {
             transform: scale(1.05);
@@ -205,11 +207,13 @@
             top: 5px;
             left: 5px;
             z-index: 10;
+            touch-action: manipulation; /* 빠른 터치 응답 */
         }
         .checkbox-wrapper input[type="checkbox"] {
             width: 24px;
             height: 24px;
             cursor: pointer;
+            touch-action: manipulation; /* 빠른 터치 응답 */
         }
         .photo-type-badge {
             position: absolute;
@@ -403,6 +407,7 @@
             border: 2px solid white;
             border-radius: 50%;
             display: flex;
+            pointer-events: none; /* 클릭 통과 */
             align-items: center;
             justify-content: center;
             font-size: 20px;
@@ -1853,14 +1858,32 @@
                 ${visibilityBadge}
             `;
 
-            // galleryItem 전체를 클릭 가능하게 (배지 제외)
+            // galleryItem 전체를 클릭/터치 가능하게 (배지 제외)
             galleryItem.style.cursor = 'pointer';
-            galleryItem.onclick = function(e) {
-                // 체크박스 클릭은 제외
+            galleryItem.style.touchAction = 'manipulation'; // 빠른 터치 응답
+
+            // 터치 이벤트 처리 (모바일)
+            let touchStartTime = 0;
+            galleryItem.addEventListener('touchstart', function(e) {
+                touchStartTime = Date.now();
+            }, { passive: true });
+
+            galleryItem.addEventListener('touchend', function(e) {
+                // 긴 터치나 스크롤은 무시 (드래그 방지)
+                if (Date.now() - touchStartTime > 500) return;
+
+                if (!e.target.closest('.checkbox-wrapper')) {
+                    e.preventDefault(); // 300ms 지연 방지
+                    eval(imageClickHandler);
+                }
+            });
+
+            // 클릭 이벤트 처리 (데스크톱 호환성)
+            galleryItem.addEventListener('click', function(e) {
                 if (!e.target.closest('.checkbox-wrapper')) {
                     eval(imageClickHandler);
                 }
-            };
+            });
 
             gallery.appendChild(galleryItem);
         });
@@ -2720,13 +2743,32 @@
                     ${visibilityBadge}
                 `;
 
-                // galleryItem 전체를 클릭 가능하게
+                // galleryItem 전체를 클릭/터치 가능하게
                 galleryItem.style.cursor = 'pointer';
-                galleryItem.onclick = function(e) {
+                galleryItem.style.touchAction = 'manipulation'; // 빠른 터치 응답
+    
+                // 터치 이벤트 처리 (모바일)
+                let touchStartTime = 0;
+                galleryItem.addEventListener('touchstart', function(e) {
+                    touchStartTime = Date.now();
+                }, { passive: true });
+
+                galleryItem.addEventListener('touchend', function(e) {
+                    // 긴 터치나 스크롤은 무시 (드래그 방지)
+                    if (Date.now() - touchStartTime > 500) return;
+
+                    if (!e.target.closest('.checkbox-wrapper')) {
+                        e.preventDefault(); // 300ms 지연 방지
+                        togglePhotoCheckbox('guest', photo.id);
+                    }
+                });
+
+                // 클릭 이벤트 처리 (데스크톱 호환성)
+                galleryItem.addEventListener('click', function(e) {
                     if (!e.target.closest('.checkbox-wrapper')) {
                         togglePhotoCheckbox('guest', photo.id);
                     }
-                };
+                });
 
                 gallery.appendChild(galleryItem);
             });
@@ -2927,13 +2969,32 @@
                 <div class="photo-type-badge">${PHOTO_TYPE_LABELS[photo.photo_type] || photo.photo_type}</div>
             `;
 
-            // galleryItem 전체를 클릭 가능하게
+            // galleryItem 전체를 클릭/터치 가능하게
             galleryItem.style.cursor = 'pointer';
-            galleryItem.onclick = function(e) {
+            galleryItem.style.touchAction = 'manipulation'; // 빠른 터치 응답
+
+            // 터치 이벤트 처리 (모바일)
+            let touchStartTime = 0;
+            galleryItem.addEventListener('touchstart', function(e) {
+                touchStartTime = Date.now();
+            }, { passive: true });
+
+            galleryItem.addEventListener('touchend', function(e) {
+                // 긴 터치나 스크롤은 무시 (드래그 방지)
+                if (Date.now() - touchStartTime > 500) return;
+
+                if (!e.target.closest('.checkbox-wrapper')) {
+                    e.preventDefault(); // 300ms 지연 방지
+                    togglePhotoCheckbox('users', photo.id);
+                }
+            });
+
+            // 클릭 이벤트 처리 (데스크톱 호환성)
+            galleryItem.addEventListener('click', function(e) {
                 if (!e.target.closest('.checkbox-wrapper')) {
                     togglePhotoCheckbox('users', photo.id);
                 }
-            };
+            });
 
             gallery.appendChild(galleryItem);
         });

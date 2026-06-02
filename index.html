@@ -491,6 +491,7 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.95);
             z-index: 9999;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
         }
@@ -499,9 +500,18 @@
             display: flex;
         }
 
+        .lightbox-main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            position: relative;
+        }
+
         .lightbox img {
             max-width: 90%;
-            max-height: 90%;
+            max-height: 80vh;
             border-radius: 8px;
         }
 
@@ -517,6 +527,103 @@
             font-size: 24px;
             cursor: pointer;
             line-height: 1;
+            z-index: 10001;
+        }
+
+        .lightbox-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .lightbox-arrow:hover {
+            background: white;
+        }
+
+        .lightbox-arrow.prev {
+            left: 20px;
+        }
+
+        .lightbox-arrow.next {
+            right: 20px;
+        }
+
+        .lightbox-thumbnails {
+            width: 100%;
+            max-width: 90%;
+            padding: 20px 0;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .lightbox-thumbnails::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .lightbox-thumbnails::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 3px;
+        }
+
+        .lightbox-thumbnail {
+            min-width: 60px;
+            width: 60px;
+            height: 60px;
+            border-radius: 4px;
+            cursor: pointer;
+            object-fit: cover;
+            opacity: 0.5;
+            transition: opacity 0.3s, transform 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .lightbox-thumbnail:hover {
+            opacity: 0.8;
+            transform: scale(1.1);
+        }
+
+        .lightbox-thumbnail.active {
+            opacity: 1;
+            border-color: #43573a;
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 768px) {
+            .lightbox-arrow {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+
+            .lightbox-arrow.prev {
+                left: 10px;
+            }
+
+            .lightbox-arrow.next {
+                right: 10px;
+            }
+
+            .lightbox-thumbnail {
+                min-width: 50px;
+                width: 50px;
+                height: 50px;
+            }
         }
 
         /* 달력 */
@@ -1446,8 +1553,13 @@
 
 <!-- 라이트박스 -->
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
-    <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
-    <img id="lightboxImg" src="" alt="">
+    <button class="lightbox-close" onclick="event.stopPropagation(); closeLightbox()">&times;</button>
+    <div class="lightbox-main" onclick="event.stopPropagation()">
+        <button class="lightbox-arrow prev" onclick="event.stopPropagation(); prevLightboxImage()">‹</button>
+        <img id="lightboxImg" src="" alt="" onclick="event.stopPropagation()">
+        <button class="lightbox-arrow next" onclick="event.stopPropagation(); nextLightboxImage()">›</button>
+    </div>
+    <div class="lightbox-thumbnails" id="lightboxThumbnails" onclick="event.stopPropagation()"></div>
 </div>
 
 <!-- 내 사진 보기 모달 -->
@@ -1600,6 +1712,8 @@
 
     let selectedFiles = [];
     let currentTab = 'all';
+    let currentGalleryPhotos = []; // 현재 갤러리의 전체 사진 배열
+    let currentLightboxIndex = 0; // 현재 라이트박스에서 보는 사진 인덱스
 
     // 달력 생성
     function generateCalendar() {
@@ -1767,14 +1881,18 @@
             // });
 
             gallery.innerHTML = '';
-            data.forEach(photo => {
+
+            // 갤러리 사진 URL 배열 저장 (라이트박스용)
+            currentGalleryPhotos = data.map(photo => photo.image_url);
+
+            data.forEach((photo, index) => {
                 console.log(
                     `photo_type=${photo.photo_type}, display_order=${photo.display_order}`
                 );
                 const item = document.createElement('div');
                 item.className = 'gallery-item';
 
-                let html = '<img src="' + photo.image_url + '" alt="" onclick="openLightbox(\'' + photo.image_url + '\')">';
+                let html = '<img src="' + photo.image_url + '" alt="" onclick="openLightbox(' + index + ')">';
 
                 if (photo.photo_type === 'guest') {
                     html += '<button class="photo-delete-btn" onclick="event.stopPropagation(); deletePhoto(' + photo.id + ', \'' + photo.image_url + '\')">삭제</button>';
@@ -2184,7 +2302,10 @@
                 grid.style.display = 'grid';
                 grid.innerHTML = '';
 
-                photos.forEach(photo => {
+                // 내 사진 배열 저장 (라이트박스용)
+                currentGalleryPhotos = photos.map(photo => photo.image_url);
+
+                photos.forEach((photo, index) => {
                     const item = document.createElement('div');
                     item.style.position = 'relative';
                     item.setAttribute('data-photo-id', photo.id); // 사진 ID 저장
@@ -2193,7 +2314,7 @@
                     img.src = photo.image_url;
                     img.alt = '';
                     img.style.cssText = 'width: 100%; height: 150px; object-fit: cover; border-radius: 8px; cursor: pointer;';
-                    img.onclick = () => openLightbox(photo.image_url);
+                    img.onclick = () => openLightbox(index);
 
                     const deleteBtn = document.createElement('button');
                     deleteBtn.textContent = '×';
@@ -2433,16 +2554,83 @@
     }
 
     // 라이트박스
-    function openLightbox(url) {
-        document.getElementById('lightboxImg').src = url;
+    function openLightbox(index) {
+        currentLightboxIndex = index;
+        showLightboxImage(index);
+        renderLightboxThumbnails();
         document.getElementById('lightbox').classList.add('active');
         lockBodyScroll();
+    }
+
+    function showLightboxImage(index) {
+        if (index < 0) index = currentGalleryPhotos.length - 1;
+        if (index >= currentGalleryPhotos.length) index = 0;
+
+        currentLightboxIndex = index;
+        document.getElementById('lightboxImg').src = currentGalleryPhotos[index];
+
+        // 썸네일 active 상태 업데이트
+        updateThumbnailsActive();
+    }
+
+    function prevLightboxImage() {
+        showLightboxImage(currentLightboxIndex - 1);
+    }
+
+    function nextLightboxImage() {
+        showLightboxImage(currentLightboxIndex + 1);
+    }
+
+    function renderLightboxThumbnails() {
+        const container = document.getElementById('lightboxThumbnails');
+        container.innerHTML = '';
+
+        currentGalleryPhotos.forEach((url, index) => {
+            const thumb = document.createElement('img');
+            thumb.src = url;
+            thumb.className = 'lightbox-thumbnail';
+            if (index === currentLightboxIndex) {
+                thumb.classList.add('active');
+            }
+            thumb.onclick = (e) => {
+                e.stopPropagation();
+                showLightboxImage(index);
+            };
+            container.appendChild(thumb);
+        });
+    }
+
+    function updateThumbnailsActive() {
+        const thumbnails = document.querySelectorAll('.lightbox-thumbnail');
+        thumbnails.forEach((thumb, index) => {
+            if (index === currentLightboxIndex) {
+                thumb.classList.add('active');
+                // 현재 썸네일이 보이도록 스크롤
+                thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            } else {
+                thumb.classList.remove('active');
+            }
+        });
     }
 
     function closeLightbox() {
         document.getElementById('lightbox').classList.remove('active');
         unlockBodyScroll();
     }
+
+    // 키보드로 라이트박스 네비게이션
+    document.addEventListener('keydown', function(e) {
+        const lightbox = document.getElementById('lightbox');
+        if (!lightbox.classList.contains('active')) return;
+
+        if (e.key === 'ArrowLeft') {
+            prevLightboxImage();
+        } else if (e.key === 'ArrowRight') {
+            nextLightboxImage();
+        } else if (e.key === 'Escape') {
+            closeLightbox();
+        }
+    });
 
     // 네이버 지도 초기화
     function initMap() {

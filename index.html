@@ -2824,11 +2824,20 @@
     }
 
     function unlockBodyScroll() {
-        document.body.style.overflow = '';
+        const scrollY = savedScrollPosition;
+
+        // top을 0으로 먼저 설정 (position: fixed 상태에서)
+        document.body.style.top = '0';
+
+        // position 제거 (top이 0이므로 점프 없음)
         document.body.style.position = '';
+
+        // 나머지 스타일 제거
+        document.body.style.overflow = '';
         document.body.style.width = '';
-        document.body.style.top = '';
-        window.scrollTo(0, savedScrollPosition); // 저장된 위치로 복원
+
+        // 저장된 위치로 스크롤
+        window.scrollTo(0, scrollY);
     }
 
     // RSVP 모달

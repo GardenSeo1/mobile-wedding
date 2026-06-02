@@ -494,6 +494,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            overflow-y: auto; /* 라이트박스 내부 스크롤 허용 */
+            -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
         }
 
         .lightbox.active {
@@ -2633,6 +2635,26 @@
         }
     });
 
+    // 모바일에서 배경 스크롤 방지 (iOS 대응)
+    let preventScroll = false;
+
+    document.addEventListener('touchmove', function(e) {
+        if (preventScroll) {
+            // 라이트박스 내부 요소가 아니면 스크롤 방지
+            const lightbox = document.getElementById('lightbox');
+            if (lightbox.classList.contains('active')) {
+                const target = e.target;
+                const isLightboxContent = target.closest('.lightbox-thumbnails') ||
+                                          target.classList.contains('lightbox-thumbnail');
+
+                // 썸네일 영역이 아니면 스크롤 차단
+                if (!isLightboxContent) {
+                    e.preventDefault();
+                }
+            }
+        }
+    }, { passive: false });
+
     // 네이버 지도 초기화
     function initMap() {
         try {
@@ -2817,27 +2839,28 @@
     // 모달 열기/닫기 시 body 스크롤 제어
     function lockBodyScroll() {
         savedScrollPosition = window.scrollY; // 현재 스크롤 위치 저장
+
+        // position: fixed 대신 overflow만 사용 (스크롤 위치 유지)
+        document.documentElement.style.overflow = 'hidden';
         document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed';
-        document.body.style.width = '100%';
-        document.body.style.top = `-${savedScrollPosition}px`;
+
+        // iOS 모바일에서 터치 스크롤 방지
+        document.body.style.touchAction = 'none';
+
+        // 터치 이벤트 스크롤 방지 활성화
+        preventScroll = true;
     }
 
     function unlockBodyScroll() {
-        const scrollY = savedScrollPosition;
-
-        // top을 0으로 먼저 설정 (position: fixed 상태에서)
-        document.body.style.top = '0';
-
-        // position 제거 (top이 0이므로 점프 없음)
-        document.body.style.position = '';
-
-        // 나머지 스타일 제거
+        // overflow 해제
+        document.documentElement.style.overflow = '';
         document.body.style.overflow = '';
-        document.body.style.width = '';
+        document.body.style.touchAction = '';
 
-        // 저장된 위치로 스크롤
-        window.scrollTo(0, scrollY);
+        // 터치 이벤트 스크롤 방지 비활성화
+        preventScroll = false;
+
+        // 스크롤 위치는 그대로 유지됨 (깜빡임 없음)
     }
 
     // RSVP 모달

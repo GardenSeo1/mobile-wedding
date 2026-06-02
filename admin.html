@@ -1912,7 +1912,6 @@
 
         sortableInstances[type] = Sortable.create(gallery, {
             animation: 200,
-            filter: '.gallery-item:not(.visible-photo)', // 노출중인 사진만 드래그 가능
             ghostClass: 'sortable-ghost',
             dragClass: 'sortable-drag',
             // 모바일 터치 지원 강화
@@ -1920,6 +1919,11 @@
             forceFallback: false, // HTML5 DnD 사용 (모바일에서 더 부드러움)
             delay: 0, // 즉시 드래그 시작
             delayOnTouchOnly: true, // 터치에서만 약간의 지연
+            // 노출중인 사진만 드래그 가능하도록 onMove로 제어 (filter 대신 사용)
+            onMove: function(evt) {
+                // 드래그하려는 항목이 visible-photo 클래스가 있는지 확인
+                return evt.dragged.classList.contains('visible-photo');
+            },
             onEnd: function(evt) {
                 console.log('[드래그 완료] 이전 인덱스:', evt.oldIndex, '→ 새 인덱스:', evt.newIndex);
 

@@ -692,7 +692,7 @@
         @media (max-width: 768px) {
             .login-input {
                 padding: 12px;
-                font-size: 15px;
+                font-size: 16px; /* iOS 자동 줌 방지: 16px 이상 필수 */
                 margin-bottom: 15px;
             }
         }
@@ -976,6 +976,118 @@
         .action-btn.active {
             background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
             transform: scale(1.05);
+        }
+
+        /* 모바일 테이블 및 통계 최적화 */
+        @media (max-width: 768px) {
+            /* 통계 그리드 폰트 크기 조정 */
+            .visibility-info > div > div:first-child {
+                font-size: 20px !important;
+            }
+            .visibility-info > div > div:last-child {
+                font-size: 11px !important;
+            }
+            /* 검색 입력 필드 모바일 조정 */
+            #guestbookSearchInput,
+            #rsvpSearchInput {
+                padding: 10px 12px !important;
+                font-size: 16px !important; /* iOS 자동 줌 방지 */
+            }
+            /* 필터/검색 영역 모바일 조정 */
+            div[style*="display: flex"][style*="gap: 10px"] select,
+            div[style*="display: flex"][style*="gap: 10px"] input {
+                padding: 10px !important;
+                font-size: 14px !important;
+            }
+            /* 테이블 헤더 및 셀 모바일 조정 */
+            table th {
+                font-size: 10px !important;
+                padding: 8px 4px !important;
+                white-space: nowrap;
+            }
+            table td {
+                font-size: 11px !important;
+                padding: 8px 4px !important;
+                word-break: keep-all;
+            }
+            /* RSVP 테이블 특정 컬럼 너비 조정 */
+            table th:nth-child(2), /* 측 */
+            table td:nth-child(2) {
+                min-width: 45px;
+                text-align: center !important;
+            }
+            table th:nth-child(3), /* 참석 */
+            table td:nth-child(3) {
+                min-width: 40px;
+            }
+            table th:nth-child(4), /* 식사 */
+            table td:nth-child(4) {
+                min-width: 35px;
+            }
+            table th:nth-child(5), /* 동행 */
+            table td:nth-child(5) {
+                min-width: 35px;
+            }
+            /* 테이블 버튼 모바일 조정 */
+            table button {
+                padding: 5px 8px !important;
+                font-size: 10px !important;
+                white-space: nowrap;
+            }
+            /* RSVP 통계 박스 모바일 조정 */
+            div[style*="padding: 20px"][style*="border-radius: 12px"] {
+                padding: 15px !important;
+            }
+            div[style*="font-size: 28px"] {
+                font-size: 22px !important;
+            }
+            div[style*="font-size: 14px"][style*="margin-bottom: 10px"] {
+                font-size: 12px !important;
+            }
+            /* 빈 메시지 반응형 */
+            .gallery-grid p,
+            #guestGallery p,
+            #mainGallery p,
+            #adminGallery p,
+            #allGallery p,
+            #usersGallery p {
+                padding: 30px 15px !important;
+                font-size: 13px !important;
+                word-break: keep-all;
+                line-height: 1.5;
+            }
+        }
+        @media (max-width: 480px) {
+            /* 더 작은 모바일에서 추가 최적화 */
+            table th {
+                font-size: 9px !important;
+                padding: 6px 2px !important;
+            }
+            table td {
+                font-size: 10px !important;
+                padding: 6px 2px !important;
+            }
+            table button {
+                padding: 4px 6px !important;
+                font-size: 9px !important;
+            }
+            /* 빈 메시지 추가 조정 */
+            .gallery-grid p,
+            #guestGallery p,
+            #mainGallery p,
+            #adminGallery p,
+            #allGallery p,
+            #usersGallery p {
+                padding: 25px 12px !important;
+                font-size: 12px !important;
+            }
+            /* RSVP 테이블 측 라벨 모바일 버전 */
+            .rsvp-side-label .side-full {
+                display: none !important;
+            }
+            .rsvp-side-label .side-short {
+                display: inline !important;
+            }
         }
     </style>
 </head>
@@ -1998,7 +2110,7 @@
         }
 
         if (!data || data.length === 0) {
-            gallery.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">업로드된 사진이 없습니다</p>';
+            gallery.innerHTML = '<p style="text-align:center;color:#999;padding:40px;word-break:keep-all;">업로드된 사진이 없습니다</p>';
             return;
         }
 
@@ -2960,7 +3072,7 @@
         gallery.innerHTML = "";
 
         if (!data || data.length === 0) {
-            gallery.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">업로드된 게스트 사진이 없습니다</p>';
+            gallery.innerHTML = '<p style="text-align:center;color:#999;padding:40px;word-break:keep-all;">업로드된 게스트 사진이 없습니다</p>';
             return;
         }
 
@@ -3382,7 +3494,7 @@
         if (!data || data.length === 0) {
             statsDiv.style.display = 'none';
             selectAllWrapper.style.display = 'none';
-            gallery.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">이 사용자의 사진이 없습니다</p>';
+            gallery.innerHTML = '<p style="text-align:center;color:#999;padding:40px;word-break:keep-all;">이 사용자의 사진이 없습니다</p>';
             return;
         }
 
@@ -3790,6 +3902,7 @@
             });
 
             const sideLabel = item.side === 'groom' ? '신랑측' : '신부측';
+            const sideLabelShort = item.side === 'groom' ? '신랑' : '신부'; // 모바일용 짧은 라벨
             const sideColor = item.side === 'groom' ? '#5f8b9b' : '#BB7273';
             const attendLabel = item.attendance === 'yes' ? '참석' : '불참';
             const attendColor = item.attendance === 'yes' ? '#4caf50' : '#ff9800';
@@ -3807,12 +3920,13 @@
             row.innerHTML = `
                 <td style="padding: 12px; font-weight: 600;">${item.name}</td>
                 <td style="padding: 12px; text-align: center;">
-                    <span style="padding: 4px 10px; background: ${sideColor}; color: white; border-radius: 12px; font-size: 11px; font-weight: 600;">
-                        ${sideLabel}
+                    <span class="rsvp-side-label" style="padding: 4px 8px; background: ${sideColor}; color: white; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap;">
+                        <span class="side-full">${sideLabel}</span>
+                        <span class="side-short" style="display: none;">${sideLabelShort}</span>
                     </span>
                 </td>
                 <td style="padding: 12px; text-align: center;">
-                    <span style="padding: 4px 10px; background: ${attendColor}; color: white; border-radius: 12px; font-size: 11px; font-weight: 600;">
+                    <span style="padding: 4px 8px; background: ${attendColor}; color: white; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap;">
                         ${attendLabel}
                     </span>
                 </td>
@@ -3822,7 +3936,7 @@
                 <td style="padding: 12px; text-align: center; font-size: 11px; color: #999;">${date}</td>
                 <td style="padding: 12px; text-align: center;">
                     <button onclick="deleteRsvpAdmin(${item.id})"
-                            style="padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                            style="padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; white-space: nowrap;">
                         삭제
                     </button>
                 </td>

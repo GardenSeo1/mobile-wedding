@@ -143,6 +143,13 @@
             display: flex;
             justify-content: space-around;
             margin-top: 40px;
+            gap: 20px;
+        }
+        @media (max-width: 480px) {
+            .couple-info {
+                margin-top: 30px;
+                gap: 15px;
+            }
         }
 
         .person {
@@ -156,11 +163,23 @@
             letter-spacing: 2px;
             margin-bottom: 15px;
         }
+        @media (max-width: 480px) {
+            .person .label {
+                font-size: 10px;
+                margin-bottom: 12px;
+            }
+        }
 
         .person .name {
             font-size: 22px;
             font-weight: 600;
             margin-bottom: 8px;
+        }
+        @media (max-width: 480px) {
+            .person .name {
+                font-size: 20px;
+                margin-bottom: 6px;
+            }
         }
 
         .person.groom .name {
@@ -176,6 +195,12 @@
             color: #666;
             line-height: 1.8;
         }
+        @media (max-width: 480px) {
+            .person .info {
+                font-size: 11px;
+                line-height: 1.7;
+            }
+        }
 
         .contact-btn {
             display: inline-block;
@@ -189,6 +214,13 @@
             background: white;
             cursor: pointer;
             transition: all 0.3s;
+        }
+        @media (max-width: 480px) {
+            .contact-btn {
+                margin: 12px 4px 0;
+                padding: 7px 14px;
+                font-size: 11px;
+            }
         }
 
         .contact-btn:hover {
@@ -258,6 +290,13 @@
             position: relative;
             margin-bottom: 20px;
         }
+        @media (max-width: 480px) {
+            .upload-box {
+                padding: 30px 15px;
+                border-radius: 10px;
+                margin-bottom: 15px;
+            }
+        }
 
         .upload-box:hover {
             background: #f0f0f0;
@@ -277,12 +316,24 @@
             font-size: 48px;
             margin-bottom: 15px;
         }
+        @media (max-width: 480px) {
+            .upload-icon {
+                font-size: 40px;
+                margin-bottom: 12px;
+            }
+        }
 
         .preview-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
             margin-bottom: 20px;
+        }
+        @media (max-width: 480px) {
+            .preview-grid {
+                gap: 8px;
+                margin-bottom: 15px;
+            }
         }
 
         .preview-item {
@@ -364,9 +415,21 @@
             border-radius: 12px;
             margin-bottom: 30px;
         }
+        @media (max-width: 480px) {
+            .guestbook-form {
+                padding: 18px 15px;
+                border-radius: 10px;
+                margin-bottom: 20px;
+            }
+        }
 
         .form-group {
             margin-bottom: 15px;
+        }
+        @media (max-width: 480px) {
+            .form-group {
+                margin-bottom: 12px;
+            }
         }
 
         .form-group input,
@@ -378,10 +441,22 @@
             font-size: 13px;
             font-family: inherit;
         }
+        @media (max-width: 480px) {
+            .form-group input,
+            .form-group textarea {
+                padding: 11px 13px;
+                font-size: 14px;
+            }
+        }
 
         .form-group textarea {
             min-height: 100px;
             resize: vertical;
+        }
+        @media (max-width: 480px) {
+            .form-group textarea {
+                min-height: 90px;
+            }
         }
 
         .submit-btn {
@@ -395,6 +470,12 @@
             cursor: pointer;
             transition: all 0.3s;
         }
+        @media (max-width: 480px) {
+            .submit-btn {
+                padding: 13px;
+                font-size: 14px;
+            }
+        }
 
         .submit-btn:hover {
             background: #516349;
@@ -405,6 +486,11 @@
             flex-direction: column;
             gap: 15px;
         }
+        @media (max-width: 480px) {
+            .guestbook-list {
+                gap: 12px;
+            }
+        }
 
         .guestbook-item {
             background: #fafaf8;
@@ -412,12 +498,25 @@
             border-radius: 12px;
             position: relative;
         }
+        @media (max-width: 480px) {
+            .guestbook-item {
+                padding: 15px;
+                border-radius: 10px;
+            }
+        }
 
         .guestbook-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
+            gap: 10px;
+        }
+        @media (max-width: 480px) {
+            .guestbook-header {
+                margin-bottom: 10px;
+                gap: 8px;
+            }
         }
 
         .guestbook-delete-btn {
@@ -429,6 +528,14 @@
             font-size: 12px;
             cursor: pointer;
             transition: background 0.3s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        @media (max-width: 480px) {
+            .guestbook-delete-btn {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
         }
 
         .guestbook-delete-btn:hover {
@@ -670,21 +777,53 @@
         }
 
         .calendar-date.wedding-day {
-            background: #43573a;
+            background: transparent;
             color: white;
             font-weight: 700;
+            border-radius: 0;
+            position: relative;
+        }
+
+        /* 하트 배경을 ::before로 숫자 뒤에 배치 */
+        .calendar-date.wedding-day::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 85%;
+            height: 85%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23FFB6C1" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 0;
         }
 
         .calendar-date.wedding-day .date-number {
-            font-size: 14px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 13px;
             font-weight: 700;
+            color: white;
+            z-index: 1;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
         }
 
         .calendar-date.wedding-day .date-time {
-            font-size: 8px;
-            margin-top: 1px;
-            opacity: 0.95;
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 7px;
+            opacity: 1;
             line-height: 1;
+            color: white;
+            z-index: 1;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
         }
 
         .calendar-date.sunday {
@@ -795,12 +934,24 @@
             border-radius: 12px;
             margin-bottom: 20px;
         }
+        @media (max-width: 480px) {
+            .account-box {
+                padding: 20px 15px;
+                border-radius: 10px;
+            }
+        }
 
         .account-title {
             text-align: center;
             font-size: 16px;
             font-weight: 600;
             margin-bottom: 20px;
+        }
+        @media (max-width: 480px) {
+            .account-title {
+                font-size: 15px;
+                margin-bottom: 15px;
+            }
         }
 
         .account-title.groom {
@@ -819,6 +970,13 @@
             background: #fafaf8;
             border-radius: 8px;
             margin-bottom: 10px;
+            gap: 10px;
+        }
+        @media (max-width: 480px) {
+            .account-item {
+                padding: 12px;
+                gap: 8px;
+            }
         }
 
         .account-info .bank {
@@ -826,11 +984,23 @@
             color: #999;
             margin-bottom: 5px;
         }
+        @media (max-width: 480px) {
+            .account-info .bank {
+                font-size: 11px;
+                word-break: keep-all;
+            }
+        }
 
         .account-info .number {
             font-size: 14px;
             color: #383737;
             font-weight: 500;
+        }
+        @media (max-width: 480px) {
+            .account-info .number {
+                font-size: 13px;
+                word-break: keep-all;
+            }
         }
 
         .copy-btn {
@@ -841,6 +1011,14 @@
             border-radius: 6px;
             font-size: 11px;
             cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        @media (max-width: 480px) {
+            .copy-btn {
+                padding: 8px 12px;
+                font-size: 11px;
+            }
         }
 
         /* 푸터 */
@@ -868,6 +1046,12 @@
             justify-content: center;
             margin: 30px 0;
         }
+        @media (max-width: 480px) {
+            .action-buttons {
+                gap: 8px;
+                margin: 20px 0;
+            }
+        }
 
         .action-btn {
             flex: 1;
@@ -882,6 +1066,12 @@
             text-align: center;
             text-decoration: none;
             display: inline-block;
+        }
+        @media (max-width: 480px) {
+            .action-btn {
+                padding: 12px;
+                font-size: 13px;
+            }
         }
 
         .action-btn:hover {
@@ -903,6 +1093,11 @@
             justify-content: center;
             padding: 20px;
         }
+        @media (max-width: 480px) {
+            .modal {
+                padding: 15px;
+            }
+        }
 
         .modal.active {
             display: flex;
@@ -917,11 +1112,22 @@
             overflow-y: auto;
             position: relative;
         }
+        @media (max-width: 480px) {
+            .modal-content {
+                border-radius: 12px;
+                max-height: 85vh;
+            }
+        }
 
         .modal-header {
             padding: 25px;
             border-bottom: 1px solid #f0f0f0;
             position: relative;
+        }
+        @media (max-width: 480px) {
+            .modal-header {
+                padding: 18px 15px;
+            }
         }
 
         .modal-title {
@@ -929,6 +1135,12 @@
             font-weight: 600;
             color: #43573a;
             text-align: center;
+        }
+        @media (max-width: 480px) {
+            .modal-title {
+                font-size: 16px;
+                padding-right: 35px;
+            }
         }
 
         .modal-close {
@@ -945,14 +1157,33 @@
             line-height: 1;
             color: #666;
         }
+        @media (max-width: 480px) {
+            .modal-close {
+                top: 15px;
+                right: 15px;
+                width: 30px;
+                height: 30px;
+                font-size: 18px;
+            }
+        }
 
         .modal-body {
             padding: 25px;
+        }
+        @media (max-width: 480px) {
+            .modal-body {
+                padding: 18px 15px;
+            }
         }
 
         /* RSVP 폼 */
         .rsvp-form .form-group {
             margin-bottom: 20px;
+        }
+        @media (max-width: 480px) {
+            .rsvp-form .form-group {
+                margin-bottom: 16px;
+            }
         }
 
         .rsvp-form label {
@@ -961,6 +1192,12 @@
             font-size: 13px;
             font-weight: 600;
             color: #383737;
+        }
+        @media (max-width: 480px) {
+            .rsvp-form label {
+                font-size: 12px;
+                margin-bottom: 6px;
+            }
         }
 
         .rsvp-form select,
@@ -972,10 +1209,22 @@
             font-size: 13px;
             font-family: inherit;
         }
+        @media (max-width: 480px) {
+            .rsvp-form select,
+            .rsvp-form input {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+        }
 
         .radio-group {
             display: flex;
             gap: 10px;
+        }
+        @media (max-width: 480px) {
+            .radio-group {
+                gap: 8px;
+            }
         }
 
         .radio-option {
@@ -997,6 +1246,14 @@
             cursor: pointer;
             transition: all 0.3s;
             margin: 0;
+            font-size: 13px;
+        }
+        @media (max-width: 480px) {
+            .radio-option label {
+                padding: 10px 8px;
+                font-size: 13px;
+                white-space: nowrap;
+            }
         }
 
         .radio-option input[type="radio"]:checked + label {
@@ -1012,6 +1269,12 @@
             gap: 10px;
             margin-top: 15px;
         }
+        @media (max-width: 480px) {
+            .contact-modal-buttons {
+                gap: 8px;
+                margin-top: 12px;
+            }
+        }
 
         .contact-modal-btn {
             padding: 12px;
@@ -1025,6 +1288,12 @@
             color: #383737;
             text-align: center;
             display: block;
+        }
+        @media (max-width: 480px) {
+            .contact-modal-btn {
+                padding: 11px 8px;
+                font-size: 12px;
+            }
         }
 
         .contact-modal-btn:hover {
@@ -1483,37 +1752,43 @@
 
     <!-- 사진 업로드 -->
     <section class="section upload-section" data-aos="fade-up">
-        <div class="section-title">📸 축하 사진 올리기</div>
-        <p style="text-align: center; color: #666; margin-bottom: 20px; font-size: 13px;">
-            축하의 마음을 담은 사진을 올려주세요
-        </p>
-
-        <div style="margin-bottom: 15px;">
-            <input type="text" id="uploaderName" placeholder="이름을 입력해주세요" oninput="checkUploadButtonState()"
-                   style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit; margin-bottom: 10px;">
-            <input type="password" id="uploaderPassword" placeholder="비밀번호 (4자 이상)" oninput="checkUploadButtonState()"
-                   style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit;">
+        <div class="section-title">📸 사진 및 영상 업로드<br><span style="font-size: 14px; color: #BB7273; font-weight: 500;">(10월 4일 오전 9시 OPEN)</span></div>
+        <div style="text-align: center; color: #666; margin-bottom: 25px; font-size: 13px; line-height: 1.8;">
+            <p style="margin: 0 0 8px 0; color: #999; font-size: 12px;">2026년 10월 4일 오전 9시부터 사진 및 영상 업로드가 가능합니다.</p>
+            <p style="margin: 0 0 6px 0;">소중한 순간을 담아주세요.</p>
+            <p style="margin: 0 0 6px 0;">여러분의 시선으로 담아주신 순간들이<br>저희에게는 영원한 기억이 됩니다.</p>
+            <p style="margin: 0 0 6px 0;">결혼식의 행복한 순간을 함께 나눠주세요.</p>
+            <p style="margin: 0; color: #BB7273;">여러분의 사진 한 장이 저희에게<br>소중한 보물이 될 거예요 :)</p>
         </div>
 
-        <div class="upload-box">
-            <input type="file" id="guestFileInput" accept="image/*,video/*" multiple onchange="previewImages()">
-            <div class="upload-icon">📷</div>
-            <div style="font-size: 14px; margin-bottom: 5px;">사진/동영상 선택하기</div>
-            <div style="font-size: 12px; color: #999;">여러 장 선택 가능 (사진은 자동 압축됨)</div>
+        <div id="uploadFormArea">
+            <div style="margin-bottom: 15px;">
+                <input type="text" id="uploaderName" placeholder="이름을 입력해주세요" oninput="checkUploadButtonState()" onclick="checkDateAndAlert(event)"
+                       style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit; margin-bottom: 10px;">
+                <input type="password" id="uploaderPassword" placeholder="비밀번호 (4자 이상)" oninput="checkUploadButtonState()" onclick="checkDateAndAlert(event)"
+                       style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit;">
+            </div>
+
+            <div class="upload-box" onclick="checkDateAndAlertForFile(event)">
+                <input type="file" id="guestFileInput" accept="image/*,video/*" multiple onchange="previewImages()">
+                <div class="upload-icon">📷</div>
+                <div style="font-size: 14px; margin-bottom: 5px;">사진/동영상 선택하기</div>
+                <div style="font-size: 12px; color: #999;">여러 장 선택 가능 (사진은 자동 압축됨)</div>
+            </div>
+
+            <div class="preview-grid" id="previewGrid"></div>
+
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="upload-btn" id="viewMyPhotosBtn" onclick="viewMyPhotos()" style="flex: 1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    🖼️ 내 사진 보기
+                </button>
+                <button class="upload-btn" id="uploadBtn" onclick="uploadPhotos()" style="flex: 2; background: linear-gradient(135deg, #43573a 0%, #516349 100%);">
+                    📤 업로드하기
+                </button>
+            </div>
+
+            <div class="status-message" id="uploadStatus"></div>
         </div>
-
-        <div class="preview-grid" id="previewGrid"></div>
-
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button class="upload-btn" id="uploadBtn" onclick="uploadPhotos()" disabled style="flex: 1;">
-                📤 업로드하기
-            </button>
-            <button class="upload-btn" onclick="viewMyPhotos()" style="flex: 1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                🖼️ 내 사진 보기
-            </button>
-        </div>
-
-        <div class="status-message" id="uploadStatus"></div>
     </section>
 
     <!-- 푸터 -->
@@ -1565,7 +1840,7 @@
         <div class="modal-body">
             <form class="rsvp-form" onsubmit="submitRsvp(event)">
                 <div class="form-group">
-                    <label>어느 측 하객이신가요?</label>
+                    <label>참석자 구분</label>
                     <div class="radio-group">
                         <div class="radio-option">
                             <input type="radio" id="side-groom" name="side" value="groom" required>
@@ -1587,7 +1862,7 @@
                         </div>
                         <div class="radio-option">
                             <input type="radio" id="attend-no" name="attendance" value="no" onchange="toggleAttendanceFields()" required>
-                            <label for="attend-no">불참석</label>
+                            <label for="attend-no">불참</label>
                         </div>
                     </div>
                 </div>
@@ -1598,18 +1873,18 @@
                 </div>
 
                 <div class="form-group" id="companionsGroup" style="display: none;">
-                    <label>동행인 수 (본인 제외)</label>
+                    <label>동행 인원</label>
                     <select name="companions" id="companionsSelect" onchange="updateMealCount()">
                         <option value="0">없음 (본인만)</option>
-                        <option value="1">1명</option>
-                        <option value="2">2명</option>
-                        <option value="3">3명</option>
-                        <option value="4">4명</option>
-                        <option value="5">5명</option>
-                        <option value="6">6명</option>
-                        <option value="7">7명</option>
-                        <option value="8">8명</option>
-                        <option value="9">9명</option>
+                        <option value="1">1명 (본인 포함 2명)</option>
+                        <option value="2">2명 (본인 포함 3명)</option>
+                        <option value="3">3명 (본인 포함 4명)</option>
+                        <option value="4">4명 (본인 포함 5명)</option>
+                        <option value="5">5명 (본인 포함 6명)</option>
+                        <option value="6">6명 (본인 포함 7명)</option>
+                        <option value="7">7명 (본인 포함 8명)</option>
+                        <option value="8">8명 (본인 포함 9명)</option>
+                        <option value="9">9명 (본인 포함 10명)</option>
                         <option value="10">10명 이상</option>
                     </select>
                 </div>
@@ -1623,13 +1898,13 @@
                         </div>
                         <div class="radio-option">
                             <input type="radio" id="meal-no" name="mealOption" value="no" onchange="toggleMealCount()">
-                            <label for="meal-no">식사 안함</label>
+                            <label for="meal-no">안함</label>
                         </div>
                     </div>
                 </div>
 
                 <div class="form-group" id="mealCountGroup" style="display: none;">
-                    <label>식사 인원 (본인 포함)</label>
+                    <label>식사 인원</label>
                     <select name="meal" id="mealSelect">
                         <option value="1" selected>1명</option>
                         <option value="2">2명</option>
@@ -1646,8 +1921,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label>전달사항 (선택)</label>
-                    <input type="text" name="message" placeholder="추가로 전달하실 내용이 있으시면 적어주세요">
+                    <label>전달사항</label>
+                    <input type="text" name="message" placeholder="전달하실 내용이 있으시면 적어주세요 (선택)">
                 </div>
 
                 <button type="submit" class="submit-btn">제출하기</button>
@@ -1691,6 +1966,19 @@
     let currentLightboxIndex = 0; // 현재 라이트박스에서 보는 사진 인덱스
     let savedScrollPosition = 0; // 모달 열기 전 스크롤 위치 저장
 
+    // 업로드 관련 전역 상수
+    const UPLOAD_DATE_MESSAGE = '사진 및 영상 업로드는 2026년 10월 4일 오전 9시부터 가능합니다.';
+    const VIEW_PHOTOS_DATE_MESSAGE = '사진 조회는 2026년 10월 4일 오전 9시부터 가능합니다.';
+    let previousUploadAvailable = null; // 이전 업로드 가능 상태 저장
+
+    // 업로드 가능 날짜 체크 함수
+    function isUploadAvailable() {
+        const now = new Date();
+        // const UPLOAD_START_DATE = new Date('2026-10-04T09:00:00+09:00'); // 2026년 10월 4일 오전 9시 (KST)
+        const UPLOAD_START_DATE = new Date('2026-06-05T21:30:00+09:00'); // 2026년 10월 4일 오전 9시 (KST)
+        return now >= UPLOAD_START_DATE;
+    }
+
     // 달력 생성
     function generateCalendar() {
         const calendarDates = document.getElementById('calendarDates');
@@ -1722,7 +2010,7 @@
                 html += `
                     <div class="${dayClass} wedding-day">
                         <div class="date-number">${day}</div>
-                        <div class="date-time">오후2:00</div>
+                        <div class="date-time">오후 2시</div>
                     </div>
                 `;
             } else {
@@ -1769,6 +2057,13 @@
             hoursEl.textContent = String(hours).padStart(2, '0');
             minutesEl.textContent = String(minutes).padStart(2, '0');
             secondsEl.textContent = String(seconds).padStart(2, '0');
+        }
+
+        // 업로드 가능 상태가 변경되었는지 체크 (1초마다)
+        const currentUploadAvailable = isUploadAvailable();
+        if (previousUploadAvailable !== currentUploadAvailable) {
+            previousUploadAvailable = currentUploadAvailable;
+            checkUploadButtonState(); // 상태가 변경되었을 때만 업데이트
         }
     }
 
@@ -1890,13 +2185,84 @@
         });
     }
 
-    // 업로드 버튼 활성화 체크
+    // disabled된 입력 필드 클릭 시 alert 표시
+    function checkDateAndAlert(event) {
+        if (!isUploadAvailable()) {
+            event.preventDefault();
+            alert(UPLOAD_DATE_MESSAGE);
+            event.target.blur(); // 포커스 해제
+            return false;
+        }
+    }
+
+    // disabled된 파일 입력 클릭 시 alert 표시
+    function checkDateAndAlertForFile(event) {
+        if (!isUploadAvailable()) {
+            event.preventDefault();
+            event.stopPropagation();
+            alert(UPLOAD_DATE_MESSAGE);
+            return false;
+        }
+    }
+
     function checkUploadButtonState() {
         const uploadBtn = document.getElementById('uploadBtn');
-        const hasFiles = selectedFiles.length > 0;
-        const uploaderName = document.getElementById('uploaderName').value.trim();
-        const uploaderPassword = document.getElementById('uploaderPassword').value.trim();
-        uploadBtn.disabled = !(hasFiles && uploaderName && uploaderPassword && uploaderPassword.length >= 4);
+        const viewMyPhotosBtn = document.getElementById('viewMyPhotosBtn');
+        const uploaderName = document.getElementById('uploaderName');
+        const uploaderPassword = document.getElementById('uploaderPassword');
+        const guestFileInput = document.getElementById('guestFileInput');
+
+        if (!isUploadAvailable()) {
+            // 날짜 이전이면 모든 입력/버튼 시각적으로 비활성화
+            if (uploaderName) {
+                uploaderName.readOnly = true;
+                uploaderName.style.backgroundColor = '#f5f5f5';
+                uploaderName.style.cursor = 'not-allowed';
+            }
+            if (uploaderPassword) {
+                uploaderPassword.readOnly = true;
+                uploaderPassword.style.backgroundColor = '#f5f5f5';
+                uploaderPassword.style.cursor = 'not-allowed';
+            }
+            if (guestFileInput) {
+                guestFileInput.disabled = true;
+                guestFileInput.style.cursor = 'not-allowed';
+            }
+            if (uploadBtn) {
+                uploadBtn.style.opacity = '0.5';
+                uploadBtn.style.cursor = 'not-allowed';
+            }
+            if (viewMyPhotosBtn) {
+                viewMyPhotosBtn.style.opacity = '0.5';
+                viewMyPhotosBtn.style.cursor = 'not-allowed';
+            }
+        } else {
+            // 날짜 이후면 입력 필드 활성화
+            if (uploaderName) {
+                uploaderName.readOnly = false;
+                uploaderName.style.backgroundColor = '';
+                uploaderName.style.cursor = '';
+            }
+            if (uploaderPassword) {
+                uploaderPassword.readOnly = false;
+                uploaderPassword.style.backgroundColor = '';
+                uploaderPassword.style.cursor = '';
+            }
+            if (guestFileInput) {
+                guestFileInput.disabled = false;
+                guestFileInput.style.cursor = '';
+            }
+            if (viewMyPhotosBtn) {
+                viewMyPhotosBtn.style.opacity = '1';
+                viewMyPhotosBtn.style.cursor = 'pointer';
+            }
+
+            // 날짜가 지나면 업로드 버튼도 시각적으로 활성화 (조건 체크는 함수 내부에서)
+            if (uploadBtn) {
+                uploadBtn.style.opacity = '1';
+                uploadBtn.style.cursor = 'pointer';
+            }
+        }
     }
 
     function removePreview(index) {
@@ -1997,6 +2363,12 @@
 
     // 사진 업로드 (병렬 업로드 + 이미지 압축)
     async function uploadPhotos() {
+        // 업로드 가능 날짜 체크
+        if (!isUploadAvailable()) {
+            alert(UPLOAD_DATE_MESSAGE);
+            return;
+        }
+
         if (!supabaseClient) {
             alert('데이터베이스 연결에 실패했습니다. 관리자에게 문의하세요.');
             return;
@@ -2220,6 +2592,12 @@
 
     // 내 사진 보기
     async function viewMyPhotos() {
+        // 업로드 가능 날짜 체크
+        if (!isUploadAvailable()) {
+            alert(VIEW_PHOTOS_DATE_MESSAGE);
+            return;
+        }
+
         const name = prompt('이름을 입력해주세요:');
         if (!name || !name.trim()) {
             return;
@@ -2582,6 +2960,11 @@
     function closeLightbox() {
         document.getElementById('lightbox').classList.remove('active');
         unlockBodyScroll();
+
+        // 스크롤 위치 복원 (저장된 위치로)
+        if (savedScrollPosition !== undefined && savedScrollPosition !== null) {
+            window.scrollTo(0, savedScrollPosition);
+        }
     }
 
     // 키보드로 라이트박스 네비게이션
@@ -2933,6 +3316,14 @@
 
     // 페이지 초기화 함수
     async function initPage() {
+        // 브라우저의 자동 스크롤 복원 방지 (페이지 새로고침 시 스크롤 위치 고정 방지)
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+
+        // 페이지 로드 시 스크롤을 맨 위로
+        window.scrollTo(0, 0);
+
         // 모달 배경 클릭 시 닫기
         const rsvpModal = document.getElementById('rsvpModal');
         const contactModal = document.getElementById('contactModal');
@@ -2960,6 +3351,9 @@
         generateCalendar();
         updateDday();
         setInterval(updateDday, 1000); // 1초마다 업데이트
+
+        // 업로드 버튼 상태 초기화
+        checkUploadButtonState();
 
         if (supabaseClient) {
             loadGallery();

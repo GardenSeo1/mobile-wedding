@@ -21,10 +21,22 @@
             margin: 0 auto;
             padding: 20px;
         }
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+        }
         h1 {
             color: #333;
             margin-bottom: 30px;
             text-align: center;
+            font-size: 28px;
+        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 22px;
+                margin-bottom: 20px;
+            }
         }
         .upload-section {
             background: white;
@@ -32,6 +44,13 @@
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             margin-bottom: 30px;
+        }
+        @media (max-width: 768px) {
+            .upload-section {
+                padding: 15px;
+                border-radius: 8px;
+                margin-bottom: 15px;
+            }
         }
         .file-input-wrapper {
             position: relative;
@@ -55,6 +74,13 @@
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
+            font-size: 14px;
+        }
+        @media (max-width: 768px) {
+            .file-input-label {
+                padding: 15px;
+                font-size: 13px;
+            }
         }
         .file-input-label:hover {
             border-color: #667eea;
@@ -72,8 +98,21 @@
             transition: transform 0.2s;
             margin-right: 10px;
         }
+        @media (max-width: 768px) {
+            .upload-btn, .action-btn {
+                padding: 10px 16px;
+                font-size: 13px;
+                margin-right: 6px;
+                margin-bottom: 6px;
+            }
+        }
         .upload-btn:hover, .action-btn:hover {
             transform: translateY(-2px);
+        }
+        @media (max-width: 768px) {
+            .upload-btn:hover, .action-btn:hover {
+                transform: none; /* 모바일에서는 호버 효과 제거 */
+            }
         }
         .upload-btn:disabled, .action-btn:disabled {
             background: #ccc;
@@ -265,12 +304,25 @@
             padding-bottom: 10px;
             border-bottom: 2px solid #f0f0f0;
         }
+        @media (max-width: 768px) {
+            .section-title {
+                font-size: 17px;
+                margin-bottom: 12px;
+                padding-bottom: 8px;
+            }
+        }
         .tabs {
             display: flex;
             gap: 10px;
             margin-bottom: 30px;
             border-bottom: 2px solid #f0f0f0;
             flex-wrap: wrap;
+        }
+        @media (max-width: 768px) {
+            .tabs {
+                gap: 6px;
+                margin-bottom: 15px;
+            }
         }
         .tab-btn {
             padding: 12px 24px;
@@ -282,6 +334,13 @@
             color: #666;
             cursor: pointer;
             transition: all 0.3s;
+        }
+        @media (max-width: 768px) {
+            .tab-btn {
+                padding: 10px 14px;
+                font-size: 13px;
+                white-space: nowrap;
+            }
         }
         .tab-btn:hover {
             color: #333;
@@ -306,6 +365,13 @@
             font-size: 14px;
             text-align: center;
         }
+        @media (max-width: 768px) {
+            .limit-info {
+                padding: 10px;
+                font-size: 12px;
+                margin-bottom: 12px;
+            }
+        }
         .bulk-actions {
             background: #f8f9fa;
             padding: 15px;
@@ -313,11 +379,22 @@
             margin-bottom: 20px;
             display: none;
         }
+        @media (max-width: 768px) {
+            .bulk-actions {
+                padding: 10px;
+                margin-bottom: 12px;
+            }
+        }
         .bulk-actions.active {
             display: flex;
             gap: 10px;
             align-items: center;
             flex-wrap: wrap;
+        }
+        @media (max-width: 768px) {
+            .bulk-actions.active {
+                gap: 6px;
+            }
         }
         .bulk-actions select {
             padding: 8px 12px;
@@ -325,9 +402,23 @@
             border-radius: 6px;
             font-size: 14px;
         }
+        @media (max-width: 768px) {
+            .bulk-actions select {
+                padding: 8px 10px;
+                font-size: 13px;
+            }
+        }
         .bulk-actions-label {
             font-weight: 600;
             color: #333;
+            font-size: 14px;
+        }
+        @media (max-width: 768px) {
+            .bulk-actions-label {
+                font-size: 13px;
+                width: 100%;
+                margin-bottom: 4px;
+            }
         }
         /* 라이트박스 */
         .lightbox {
@@ -369,10 +460,22 @@
             background: #f8f9fa;
             border-radius: 6px;
         }
+        @media (max-width: 768px) {
+            .select-all-wrapper {
+                margin-bottom: 12px;
+                padding: 8px;
+            }
+        }
         .select-all-wrapper label {
             cursor: pointer;
             font-weight: 600;
             color: #333;
+            font-size: 14px;
+        }
+        @media (max-width: 768px) {
+            .select-all-wrapper label {
+                font-size: 13px;
+            }
         }
         .select-all-wrapper input {
             width: 18px;
@@ -513,6 +616,13 @@
             font-size: 14px;
             text-align: center;
         }
+        @media (max-width: 768px) {
+            .visibility-info {
+                padding: 10px;
+                font-size: 12px;
+                margin-bottom: 12px;
+            }
+        }
         .visibility-warning {
             background: #fff3e0;
             border: 1px solid #ff9800;
@@ -543,15 +653,32 @@
             width: 90%;
             text-align: center;
         }
+        @media (max-width: 768px) {
+            .login-box {
+                padding: 30px 20px;
+                width: 85%;
+            }
+        }
         .login-box h2 {
             margin: 0 0 10px 0;
             color: #333;
             font-size: 24px;
         }
+        @media (max-width: 768px) {
+            .login-box h2 {
+                font-size: 20px;
+            }
+        }
         .login-box p {
             margin: 0 0 30px 0;
             color: #666;
             font-size: 14px;
+        }
+        @media (max-width: 768px) {
+            .login-box p {
+                font-size: 13px;
+                margin: 0 0 20px 0;
+            }
         }
         .login-input {
             width: 100%;
@@ -561,6 +688,13 @@
             font-size: 16px;
             margin-bottom: 20px;
             transition: border-color 0.3s;
+        }
+        @media (max-width: 768px) {
+            .login-input {
+                padding: 12px;
+                font-size: 15px;
+                margin-bottom: 15px;
+            }
         }
         .login-input:focus {
             outline: none;
@@ -613,6 +747,14 @@
             transition: all 0.3s;
             z-index: 1000;
         }
+        @media (max-width: 768px) {
+            .logout-btn {
+                top: 10px;
+                right: 10px;
+                padding: 8px 14px;
+                font-size: 12px;
+            }
+        }
         .logout-btn:hover {
             background: #764ba2;
             color: white;
@@ -622,6 +764,13 @@
             padding: 20px;
             background: #f8f9fa;
             border-radius: 12px;
+        }
+        @media (max-width: 768px) {
+            .person-group {
+                margin-bottom: 15px;
+                padding: 12px;
+                border-radius: 8px;
+            }
         }
         .person-group-header {
             font-size: 18px;
@@ -633,6 +782,17 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 10px;
+        }
+        @media (max-width: 768px) {
+            .person-group-header {
+                font-size: 15px;
+                margin-bottom: 10px;
+                padding-bottom: 8px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
         }
         .person-group-header:hover {
             color: #764ba2;
@@ -644,16 +804,73 @@
             font-weight: normal;
             margin-left: 10px;
         }
+        @media (max-width: 768px) {
+            .person-group-count {
+                font-size: 12px;
+                margin-left: 6px;
+            }
+        }
+        /* 인원별 헤더 버튼 컨테이너 */
+        .person-header-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        @media (max-width: 768px) {
+            .person-header-buttons {
+                width: 100%;
+                justify-content: stretch;
+            }
+            .person-header-buttons .action-btn {
+                flex: 1;
+                margin-right: 0;
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+        }
+        /* 뷰 모드 토글 */
+        .view-mode-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        @media (max-width: 768px) {
+            .view-mode-toggle {
+                gap: 8px;
+                margin-bottom: 15px;
+            }
+        }
+        .view-toggle-btn {
+            flex: 1;
+            max-width: 200px;
+        }
+        @media (max-width: 768px) {
+            .view-toggle-btn {
+                max-width: none;
+                font-size: 13px;
+                padding: 10px 12px;
+            }
+        }
         .person-preview-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 10px;
+        }
+        @media (max-width: 768px) {
+            .person-preview-grid {
+                gap: 6px;
+            }
         }
         .person-preview-item {
             position: relative;
             aspect-ratio: 1;
             border-radius: 8px;
             overflow: hidden;
+        }
+        @media (max-width: 768px) {
+            .person-preview-item {
+                border-radius: 6px;
+            }
         }
         .person-preview-item img {
             width: 100%;
@@ -673,6 +890,12 @@
             font-weight: 600;
             cursor: pointer;
             transition: background 0.3s;
+        }
+        @media (max-width: 768px) {
+            .person-preview-more {
+                border-radius: 6px;
+                font-size: 18px;
+            }
         }
         .person-preview-more:hover {
             background: rgba(0,0,0,0.85);
@@ -699,6 +922,15 @@
             padding: 30px;
             position: relative;
         }
+        @media (max-width: 768px) {
+            .guest-photos-modal-content {
+                margin: 20px;
+                padding: 20px;
+                border-radius: 8px;
+                max-height: calc(100vh - 40px);
+                overflow-y: auto;
+            }
+        }
         .guest-photos-modal-close {
             position: absolute;
             top: 15px;
@@ -714,9 +946,32 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 10;
+        }
+        @media (max-width: 768px) {
+            .guest-photos-modal-close {
+                width: 36px;
+                height: 36px;
+                font-size: 20px;
+                top: 10px;
+                right: 10px;
+            }
         }
         .guest-photos-modal-close:hover {
             background: #d32f2f;
+        }
+        /* 모달 제목 모바일 최적화 */
+        #guestPhotosModalTitle {
+            font-size: 22px;
+        }
+        @media (max-width: 768px) {
+            #guestPhotosModalTitle {
+                font-size: 17px;
+                margin: 0 0 15px 0 !important;
+                padding-right: 40px; /* 닫기 버튼과 겹치지 않도록 */
+                word-break: keep-all;
+                line-height: 1.4;
+            }
         }
         .action-btn.active {
             background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
@@ -934,13 +1189,12 @@
             <div class="section-title">게스트 사진 관리</div>
 
             <!-- 뷰 모드 토글 -->
-            <div style="display: flex; gap: 10px; margin-bottom: 20px; justify-content: center;">
-                <button class="action-btn" id="guestViewAllBtn" onclick="switchGuestViewMode('all')"
-                        style="flex: 1; max-width: 200px;">
+            <div class="view-mode-toggle">
+                <button class="action-btn view-toggle-btn" id="guestViewAllBtn" onclick="switchGuestViewMode('all')">
                     📋 전체보기
                 </button>
-                <button class="action-btn active" id="guestViewByPersonBtn" onclick="switchGuestViewMode('byPerson')"
-                        style="flex: 1; max-width: 200px; background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">
+                <button class="action-btn view-toggle-btn active" id="guestViewByPersonBtn" onclick="switchGuestViewMode('byPerson')"
+                        style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">
                     👥 인원별보기
                 </button>
             </div>
@@ -2811,12 +3065,12 @@
 
                 // 버튼 영역
                 const buttonsDiv = document.createElement('div');
-                buttonsDiv.style.cssText = 'display: flex; gap: 8px;';
+                buttonsDiv.className = 'person-header-buttons';
 
                 // 저장 버튼
                 const saveBtn = document.createElement('button');
                 saveBtn.className = 'action-btn';
-                saveBtn.style.cssText = 'padding: 6px 12px; font-size: 13px; background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);';
+                saveBtn.style.cssText = 'padding: 6px 12px; font-size: 13px; background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%); white-space: nowrap;';
                 saveBtn.innerHTML = '💾 저장';
                 saveBtn.onclick = (e) => {
                     e.stopPropagation();
@@ -2826,7 +3080,7 @@
                 // 삭제 버튼
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'action-btn';
-                deleteBtn.style.cssText = 'padding: 6px 12px; font-size: 13px; background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);';
+                deleteBtn.style.cssText = 'padding: 6px 12px; font-size: 13px; background: linear-gradient(135deg, #f44336 0%, #e91e63 100%); white-space: nowrap;';
                 deleteBtn.innerHTML = '🗑️ 삭제';
                 deleteBtn.onclick = (e) => {
                     e.stopPropagation();

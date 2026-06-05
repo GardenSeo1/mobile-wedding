@@ -931,32 +931,7 @@
     <!-- 게스트 사진 탭 -->
     <div id="guest-tab" class="tab-content">
         <div class="upload-section">
-            <div class="section-title">게스트 사진 업로드</div>
-
-            <div class="file-input-wrapper">
-                <input type="file" id="guestFileInput" accept="image/*,video/*" multiple onchange="previewImages('guest')" />
-                <label class="file-input-label" for="guestFileInput">
-                    <div style="font-size: 48px; margin-bottom: 10px;">📷</div>
-                    <div>클릭하여 게스트 사진/동영상을 선택하세요</div>
-                    <div style="font-size: 14px; color: #999; margin-top: 5px;">여러 장 선택 가능 (이미지 자동 압축)</div>
-                </label>
-            </div>
-
-            <div id="guestPreviewGrid" class="preview-grid"></div>
-
-            <button class="upload-btn" onclick="uploadImages('guest')" id="guestUploadBtn" disabled>
-                업로드 하기
-            </button>
-
-            <div class="progress-bar" id="guestProgressBar">
-                <div class="progress-bar-fill" id="guestProgressBarFill"></div>
-            </div>
-
-            <div class="status-message" id="guestStatusMessage"></div>
-        </div>
-
-        <div class="upload-section">
-            <div class="section-title">업로드된 게스트 사진 목록</div>
+            <div class="section-title">게스트 사진 관리</div>
 
             <!-- 뷰 모드 토글 -->
             <div style="display: flex; gap: 10px; margin-bottom: 20px; justify-content: center;">
@@ -964,7 +939,7 @@
                         style="flex: 1; max-width: 200px;">
                     📋 전체보기
                 </button>
-                <button class="action-btn" id="guestViewByPersonBtn" onclick="switchGuestViewMode('byPerson')"
+                <button class="action-btn active" id="guestViewByPersonBtn" onclick="switchGuestViewMode('byPerson')"
                         style="flex: 1; max-width: 200px; background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">
                     👥 인원별보기
                 </button>
@@ -1266,7 +1241,7 @@
     };
 
     // 게스트 뷰 모드
-    let guestViewMode = 'all'; // 'all' or 'byPerson'
+    let guestViewMode = 'byPerson'; // 'all' or 'byPerson' - 기본값: 인원별보기
 
     // 로그인/로그아웃 기능
     async function loginAdmin() {
@@ -2709,6 +2684,18 @@
 
     // 게스트 갤러리 로드 (전체/인원별)
     async function loadGuestGallery() {
+        // 버튼 상태 업데이트
+        const allBtn = document.getElementById('guestViewAllBtn');
+        const byPersonBtn = document.getElementById('guestViewByPersonBtn');
+
+        if (guestViewMode === 'all') {
+            allBtn.classList.add('active');
+            byPersonBtn.classList.remove('active');
+        } else {
+            allBtn.classList.remove('active');
+            byPersonBtn.classList.add('active');
+        }
+
         const { data, error } = await supabaseClient
             .from("photos")
             .select("*")
@@ -2743,11 +2730,9 @@
                 }
                 galleryItem.className = className;
 
-                const itemStyle = isVisible ? '' : 'opacity: 0.4; border: 2px solid #ff6b6b;';
-                const visibilityBadge = isVisible
-                    ? '<div class="visibility-badge">노출중</div>'
-                    : '<div class="visibility-badge hidden">숨김</div>';
+                const itemStyle = '';
 
+                // 게스트 사진은 노출/미노출 배지 불필요
                 // 체크박스는 is_visible과 무관하게 항상 비활성화 상태로 시작
                 galleryItem.innerHTML = `
                     <div class="checkbox-wrapper" onclick="event.stopPropagation()">
@@ -2755,7 +2740,6 @@
                     </div>
                     <img src="${photo.image_url}" alt="Photo" style="cursor: pointer; ${itemStyle}" />
                     <div class="photo-type-badge">${PHOTO_TYPE_LABELS[photo.photo_type] || photo.photo_type}</div>
-                    ${visibilityBadge}
                 `;
 
                 // galleryItem 전체를 클릭/터치 가능하게
@@ -2812,14 +2796,48 @@
                 const groupDiv = document.createElement('div');
                 groupDiv.className = 'person-group';
 
-                // 그룹 헤더 (클릭 가능)
+                // 그룹 헤더 생성
                 const headerDiv = document.createElement('div');
                 headerDiv.className = 'person-group-header';
-                headerDiv.innerHTML = `
-                    <span>${name} <span class="person-group-count">${photos.length}개</span></span>
-                    <span style="font-size: 14px; color: #764ba2;">전체보기 →</span>
+
+                // 제목 영역
+                const titleSpan = document.createElement('span');
+                titleSpan.style.cursor = 'pointer';
+                titleSpan.innerHTML = `
+                    ${name} <span class="person-group-count">${photos.length}개</span>
+                    <span style="font-size: 14px; color: #764ba2; margin-left: 10px;">전체보기 →</span>
                 `;
-                headerDiv.onclick = () => openGuestPhotosModal(name, photos);
+                titleSpan.onclick = () => openGuestPhotosModal(name, photos);
+
+                // 버튼 영역
+                const buttonsDiv = document.createElement('div');
+                buttonsDiv.style.cssText = 'display: flex; gap: 8px;';
+
+                // 저장 버튼
+                const saveBtn = document.createElement('button');
+                saveBtn.className = 'action-btn';
+                saveBtn.style.cssText = 'padding: 6px 12px; font-size: 13px; background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);';
+                saveBtn.innerHTML = '💾 저장';
+                saveBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    downloadPersonPhotos(name, photos);
+                };
+
+                // 삭제 버튼
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'action-btn';
+                deleteBtn.style.cssText = 'padding: 6px 12px; font-size: 13px; background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);';
+                deleteBtn.innerHTML = '🗑️ 삭제';
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deletePersonPhotos(name, photos);
+                };
+
+                buttonsDiv.appendChild(saveBtn);
+                buttonsDiv.appendChild(deleteBtn);
+
+                headerDiv.appendChild(titleSpan);
+                headerDiv.appendChild(buttonsDiv);
                 groupDiv.appendChild(headerDiv);
 
                 // 미리보기 그리드 (최대 4개만 표시)
@@ -2868,6 +2886,7 @@
         photos.forEach(photo => {
             const galleryItem = document.createElement("div");
             galleryItem.className = "gallery-item";
+            galleryItem.style.position = 'relative';
 
             // del_yn 체크
             const isDeleted = photo.del_yn === 'Y';
@@ -2881,7 +2900,27 @@
             img.style.cursor = 'pointer';
             img.onclick = () => openLightbox(photo.image_url);
 
+            // 삭제 버튼 추가
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'remove-btn';
+            deleteBtn.innerHTML = '🗑️';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                deleteSingleGuestPhoto(photo.id, uploaderName);
+            };
+
+            // 저장 버튼 추가
+            const saveBtn = document.createElement('button');
+            saveBtn.style.cssText = 'position: absolute; top: 5px; left: 5px; background: rgba(76, 175, 80, 0.9); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 14px; line-height: 1; z-index: 10;';
+            saveBtn.innerHTML = '💾';
+            saveBtn.onclick = (e) => {
+                e.stopPropagation();
+                downloadSinglePhoto(photo.image_url, `${uploaderName}_${photo.id}`);
+            };
+
             galleryItem.appendChild(img);
+            galleryItem.appendChild(deleteBtn);
+            galleryItem.appendChild(saveBtn);
             grid.appendChild(galleryItem);
         });
 
@@ -2891,6 +2930,148 @@
     // 게스트 사진 모달 닫기
     function closeGuestPhotosModal() {
         document.getElementById('guestPhotosModal').classList.remove('active');
+    }
+
+    // 인원별 사진 일괄 삭제
+    async function deletePersonPhotos(uploaderName, photos) {
+        try {
+            const photoIds = photos.map(p => p.id);
+
+            if (!confirm(`${uploaderName}님의 사진 ${photoIds.length}개를 모두 삭제하시겠습니까?\n\n⚠️ 이 작업은 되돌릴 수 없습니다.`)) {
+                return;
+            }
+
+            // Storage에서 파일 삭제
+            for (const photo of photos) {
+                const filePath = photo.image_url.split('/wedding-photos/')[1];
+                if (filePath) {
+                    await supabaseClient.storage.from('wedding-photos').remove([filePath]);
+                }
+            }
+
+            // DB에서 사진 삭제
+            const { error: deleteError } = await supabaseClient
+                .from('photos')
+                .delete()
+                .in('id', photoIds);
+
+            if (deleteError) {
+                console.error('사진 삭제 실패:', deleteError);
+                alert('사진 삭제에 실패했습니다: ' + deleteError.message);
+                return;
+            }
+
+            alert(`${uploaderName}님의 사진 ${photoIds.length}개가 삭제되었습니다.`);
+
+            // 갤러리 새로고침
+            loadGuestGallery();
+        } catch (err) {
+            console.error('인원별 삭제 오류:', err);
+            alert('사진 삭제 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 인원별 사진 일괄 저장
+    async function downloadPersonPhotos(uploaderName, photos) {
+        try {
+            if (photos.length === 0) {
+                alert('저장할 사진이 없습니다.');
+                return;
+            }
+
+            alert(`${uploaderName}님의 사진 ${photos.length}개 다운로드를 시작합니다.\n\n브라우저 설정에서 "여러 파일 다운로드 허용"이 필요할 수 있습니다.`);
+
+            // 각 사진을 순차적으로 다운로드
+            for (let i = 0; i < photos.length; i++) {
+                const photo = photos[i];
+                await downloadSinglePhoto(photo.image_url, `${uploaderName}_${i + 1}`);
+
+                // 브라우저가 다운로드를 처리할 시간을 주기 위해 약간의 지연
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            console.log(`${uploaderName}님의 사진 ${photos.length}개 다운로드 완료`);
+        } catch (err) {
+            console.error('인원별 저장 오류:', err);
+            alert('사진 저장 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 개별 사진 삭제
+    async function deleteSingleGuestPhoto(photoId, uploaderName) {
+        try {
+            if (!confirm('이 사진을 삭제하시겠습니까?\n\n⚠️ 이 작업은 되돌릴 수 없습니다.')) {
+                return;
+            }
+
+            // Supabase에서 사진 정보 가져오기
+            const { data: photoData, error: fetchError } = await supabaseClient
+                .from('photos')
+                .select('image_url')
+                .eq('id', photoId)
+                .single();
+
+            if (fetchError) {
+                console.error('사진 정보 가져오기 실패:', fetchError);
+                alert('사진 정보를 가져오는데 실패했습니다.');
+                return;
+            }
+
+            // Storage에서 파일 삭제
+            const filePath = photoData.image_url.split('/wedding-photos/')[1];
+            if (filePath) {
+                await supabaseClient.storage.from('wedding-photos').remove([filePath]);
+            }
+
+            // DB에서 사진 삭제
+            const { error: deleteError } = await supabaseClient
+                .from('photos')
+                .delete()
+                .eq('id', photoId);
+
+            if (deleteError) {
+                console.error('사진 삭제 실패:', deleteError);
+                alert('사진 삭제에 실패했습니다: ' + deleteError.message);
+                return;
+            }
+
+            alert('사진이 삭제되었습니다.');
+
+            // 모달 닫고 갤러리 새로고침
+            closeGuestPhotosModal();
+            loadGuestGallery();
+        } catch (err) {
+            console.error('개별 삭제 오류:', err);
+            alert('사진 삭제 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 개별 사진 저장
+    async function downloadSinglePhoto(imageUrl, filename) {
+        try {
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+
+            // 파일 확장자 추출
+            const urlParts = imageUrl.split('.');
+            const extension = urlParts[urlParts.length - 1].split('?')[0];
+
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `${filename}.${extension}`;
+            document.body.appendChild(a);
+            a.click();
+
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            console.log(`사진 저장 완료: ${filename}.${extension}`);
+        } catch (err) {
+            console.error('사진 저장 오류:', err);
+            // 개별 사진 저장 실패는 조용히 처리 (일괄 저장 시 방해되지 않도록)
+        }
     }
 
     // 사용자 목록 로드

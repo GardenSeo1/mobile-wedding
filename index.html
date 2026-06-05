@@ -1453,6 +1453,122 @@
             margin-bottom: 25px;
         }
 
+        /* 커스텀 Alert */
+        .custom-alert {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 30000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .custom-alert.active {
+            display: flex;
+        }
+
+        .custom-alert-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 340px;
+            width: 100%;
+            padding: 30px 25px 20px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: alertSlideIn 0.25s ease-out;
+        }
+
+        @keyframes alertSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .custom-alert-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #43573a;
+            margin-bottom: 8px;
+        }
+
+        .custom-alert-message {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            white-space: pre-line;
+        }
+
+        .custom-alert-button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #43573a 0%, #516349 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .custom-alert-button:active {
+            transform: scale(0.98);
+        }
+
+        /* 하트 애니메이션 */
+        .floating-heart {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            pointer-events: none;
+            z-index: 9999;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23FFB6C1" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            animation:
+                heartFloat var(--duration) ease-out forwards,
+                heartFade var(--duration) ease-out forwards;
+        }
+
+        @keyframes heartFloat {
+            0% {
+                transform: translate(0, 0) scale(0) rotate(0deg);
+            }
+            10% {
+                transform: translate(calc(var(--vx) * 0.3), calc(var(--vy) * 0.3)) scale(1) rotate(var(--rotation));
+            }
+            100% {
+                transform: translate(var(--vx), var(--vy)) scale(0.3) rotate(calc(var(--rotation) * 2));
+            }
+        }
+
+        @keyframes heartFade {
+            0% {
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            70% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
         .rsvp-popup-buttons {
             display: flex;
             flex-direction: column;
@@ -1801,6 +1917,15 @@
 <!-- 토스트 메시지 -->
 <div class="toast" id="toast"></div>
 
+<!-- 커스텀 Alert -->
+<div class="custom-alert" id="customAlert" onclick="event.target === this && closeCustomAlert()">
+    <div class="custom-alert-content">
+        <div class="custom-alert-title">알림</div>
+        <div class="custom-alert-message" id="customAlertMessage"></div>
+        <button class="custom-alert-button" onclick="closeCustomAlert()">확인</button>
+    </div>
+</div>
+
 <!-- 라이트박스 -->
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
     <button class="lightbox-close" onclick="event.stopPropagation(); closeLightbox()">&times;</button>
@@ -2019,6 +2144,60 @@
         }
 
         calendarDates.innerHTML = html;
+
+        // 웨딩데이에 하트 애니메이션 추가
+        const weddingDayElement = calendarDates.querySelector('.wedding-day');
+        if (weddingDayElement) {
+            weddingDayElement.style.cursor = 'pointer';
+            weddingDayElement.addEventListener('click', createHeartAnimation);
+        }
+    }
+
+    // 하트 애니메이션 생성
+    function createHeartAnimation(event) {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        // 1-5개의 하트를 다양한 방향으로 생성
+        const heartCount = Math.floor(Math.random() * 5) + 1;
+
+        for (let i = 0; i < heartCount; i++) {
+            const heart = document.createElement('div');
+            heart.className = 'floating-heart';
+
+            // 중앙에서 시작
+            heart.style.left = (centerX - 15) + 'px';
+            heart.style.top = (centerY - 15) + 'px';
+
+            // 방사형으로 퍼지는 각도 계산
+            const angle = (360 / heartCount * i) + (Math.random() * 40 - 20); // 각 하트마다 다른 각도 + 랜덤
+            const distance = Math.random() * 80 + 60; // 60px ~ 140px
+            const vx = Math.cos(angle * Math.PI / 180) * distance;
+            const vy = Math.sin(angle * Math.PI / 180) * distance - (Math.random() * 30 + 40); // 위로 더 많이
+
+            // 랜덤 회전
+            const rotation = Math.random() * 360 - 180; // -180deg ~ 180deg
+
+            // 랜덤 속도 (0.8초 ~ 1.3초)
+            const duration = (Math.random() * 0.5 + 0.8) + 's';
+
+            // CSS 변수로 전달
+            heart.style.setProperty('--vx', vx + 'px');
+            heart.style.setProperty('--vy', vy + 'px');
+            heart.style.setProperty('--rotation', rotation + 'deg');
+            heart.style.setProperty('--duration', duration);
+
+            // 약간의 딜레이로 더 자연스럽게
+            heart.style.animationDelay = (Math.random() * 0.1) + 's';
+
+            document.body.appendChild(heart);
+
+            // 애니메이션 종료 후 제거
+            setTimeout(() => {
+                heart.remove();
+            }, 1500);
+        }
     }
 
     // D-day 실시간 카운트다운
@@ -2077,6 +2256,24 @@
             toast.classList.remove('show');
         }, 2000);
     }
+
+    // 커스텀 Alert (네이티브 alert 대체)
+    function showCustomAlert(message) {
+        const alertEl = document.getElementById('customAlert');
+        const messageEl = document.getElementById('customAlertMessage');
+        messageEl.textContent = message;
+        alertEl.classList.add('active');
+        lockBodyScroll();
+    }
+
+    function closeCustomAlert() {
+        const alertEl = document.getElementById('customAlert');
+        alertEl.classList.remove('active');
+        unlockBodyScroll();
+    }
+
+    // 네이티브 alert을 커스텀 alert으로 오버라이드
+    window.alert = showCustomAlert;
 
     // 계좌번호 복사
     function copyAccount(number) {
@@ -2749,15 +2946,26 @@
     }
 
     // 방명록 제출
+    // ========== 방명록 관련 함수 (방명록 섹션 주석 처리 시 에러 방지) ==========
     async function submitGuestbook() {
         if (!supabaseClient) {
             alert('데이터베이스 연결에 실패했습니다. 관리자에게 문의하세요.');
             return;
         }
 
-        const name = document.getElementById('guestName').value;
-        const password = document.getElementById('guestPassword').value;
-        const message = document.getElementById('guestMessage').value;
+        const nameEl = document.getElementById('guestName');
+        const passwordEl = document.getElementById('guestPassword');
+        const messageEl = document.getElementById('guestMessage');
+
+        // DOM 요소가 없으면 함수 종료 (방명록 섹션이 주석처리된 경우)
+        if (!nameEl || !passwordEl || !messageEl) {
+            //console.log('방명록 섹션이 비활성화되어 있습니다.');
+            return;
+        }
+
+        const name = nameEl.value;
+        const password = passwordEl.value;
+        const message = messageEl.value;
 
         if (!name || !password || !message) {
             alert('모든 항목을 입력해주세요');
@@ -2767,9 +2975,9 @@
         try {
             await supabaseClient.from("guestbook").insert([{ name: name, password: password, message: message }]);
 
-            document.getElementById('guestName').value = '';
-            document.getElementById('guestPassword').value = '';
-            document.getElementById('guestMessage').value = '';
+            nameEl.value = '';
+            passwordEl.value = '';
+            messageEl.value = '';
 
             alert('축하 메시지가 등록되었습니다 💕');
             loadGuestbook();
@@ -2832,6 +3040,13 @@
 
     // 방명록 로드
     async function loadGuestbook() {
+        // DOM 요소가 없으면 함수 종료 (방명록 섹션이 주석처리된 경우)
+        const list = document.getElementById('guestbookList');
+        if (!list) {
+            // console.log('방명록 섹션이 비활성화되어 있습니다.');
+            return;
+        }
+
         if (!supabaseClient) {
             //console.log('Supabase가 초기화되지 않았습니다.');
             return;
@@ -2842,7 +3057,6 @@
                 .from("guestbook")
                 .select("*")
                 .order("created_at", { ascending: false });
-            const list = document.getElementById('guestbookList');
 
             if (!data || data.length === 0) {
                 list.innerHTML = '<div class="empty-state">첫 번째 축하 메시지를 남겨주세요</div>';

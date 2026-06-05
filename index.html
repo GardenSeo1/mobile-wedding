@@ -782,6 +782,12 @@
             font-weight: 700;
             border-radius: 0;
             position: relative;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .calendar-date.wedding-day:active {
+            background: transparent;
         }
 
         /* 하트 배경을 ::before로 숫자 뒤에 배치 */
@@ -1715,6 +1721,9 @@
                 <div>토</div>
             </div>
             <div class="calendar-dates" id="calendarDates"></div>
+            <div style="text-align: right; margin-top: 12px; font-size: 11px; color: #FFB6C1; opacity: 0.9;">
+                예식일을 눌러보세요 !
+            </div>
         </div>
     </section>
 
@@ -2099,8 +2108,8 @@
     // 업로드 가능 날짜 체크 함수
     function isUploadAvailable() {
         const now = new Date();
-        // const UPLOAD_START_DATE = new Date('2026-10-04T09:00:00+09:00'); // 2026년 10월 4일 오전 9시 (KST)
-        const UPLOAD_START_DATE = new Date('2026-06-05T21:30:00+09:00'); // 2026년 10월 4일 오전 9시 (KST)
+        const UPLOAD_START_DATE = new Date('2026-10-04T09:00:00+09:00'); // 2026년 10월 4일 오전 9시 (KST)
+        // const UPLOAD_START_DATE = new Date('2026-06-05T21:30:00+09:00'); // 2026년 10월 4일 오전 9시 (KST)
         return now >= UPLOAD_START_DATE;
     }
 
@@ -2155,6 +2164,8 @@
 
     // 하트 애니메이션 생성
     function createHeartAnimation(event) {
+        event.preventDefault(); // 기본 클릭 효과 방지
+
         const rect = event.currentTarget.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
@@ -3530,6 +3541,11 @@
 
     // 페이지 초기화 함수
     async function initPage() {
+        // RSVP 팝업 제일 먼저 표시
+        setTimeout(() => {
+            showRsvpPopup();
+        }, 100); // 0.1초 후 즉시 표시
+
         // 브라우저의 자동 스크롤 복원 방지 (페이지 새로고침 시 스크롤 위치 고정 방지)
         if ('scrollRestoration' in history) {
             history.scrollRestoration = 'manual';

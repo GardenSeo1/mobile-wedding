@@ -1118,6 +1118,7 @@
         <button class="tab-btn" onclick="switchTab('users')">👤 사용자별 보기</button>
         <button class="tab-btn" onclick="switchTab('guestbook')">💌 방명록 관리</button>
         <button class="tab-btn" onclick="switchTab('rsvp')">📋 참석 관리</button>
+        <button class="tab-btn" onclick="switchTab('settings')">⚙️ 설정</button>
     </div>
 
     <!-- 메인 사진 탭 -->
@@ -1542,6 +1543,64 @@
             </div>
         </div>
     </div>
+
+    <!-- 설정 탭 -->
+    <div id="settings-tab" class="tab-content">
+        <div class="upload-section">
+            <div class="section-title">⚙️ 게스트 업로드 설정</div>
+
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
+                <strong>⚠️ 주의사항</strong><br>
+                • 설정 변경 시 즉시 메인 페이지에 반영됩니다.<br>
+                • 시간은 한국 표준시(KST, UTC+9) 기준입니다.<br>
+                • 업로드 비활성화 시 게스트는 사진을 업로드할 수 없습니다.
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 8px;">
+                    📅 업로드 시작 날짜/시간
+                </label>
+                <input type="datetime-local" id="uploadStartDate"
+                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                    이 시간부터 게스트가 사진을 업로드할 수 있습니다.
+                </div>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" id="uploadEnabled"
+                           style="width: 20px; height: 20px; margin-right: 10px; cursor: pointer;">
+                    <span style="font-weight: 600;">✅ 게스트 업로드 활성화</span>
+                </label>
+                <div style="font-size: 12px; color: #666; margin-top: 5px; margin-left: 30px;">
+                    • 체크하면: 시작 날짜 이후부터 업로드 가능<br>
+                    • 체크 해제하면: 즉시 업로드 차단 (긴급 차단용)
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button onclick="saveUploadSettings()" class="upload-btn"
+                        style="flex: 1; background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);">
+                    💾 설정 저장
+                </button>
+                <button onclick="loadUploadSettings()" class="upload-btn"
+                        style="flex: 1; background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);">
+                    🔄 설정 새로고침
+                </button>
+            </div>
+
+            <div class="status-message" id="settingsStatusMessage"></div>
+
+            <!-- 현재 상태 표시 -->
+            <div style="margin-top: 30px; margin-bottom: 80px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                <div style="font-weight: 600; margin-bottom: 15px;">📊 현재 상태</div>
+                <div id="currentSettingsStatus" style="font-size: 14px; line-height: 1.8; color: #666;">
+                    설정을 불러오는 중...
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- 라이트박스 -->
@@ -1716,6 +1775,9 @@
         } else if (tabName === 'guest') {
             // 게스트 탭은 별도 로드 함수 사용
             loadGuestGallery();
+        } else if (tabName === 'settings') {
+            // 설정 탭: 설정 로드
+            loadUploadSettings();
         } else {
             loadGallery(tabName);
         }
@@ -4041,6 +4103,211 @@
             console.error('[DB 체크] 예외 발생:', err);
             return false;
         }
+    }
+
+    // ==================== 설정 관리 ====================
+
+    // 상태 메시지 표시 헬퍼 함수
+    function showMessage(elementId, message, type = 'success') {
+        const messageEl = document.getElementById(elementId);
+        if (!messageEl) {
+            console.warn(`메시지 엘리먼트를 찾을 수 없음: ${elementId}`);
+            return;
+        }
+
+        messageEl.textContent = message;
+        messageEl.className = 'status-message ' + type;
+        messageEl.style.display = 'block';
+
+        // 3초 후 자동 숨김
+        setTimeout(() => {
+            messageEl.style.display = 'none';
+        }, 5000);
+    }
+
+    // 업로드 설정 로드
+    async function loadUploadSettings() {
+        try {
+            const { data, error } = await supabaseClient
+                .from('admin_settings')
+                .select('setting_key, setting_value')
+                .in('setting_key', ['guest_upload_start_date', 'guest_upload_enabled']);
+
+            if (error) {
+                console.error('설정 로드 실패:', error);
+
+                // 설정이 없는 경우
+                if (error.code === 'PGRST116' || error.message.includes('no rows')) {
+                    showMessage('settingsStatusMessage',
+                        '⚠️ admin_settings에 설정이 없습니다. admin-settings-config.sql을 먼저 실행해주세요.',
+                        'error');
+
+                    // 기본값으로 UI 표시
+                    document.getElementById('uploadStartDate').value = '2026-10-04T09:00';
+                    document.getElementById('uploadEnabled').checked = true;
+
+                    document.getElementById('currentSettingsStatus').innerHTML = `
+                        <div style="color: #f44336;">
+                            ❌ 게스트 업로드 설정이 없습니다.<br><br>
+                            <strong>해결 방법:</strong><br>
+                            1. Supabase Dashboard → SQL Editor 접속<br>
+                            2. admin-settings-config.sql 파일 내용 복사<br>
+                            3. SQL Editor에 붙여넣고 실행<br>
+                            4. 이 페이지 새로고침
+                        </div>
+                    `;
+                    return;
+                }
+
+                showMessage('settingsStatusMessage', '설정을 불러오는데 실패했습니다.', 'error');
+                return;
+            }
+
+            let startDate = null;
+            let enabled = true;
+
+            data.forEach(item => {
+                if (item.setting_key === 'guest_upload_start_date') {
+                    startDate = item.setting_value;
+                } else if (item.setting_key === 'guest_upload_enabled') {
+                    enabled = item.setting_value === 'true';
+                }
+            });
+
+            // datetime-local 형식으로 변환 (YYYY-MM-DDTHH:MM)
+            if (startDate) {
+                const startDateObj = new Date(startDate);
+                document.getElementById('uploadStartDate').value = formatDateTimeLocal(startDateObj);
+            }
+
+            document.getElementById('uploadEnabled').checked = enabled;
+
+            // 현재 상태 업데이트
+            updateCurrentSettingsStatus(startDate, enabled);
+
+            showMessage('settingsStatusMessage', '설정을 불러왔습니다.', 'success');
+        } catch (err) {
+            console.error('설정 로드 중 오류:', err);
+            showMessage('settingsStatusMessage', '설정을 불러오는데 실패했습니다.', 'error');
+        }
+    }
+
+    // 업로드 설정 저장
+    async function saveUploadSettings() {
+        try {
+            const startDateInput = document.getElementById('uploadStartDate').value;
+            const enabled = document.getElementById('uploadEnabled').checked;
+
+            if (!startDateInput) {
+                showMessage('settingsStatusMessage', '시작 날짜를 입력해주세요.', 'error');
+                return;
+            }
+
+            // datetime-local 값을 ISO 8601 형식으로 변환 (KST)
+            const startDate = new Date(startDateInput);
+
+            // ISO 8601 형식으로 변환 (KST 타임존 포함)
+            const startDateISO = formatToKST(startDate);
+
+            // DB 업데이트
+            const updates = [
+                { setting_key: 'guest_upload_start_date', setting_value: startDateISO },
+                { setting_key: 'guest_upload_enabled', setting_value: enabled.toString() }
+            ];
+
+            for (const update of updates) {
+                const { error } = await supabaseClient
+                    .from('admin_settings')
+                    .update({ setting_value: update.setting_value })
+                    .eq('setting_key', update.setting_key);
+
+                if (error) {
+                    console.error(`${update.setting_key} 업데이트 실패:`, error);
+                    showMessage('settingsStatusMessage', '설정 저장에 실패했습니다.', 'error');
+                    return;
+                }
+            }
+
+            // 현재 상태 업데이트
+            updateCurrentSettingsStatus(startDateISO, enabled);
+
+            showMessage('settingsStatusMessage', '✅ 설정이 저장되었습니다. 메인 페이지에서 즉시 반영됩니다.', 'success');
+        } catch (err) {
+            console.error('설정 저장 중 오류:', err);
+            showMessage('settingsStatusMessage', '설정 저장에 실패했습니다.', 'error');
+        }
+    }
+
+    // datetime-local 형식으로 변환 (YYYY-MM-DDTHH:MM)
+    function formatDateTimeLocal(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    // ISO 8601 형식으로 변환 (KST 타임존 포함)
+    function formatToKST(date) {
+        // 한국 시간대로 변환
+        const kstDate = new Date(date.getTime());
+        const offset = 9 * 60; // KST는 UTC+9
+        const localOffset = kstDate.getTimezoneOffset();
+        const kstTime = new Date(kstDate.getTime() + (offset + localOffset) * 60000);
+
+        const year = kstTime.getFullYear();
+        const month = String(kstTime.getMonth() + 1).padStart(2, '0');
+        const day = String(kstTime.getDate()).padStart(2, '0');
+        const hours = String(kstTime.getHours()).padStart(2, '0');
+        const minutes = String(kstTime.getMinutes()).padStart(2, '0');
+        const seconds = String(kstTime.getSeconds()).padStart(2, '0');
+
+        return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}+09:00`;
+    }
+
+    // 현재 상태 표시 업데이트
+    function updateCurrentSettingsStatus(startDateISO, enabled) {
+        const statusDiv = document.getElementById('currentSettingsStatus');
+        if (!statusDiv) return;
+
+        const now = new Date();
+        const startDate = new Date(startDateISO);
+
+        const startDateStr = startDate.toLocaleString('ko-KR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            timeZone: 'Asia/Seoul'
+        });
+
+        let currentStatus = '';
+        let statusColor = '';
+
+        if (!enabled) {
+            currentStatus = '❌ 비활성화 (긴급 차단)';
+            statusColor = '#f44336';
+        } else if (now < startDate) {
+            currentStatus = '⏳ 시작 전';
+            statusColor = '#ff9800';
+        } else {
+            currentStatus = '✅ 업로드 가능';
+            statusColor = '#4caf50';
+        }
+
+        statusDiv.innerHTML = `
+            <div style="margin-bottom: 10px;">
+                <strong>상태:</strong> <span style="color: ${statusColor}; font-weight: 600;">${currentStatus}</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <strong>시작 시간:</strong> ${startDateStr}
+            </div>
+            <div>
+                <strong>활성화:</strong> ${enabled ? '✅ 예' : '❌ 아니오 (업로드 차단됨)'}
+            </div>
+        `;
     }
 
     document.addEventListener('DOMContentLoaded', function() {

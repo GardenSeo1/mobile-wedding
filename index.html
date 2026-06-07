@@ -2116,17 +2116,138 @@
     let currentLightboxIndex = 0; // 현재 라이트박스에서 보는 사진 인덱스
     let savedScrollPosition = 0; // 모달 열기 전 스크롤 위치 저장
 
-    // 업로드 관련 전역 상수
-    const UPLOAD_DATE_MESSAGE = '사진 및 영상 업로드는 2026년 10월 4일 오전 9시부터 가능합니다.';
-    const VIEW_PHOTOS_DATE_MESSAGE = '사진 조회는 2026년 10월 4일 오전 9시부터 가능합니다.';
+    // 업로드 관련 설정 (DB에서 로드)
+    let uploadSettings = {
+        startDate: null,
+        enabled: true,
+        loaded: false
+    };
+    let UPLOAD_DATE_MESSAGE = '사진 및 영상 업로드는 아직 시작되지 않았습니다.';
+    let VIEW_PHOTOS_DATE_MESSAGE = '사진 조회는 아직 시작되지 않았습니다.';
     let previousUploadAvailable = null; // 이전 업로드 가능 상태 저장
 
-    // 업로드 가능 날짜 체크 함수
+    // DB에서 업로드 설정 로드
+    async function loadUploadSettings() {
+        try {
+            console.log('[업로드 설정] DB에서 설정 로드 시작...');
+
+            const { data, error } = await supabaseClient
+                .from('admin_settings')
+                .select('setting_key, setting_value')
+                .in('setting_key', ['guest_upload_start_date', 'guest_upload_enabled']);
+
+            if (error) {
+                console.error('[업로드 설정] 로드 실패:', error);
+                // 기본값 사용
+                uploadSettings.startDate = new Date('2026-10-04T09:00:00+09:00');
+                uploadSettings.enabled = true;
+            } else if (!data || data.length === 0) {
+                console.warn('[업로드 설정] DB에 설정이 없습니다. 기본값 사용');
+                // 기본값 사용
+                uploadSettings.startDate = new Date('2026-10-04T09:00:00+09:00');
+                uploadSettings.enabled = true;
+            } else {
+                console.log('[업로드 설정] DB 데이터:', data);
+
+                data.forEach(item => {
+                    if (item.setting_key === 'guest_upload_start_date') {
+                        uploadSettings.startDate = new Date(item.setting_value);
+                        console.log('[업로드 설정] 시작 날짜:', uploadSettings.startDate);
+                    } else if (item.setting_key === 'guest_upload_enabled') {
+                        uploadSettings.enabled = item.setting_value === 'true';
+                        console.log('[업로드 설정] 활성화 여부:', uploadSettings.enabled);
+                    }
+                });
+
+                // 메시지 업데이트
+                if (uploadSettings.startDate) {
+                    const dateStr = uploadSettings.startDate.toLocaleString('ko-KR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        timeZone: 'Asia/Seoul'
+                    });
+                    UPLOAD_DATE_MESSAGE = `사진 및 영상 업로드는 ${dateStr}부터 가능합니다.`;
+                    VIEW_PHOTOS_DATE_MESSAGE = `사진 조회는 ${dateStr}부터 가능합니다.`;
+                }
+            }
+
+            uploadSettings.loaded = true;
+            console.log('[업로드 설정] 최종 설정:', uploadSettings);
+            console.log('[업로드 설정] 현재 업로드 가능 여부:', isUploadAvailable());
+
+            checkUploadButtonState(); // 설정 로드 후 버튼 상태 업데이트
+        } catch (err) {
+            console.error('[업로드 설정] 로드 중 예외 발생:', err);
+            // 기본값 사용
+            uploadSettings.startDate = new Date('2026-10-04T09:00:00+09:00');
+            uploadSettings.enabled = true;
+            uploadSettings.loaded = true;
+
+            checkUploadButtonState();
+        }
+    }
+
+    // 테스트용 헬퍼 함수 (콘솔에서 사용 가능)
+    window.testUploadSettings = {
+        // 현재 설정 확인
+        show: () => {
+            console.log('=== 업로드 설정 ===');
+            console.log('로드 완료:', uploadSettings.loaded);
+            console.log('활성화:', uploadSettings.enabled);
+            console.log('시작 날짜:', uploadSettings.startDate);
+            console.log('현재 시간:', new Date());
+            console.log('업로드 가능:', isUploadAvailable());
+        },
+        // 테스트: 1분 후로 설정
+        setIn1Minute: () => {
+            const newDate = new Date(Date.now() + 60000);
+            uploadSettings.startDate = newDate;
+            console.log('시작 날짜를 1분 후로 설정:', newDate);
+            checkUploadButtonState();
+        },
+        // 테스트: 1분 전으로 설정 (즉시 활성화)
+        setNow: () => {
+            const newDate = new Date(Date.now() - 60000);
+            uploadSettings.startDate = newDate;
+            console.log('시작 날짜를 1분 전으로 설정:', newDate);
+            checkUploadButtonState();
+        },
+        // 테스트: 활성화/비활성화 토글
+        toggleEnabled: () => {
+            uploadSettings.enabled = !uploadSettings.enabled;
+            console.log('활성화 상태 변경:', uploadSettings.enabled);
+            checkUploadButtonState();
+        }
+    };
+
+    // 업로드 가능 여부 체크 함수 (DB 설정 기반)
     function isUploadAvailable() {
+        if (!uploadSettings.loaded) {
+            console.log('[업로드 체크] 설정이 아직 로드되지 않음');
+            return false; // 설정이 아직 로드되지 않음
+        }
+
+        if (!uploadSettings.enabled) {
+            console.log('[업로드 체크] 관리자가 업로드 비활성화');
+            return false; // 관리자가 업로드 비활성화
+        }
+
         const now = new Date();
-        const UPLOAD_START_DATE = new Date('2026-10-04T09:00:00+09:00'); // 2026년 10월 4일 오전 9시 (KST)
-        // const UPLOAD_START_DATE = new Date('2026-06-05T21:30:00+09:00'); // 2026년 10월 4일 오전 9시 (KST)
-        return now >= UPLOAD_START_DATE;
+
+        // 시작일 이전
+        if (uploadSettings.startDate && now < uploadSettings.startDate) {
+            const diff = uploadSettings.startDate - now;
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            console.log(`[업로드 체크] 시작일 이전 (${hours}시간 ${minutes}분 남음)`);
+            return false;
+        }
+
+        console.log('[업로드 체크] 업로드 가능!');
+        return true;
     }
 
     // 달력 생성
@@ -2348,6 +2469,7 @@
         // 업로드 가능 상태가 변경되었는지 체크 (1초마다)
         const currentUploadAvailable = isUploadAvailable();
         if (previousUploadAvailable !== currentUploadAvailable) {
+            console.log(`[D-day 업데이트] 업로드 가능 상태 변경: ${previousUploadAvailable} → ${currentUploadAvailable}`);
             previousUploadAvailable = currentUploadAvailable;
             checkUploadButtonState(); // 상태가 변경되었을 때만 업데이트
         }
@@ -2516,8 +2638,12 @@
         const uploaderPassword = document.getElementById('uploaderPassword');
         const guestFileInput = document.getElementById('guestFileInput');
 
-        if (!isUploadAvailable()) {
+        const available = isUploadAvailable();
+        console.log(`[버튼 상태] 업로드 가능 여부: ${available}`);
+
+        if (!available) {
             // 날짜 이전이면 모든 입력/버튼 시각적으로 비활성화
+            console.log('[버튼 상태] 입력 필드 비활성화 중...');
             if (uploaderName) {
                 uploaderName.readOnly = true;
                 uploaderName.style.backgroundColor = '#f5f5f5';
@@ -2542,6 +2668,7 @@
             }
         } else {
             // 날짜 이후면 입력 필드 활성화
+            console.log('[버튼 상태] 입력 필드 활성화 중...');
             if (uploaderName) {
                 uploaderName.readOnly = false;
                 uploaderName.style.backgroundColor = '';
@@ -3678,8 +3805,16 @@
         updateDday();
         setInterval(updateDday, 1000); // 1초마다 업데이트
 
+        // 업로드 설정 로드 (DB에서)
+        await loadUploadSettings();
+
         // 업로드 버튼 상태 초기화
         checkUploadButtonState();
+
+        // 테스트용 안내 (콘솔)
+        console.log('💡 테스트 도구: testUploadSettings.show() - 현재 설정 확인');
+        console.log('💡 테스트 도구: testUploadSettings.setNow() - 즉시 활성화');
+        console.log('💡 테스트 도구: testUploadSettings.setIn1Minute() - 1분 후 활성화');
 
         if (supabaseClient) {
             loadGallery();

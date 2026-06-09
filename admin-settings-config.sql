@@ -14,23 +14,21 @@ DO UPDATE SET
     setting_value = EXCLUDED.setting_value,
     updated_at = NOW();
 
--- 2. RLS 정책 설정 (이미 활성화되어 있을 수 있음)
+-- 2. RLS 정책 설정
+-- 주의: admin.html은 비밀번호로 보호되므로 RLS는 관대하게 설정
 ALTER TABLE admin_settings ENABLE ROW LEVEL SECURITY;
 
 -- 기존 정책 삭제 (있다면)
 DROP POLICY IF EXISTS "Anyone can view admin_settings" ON admin_settings;
 DROP POLICY IF EXISTS "Anyone can update guest upload settings" ON admin_settings;
+DROP POLICY IF EXISTS "Anyone can insert guest upload settings" ON admin_settings;
+DROP POLICY IF EXISTS "Allow guest upload settings management" ON admin_settings;
 
--- 모든 사용자가 설정 읽기 가능
-CREATE POLICY "Anyone can view admin_settings"
+-- 통합 정책: 게스트 업로드 설정에 대한 모든 작업 허용
+-- (SELECT, INSERT, UPDATE를 모두 포함)
+CREATE POLICY "Allow guest upload settings management"
 ON admin_settings
-FOR SELECT
-USING (true);
-
--- 게스트 업로드 설정만 업데이트 허용
-CREATE POLICY "Anyone can update guest upload settings"
-ON admin_settings
-FOR UPDATE
+FOR ALL
 USING (
   setting_key IN (
     'guest_upload_start_date',

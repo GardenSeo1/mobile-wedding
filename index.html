@@ -2108,13 +2108,16 @@
         "https://fupncptwrevxjlanbnsc.supabase.co",
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1cG5jcHR3cmV2eGpsYW5ibnNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3OTg4ODYsImV4cCI6MjA4NzM3NDg4Nn0.cjkLp94xTl56r8Q4ahy4Zx192yvBULPjNX33XJCoHzI"
     );
-    //console.log('✅ Supabase 초기화 성공!');
 
     let selectedFiles = [];
     let currentTab = 'all';
     let currentGalleryPhotos = []; // 현재 갤러리의 전체 사진 배열
     let currentLightboxIndex = 0; // 현재 라이트박스에서 보는 사진 인덱스
     let savedScrollPosition = 0; // 모달 열기 전 스크롤 위치 저장
+
+    // 업로드 관련 기본값 (DB 로드 실패 시 사용)
+    const DEFAULT_UPLOAD_START_DATE = '2026-10-04T09:00:00+09:00'; // 결혼식 당일 오전 9시
+    const DEFAULT_UPLOAD_ENABLED = true;
 
     // 업로드 관련 설정 (DB에서 로드)
     let uploadSettings = {
@@ -2131,9 +2134,7 @@
     async function loadUploadSettings(isReload = false) {
         try {
             if (isReload) {
-                console.log('[업로드 설정] 🔄 설정 재로드 시작...');
             } else {
-                console.log('[업로드 설정] DB에서 설정 로드 시작...');
             }
 
             const { data, error } = await supabaseClient
@@ -2143,24 +2144,23 @@
 
             if (error) {
                 console.error('[업로드 설정] 로드 실패:', error);
+                console.warn(`[업로드 설정] 기본값 사용: ${DEFAULT_UPLOAD_START_DATE}`);
                 // 기본값 사용
-                uploadSettings.startDate = new Date('2026-10-04T09:00:00+09:00');
-                uploadSettings.enabled = true;
+                uploadSettings.startDate = new Date(DEFAULT_UPLOAD_START_DATE);
+                uploadSettings.enabled = DEFAULT_UPLOAD_ENABLED;
             } else if (!data || data.length === 0) {
                 console.warn('[업로드 설정] DB에 설정이 없습니다. 기본값 사용');
+                console.warn(`[업로드 설정] 기본값: ${DEFAULT_UPLOAD_START_DATE}`);
                 // 기본값 사용
-                uploadSettings.startDate = new Date('2026-10-04T09:00:00+09:00');
-                uploadSettings.enabled = true;
+                uploadSettings.startDate = new Date(DEFAULT_UPLOAD_START_DATE);
+                uploadSettings.enabled = DEFAULT_UPLOAD_ENABLED;
             } else {
-                console.log('[업로드 설정] DB 데이터:', data);
 
                 data.forEach(item => {
                     if (item.setting_key === 'guest_upload_start_date') {
                         uploadSettings.startDate = new Date(item.setting_value);
-                        console.log('[업로드 설정] 시작 날짜:', uploadSettings.startDate);
                     } else if (item.setting_key === 'guest_upload_enabled') {
                         uploadSettings.enabled = item.setting_value === 'true';
-                        console.log('[업로드 설정] 활성화 여부:', uploadSettings.enabled);
                     }
                 });
 
@@ -2180,8 +2180,6 @@
             }
 
             uploadSettings.loaded = true;
-            console.log('[업로드 설정] 최종 설정:', uploadSettings);
-            console.log('[업로드 설정] 현재 업로드 가능 여부:', isUploadAvailable());
 
             // 재로드 후 업로드 가능하면 interval 정지
             if (isReload && isUploadAvailable()) {
@@ -2194,8 +2192,8 @@
         } catch (err) {
             console.error('[업로드 설정] 로드 중 예외 발생:', err);
             // 기본값 사용
-            uploadSettings.startDate = new Date('2026-10-04T09:00:00+09:00');
-            uploadSettings.enabled = true;
+            uploadSettings.startDate = new Date(DEFAULT_UPLOAD_START_DATE);
+            uploadSettings.enabled = DEFAULT_UPLOAD_ENABLED;
             uploadSettings.loaded = true;
 
             checkUploadButtonState();
@@ -2206,61 +2204,19 @@
     // 업로드 체크 정지 함수
     function stopUploadCheck() {
         if (uploadCheckEnabled) {
-            console.log('[업로드 체크] ✅ 업로드 가능 상태 → 체크 정지');
             uploadCheckEnabled = false;
         }
     }
 
     // 테스트용 헬퍼 함수 (콘솔에서 사용 가능)
-    window.testUploadSettings = {
-        // 현재 설정 확인
-        show: () => {
-            console.log('=== 업로드 설정 ===');
-            console.log('로드 완료:', uploadSettings.loaded);
-            console.log('활성화:', uploadSettings.enabled);
-            console.log('시작 날짜:', uploadSettings.startDate);
-            console.log('현재 시간:', new Date());
-            console.log('업로드 가능:', isUploadAvailable());
-            console.log('체크 활성화:', uploadCheckEnabled);
-        },
-        // 테스트: 1분 후로 설정
-        setIn1Minute: () => {
-            const newDate = new Date(Date.now() + 60000);
-            uploadSettings.startDate = newDate;
-            uploadCheckEnabled = true; // 체크 재활성화
-            console.log('시작 날짜를 1분 후로 설정:', newDate);
-            checkUploadButtonState();
-        },
-        // 테스트: 1분 전으로 설정 (즉시 활성화)
-        setNow: () => {
-            const newDate = new Date(Date.now() - 60000);
-            uploadSettings.startDate = newDate;
-            console.log('시작 날짜를 1분 전으로 설정:', newDate);
-            checkUploadButtonState();
-            stopUploadCheck(); // 체크 정지
-        },
-        // 테스트: 활성화/비활성화 토글
-        toggleEnabled: () => {
-            uploadSettings.enabled = !uploadSettings.enabled;
-            console.log('활성화 상태 변경:', uploadSettings.enabled);
-            checkUploadButtonState();
-        },
-        // 테스트: DB 재조회
-        reload: async () => {
-            console.log('🔄 DB에서 설정 재조회...');
-            await loadUploadSettings(true);
-        }
-    };
 
     // 업로드 가능 여부 체크 함수 (DB 설정 기반)
     function isUploadAvailable() {
         if (!uploadSettings.loaded) {
-            console.log('[업로드 체크] 설정이 아직 로드되지 않음');
             return false; // 설정이 아직 로드되지 않음
         }
 
         if (!uploadSettings.enabled) {
-            console.log('[업로드 체크] 관리자가 업로드 비활성화');
             return false; // 관리자가 업로드 비활성화
         }
 
@@ -2271,11 +2227,9 @@
             const diff = uploadSettings.startDate - now;
             const hours = Math.floor(diff / (1000 * 60 * 60));
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            console.log(`[업로드 체크] 시작일 이전 (${hours}시간 ${minutes}분 남음)`);
             return false;
         }
 
-        console.log('[업로드 체크] 업로드 가능!');
         return true;
     }
 
@@ -2499,7 +2453,6 @@
         if (uploadCheckEnabled) {
             const currentUploadAvailable = isUploadAvailable();
             if (previousUploadAvailable !== currentUploadAvailable) {
-                console.log(`[D-day 업데이트] 업로드 가능 상태 변경: ${previousUploadAvailable} → ${currentUploadAvailable}`);
                 previousUploadAvailable = currentUploadAvailable;
                 checkUploadButtonState(); // 상태가 변경되었을 때만 업데이트
 
@@ -2555,7 +2508,6 @@
     // 갤러리 로드
     async function loadGallery() {
         if (!supabaseClient) {
-            //console.log('Supabase가 초기화되지 않았습니다.');
             return;
         }
 
@@ -2652,8 +2604,6 @@
         if (!isUploadAvailable()) {
             event.preventDefault();
 
-            // DB에서 최신 설정 다시 받아오기
-            console.log('[클릭 이벤트] 비활성화 영역 클릭 → DB 재조회');
             const nowAvailable = await loadUploadSettings(true);
 
             if (!nowAvailable) {
@@ -2661,7 +2611,6 @@
                 alert(UPLOAD_DATE_MESSAGE);
                 event.target.blur(); // 포커스 해제
             } else {
-                console.log('[클릭 이벤트] ✅ 업로드 가능 상태로 변경됨!');
             }
             return false;
         }
@@ -2673,15 +2622,12 @@
             event.preventDefault();
             event.stopPropagation();
 
-            // DB에서 최신 설정 다시 받아오기
-            console.log('[클릭 이벤트] 비활성화 영역 클릭 → DB 재조회');
             const nowAvailable = await loadUploadSettings(true);
 
             if (!nowAvailable) {
                 // 여전히 업로드 불가능하면 alert 표시
                 alert(UPLOAD_DATE_MESSAGE);
             } else {
-                console.log('[클릭 이벤트] ✅ 업로드 가능 상태로 변경됨!');
             }
             return false;
         }
@@ -2695,11 +2641,9 @@
         const guestFileInput = document.getElementById('guestFileInput');
 
         const available = isUploadAvailable();
-        console.log(`[버튼 상태] 업로드 가능 여부: ${available}`);
 
         if (!available) {
             // 날짜 이전이면 모든 입력/버튼 시각적으로 비활성화
-            console.log('[버튼 상태] 입력 필드 비활성화 중...');
             if (uploaderName) {
                 uploaderName.readOnly = true;
                 uploaderName.style.backgroundColor = '#f5f5f5';
@@ -2724,7 +2668,6 @@
             }
         } else {
             // 날짜 이후면 입력 필드 활성화
-            console.log('[버튼 상태] 입력 필드 활성화 중...');
             if (uploaderName) {
                 uploaderName.readOnly = false;
                 uploaderName.style.backgroundColor = '';
@@ -2824,10 +2767,8 @@
                                         type: outputType,
                                         lastModified: Date.now()
                                     });
-                                    // console.log(`[압축] ${file.name}: ${(file.size / 1024).toFixed(1)}KB → ${(blob.size / 1024).toFixed(1)}KB (${Math.round((1 - blob.size / file.size) * 100)}% 감소)`);
                                     resolve(compressedFile);
                                 } else {
-                                    // console.log(`[압축 스킵] ${file.name}: 압축 효과 없음`);
                                     resolve(file);
                                 }
                             } else {
@@ -2852,14 +2793,12 @@
     async function uploadPhotos() {
         // 업로드 가능 날짜 체크 (DB 재조회)
         if (!isUploadAvailable()) {
-            console.log('[업로드] 비활성화 상태 → DB 재조회');
             const nowAvailable = await loadUploadSettings(true);
 
             if (!nowAvailable) {
                 alert(UPLOAD_DATE_MESSAGE);
                 return;
             } else {
-                console.log('[업로드] ✅ 업로드 가능 상태로 변경됨!');
             }
         }
 
@@ -2902,7 +2841,6 @@
 
         try {
             // 1. 모든 파일 압축 (병렬 처리)
-            // console.log('[압축 시작] 총', totalFiles, '개 파일');
             const compressionPromises = selectedFiles.map((file, index) =>
                 compressImage(file).catch(err => {
                     console.error(`[압축 실패] ${file.name}:`, err);
@@ -2911,7 +2849,6 @@
             );
 
             const compressedFiles = await Promise.all(compressionPromises);
-            // console.log('[압축 완료]');
 
             uploadBtn.textContent = '업로드 중...';
             status.textContent = '파일 업로드 중...';
@@ -3088,14 +3025,12 @@
     async function viewMyPhotos() {
         // 업로드 가능 날짜 체크 (DB 재조회)
         if (!isUploadAvailable()) {
-            console.log('[내 사진 보기] 비활성화 상태 → DB 재조회');
             const nowAvailable = await loadUploadSettings(true);
 
             if (!nowAvailable) {
                 alert(VIEW_PHOTOS_DATE_MESSAGE);
                 return;
             } else {
-                console.log('[내 사진 보기] ✅ 업로드 가능 상태로 변경됨!');
             }
         }
 
@@ -3263,7 +3198,6 @@
 
         // DOM 요소가 없으면 함수 종료 (방명록 섹션이 주석처리된 경우)
         if (!nameEl || !passwordEl || !messageEl) {
-            //console.log('방명록 섹션이 비활성화되어 있습니다.');
             return;
         }
 
@@ -3347,12 +3281,10 @@
         // DOM 요소가 없으면 함수 종료 (방명록 섹션이 주석처리된 경우)
         const list = document.getElementById('guestbookList');
         if (!list) {
-            // console.log('방명록 섹션이 비활성화되어 있습니다.');
             return;
         }
 
         if (!supabaseClient) {
-            //console.log('Supabase가 초기화되지 않았습니다.');
             return;
         }
 
@@ -3559,7 +3491,6 @@
                 // 기본적으로 정보창 열어두기
                 infoWindow.open(map, marker);
 
-                //console.log('✅ 네이버 지도 초기화 성공!');
             } else {
                 // 네이버 지도 API가 로드되지 않은 경우 대체 텍스트 표시
                 document.getElementById('map').innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #999; font-size: 14px;">🗺️ 지도를 로드할 수 없습니다<br>아래 버튼으로 위치를 확인하세요</div>';
@@ -3573,7 +3504,6 @@
     // 메인 슬라이더 사진 로드
     async function loadMainSlider() {
         if (!supabaseClient) {
-            //console.log('Supabase가 초기화되지 않았습니다.');
             return;
         }
 
@@ -3611,7 +3541,6 @@
                 wrapper.appendChild(slide);
             });
 
-            //console.log(`✅ 메인 사진 ${data.length}개 로드 완료!`);
         } catch (error) {
             console.error('메인 슬라이더 로드 실패:', error);
         }
@@ -3635,7 +3564,6 @@
                     clickable: true,
                 },
             });
-            //console.log('✅ Swiper 초기화 성공!');
         } else {
             console.error('❌ Swiper 라이브러리가 로드되지 않았습니다');
         }
@@ -3895,18 +3823,10 @@
 
                 // 업로드 가능 상태면 체크 비활성화
                 if (isUploadAvailable()) {
-                    console.log('[초기화] 업로드 가능 상태 → 체크 비활성화');
                     uploadCheckEnabled = false;
                 } else {
-                    console.log('[초기화] 업로드 불가능 상태 → 1초마다 체크 활성화');
                 }
             });
-
-            // 테스트용 안내
-            console.log('💡 테스트 도구: testUploadSettings.show() - 현재 설정 확인');
-            console.log('💡 테스트 도구: testUploadSettings.setNow() - 즉시 활성화');
-            console.log('💡 테스트 도구: testUploadSettings.setIn1Minute() - 1분 후 활성화');
-            console.log('💡 테스트 도구: testUploadSettings.reload() - DB 재조회');
 
             // 갤러리 및 방명록
             if (supabaseClient) {
@@ -3979,14 +3899,12 @@
         const tomorrow = new Date();
         tomorrow.setHours(24, 0, 0, 0); // 다음날 자정
         localStorage.setItem('hideRsvpPopup', tomorrow.getTime().toString());
-        //console.log('[localStorage 저장] hideRsvpPopup 설정됨 (만료: ' + tomorrow.toLocaleString() + ')');
     }
 
     function shouldShowPopup() {
         const hideUntil = localStorage.getItem('hideRsvpPopup');
 
         if (!hideUntil) {
-            //console.log('[localStorage] 저장된 값 없음 → 팝업 표시');
             return true;
         }
 
@@ -3996,17 +3914,14 @@
         if (now > expiryTime) {
             // 만료됨
             localStorage.removeItem('hideRsvpPopup');
-            //console.log('[localStorage] 만료됨 → 팝업 표시');
             return true;
         }
 
-        //console.log('[localStorage] 아직 유효함 → 팝업 숨김');
         return false;
     }
 
     // 팝업 열기
     function showRsvpPopup() {
-        //console.log('[팝업] 표시');
         const popup = document.getElementById('rsvpPopup');
         popup.classList.add('active');
         lockBodyScroll();
@@ -4014,7 +3929,6 @@
 
     // 팝업 닫기
     function closeRsvpPopup() {
-        //console.log('[팝업] 닫기');
         const popup = document.getElementById('rsvpPopup');
         popup.classList.remove('active');
         unlockBodyScroll();
@@ -4022,7 +3936,6 @@
 
     // 오늘 하루 보지 않기
     function closeRsvpPopupForToday() {
-        //console.log('[팝업] 오늘 하루 보지 않기 클릭');
         setHidePopup();
         closeRsvpPopup();
     }
@@ -4054,7 +3967,6 @@
 
     // 페이지 로드 시 팝업 표시 체크
     window.addEventListener('load', function() {
-        //console.log('[페이지 로드] 팝업 표시 여부 확인');
 
         // localStorage 확인
         if (shouldShowPopup()) {

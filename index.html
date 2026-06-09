@@ -2125,11 +2125,16 @@
     let UPLOAD_DATE_MESSAGE = '사진 및 영상 업로드는 아직 시작되지 않았습니다.';
     let VIEW_PHOTOS_DATE_MESSAGE = '사진 조회는 아직 시작되지 않았습니다.';
     let previousUploadAvailable = null; // 이전 업로드 가능 상태 저장
+    let uploadCheckEnabled = true; // 업로드 체크 활성화 여부
 
-    // DB에서 업로드 설정 로드
-    async function loadUploadSettings() {
+    // DB에서 업로드 설정 로드 (재로드 가능)
+    async function loadUploadSettings(isReload = false) {
         try {
-            console.log('[업로드 설정] DB에서 설정 로드 시작...');
+            if (isReload) {
+                console.log('[업로드 설정] 🔄 설정 재로드 시작...');
+            } else {
+                console.log('[업로드 설정] DB에서 설정 로드 시작...');
+            }
 
             const { data, error } = await supabaseClient
                 .from('admin_settings')
@@ -2178,7 +2183,14 @@
             console.log('[업로드 설정] 최종 설정:', uploadSettings);
             console.log('[업로드 설정] 현재 업로드 가능 여부:', isUploadAvailable());
 
+            // 재로드 후 업로드 가능하면 interval 정지
+            if (isReload && isUploadAvailable()) {
+                stopUploadCheck();
+            }
+
             checkUploadButtonState(); // 설정 로드 후 버튼 상태 업데이트
+
+            return isUploadAvailable(); // 업로드 가능 여부 반환
         } catch (err) {
             console.error('[업로드 설정] 로드 중 예외 발생:', err);
             // 기본값 사용
@@ -2187,6 +2199,15 @@
             uploadSettings.loaded = true;
 
             checkUploadButtonState();
+            return false;
+        }
+    }
+
+    // 업로드 체크 정지 함수
+    function stopUploadCheck() {
+        if (uploadCheckEnabled) {
+            console.log('[업로드 체크] ✅ 업로드 가능 상태 → 체크 정지');
+            uploadCheckEnabled = false;
         }
     }
 
@@ -2200,11 +2221,13 @@
             console.log('시작 날짜:', uploadSettings.startDate);
             console.log('현재 시간:', new Date());
             console.log('업로드 가능:', isUploadAvailable());
+            console.log('체크 활성화:', uploadCheckEnabled);
         },
         // 테스트: 1분 후로 설정
         setIn1Minute: () => {
             const newDate = new Date(Date.now() + 60000);
             uploadSettings.startDate = newDate;
+            uploadCheckEnabled = true; // 체크 재활성화
             console.log('시작 날짜를 1분 후로 설정:', newDate);
             checkUploadButtonState();
         },
@@ -2214,12 +2237,18 @@
             uploadSettings.startDate = newDate;
             console.log('시작 날짜를 1분 전으로 설정:', newDate);
             checkUploadButtonState();
+            stopUploadCheck(); // 체크 정지
         },
         // 테스트: 활성화/비활성화 토글
         toggleEnabled: () => {
             uploadSettings.enabled = !uploadSettings.enabled;
             console.log('활성화 상태 변경:', uploadSettings.enabled);
             checkUploadButtonState();
+        },
+        // 테스트: DB 재조회
+        reload: async () => {
+            console.log('🔄 DB에서 설정 재조회...');
+            await loadUploadSettings(true);
         }
     };
 
@@ -2466,12 +2495,19 @@
             secondsEl.textContent = String(seconds).padStart(2, '0');
         }
 
-        // 업로드 가능 상태가 변경되었는지 체크 (1초마다)
-        const currentUploadAvailable = isUploadAvailable();
-        if (previousUploadAvailable !== currentUploadAvailable) {
-            console.log(`[D-day 업데이트] 업로드 가능 상태 변경: ${previousUploadAvailable} → ${currentUploadAvailable}`);
-            previousUploadAvailable = currentUploadAvailable;
-            checkUploadButtonState(); // 상태가 변경되었을 때만 업데이트
+        // 업로드 가능 상태가 변경되었는지 체크 (1초마다, 체크가 활성화된 경우만)
+        if (uploadCheckEnabled) {
+            const currentUploadAvailable = isUploadAvailable();
+            if (previousUploadAvailable !== currentUploadAvailable) {
+                console.log(`[D-day 업데이트] 업로드 가능 상태 변경: ${previousUploadAvailable} → ${currentUploadAvailable}`);
+                previousUploadAvailable = currentUploadAvailable;
+                checkUploadButtonState(); // 상태가 변경되었을 때만 업데이트
+
+                // 업로드 가능 상태가 되면 더 이상 체크할 필요 없으므로 체크 정지
+                if (currentUploadAvailable) {
+                    stopUploadCheck();
+                }
+            }
         }
     }
 
@@ -2611,22 +2647,42 @@
         });
     }
 
-    // disabled된 입력 필드 클릭 시 alert 표시
-    function checkDateAndAlert(event) {
+    // disabled된 입력 필드 클릭 시 alert 표시 (DB 재조회)
+    async function checkDateAndAlert(event) {
         if (!isUploadAvailable()) {
             event.preventDefault();
-            alert(UPLOAD_DATE_MESSAGE);
-            event.target.blur(); // 포커스 해제
+
+            // DB에서 최신 설정 다시 받아오기
+            console.log('[클릭 이벤트] 비활성화 영역 클릭 → DB 재조회');
+            const nowAvailable = await loadUploadSettings(true);
+
+            if (!nowAvailable) {
+                // 여전히 업로드 불가능하면 alert 표시
+                alert(UPLOAD_DATE_MESSAGE);
+                event.target.blur(); // 포커스 해제
+            } else {
+                console.log('[클릭 이벤트] ✅ 업로드 가능 상태로 변경됨!');
+            }
             return false;
         }
     }
 
-    // disabled된 파일 입력 클릭 시 alert 표시
-    function checkDateAndAlertForFile(event) {
+    // disabled된 파일 입력 클릭 시 alert 표시 (DB 재조회)
+    async function checkDateAndAlertForFile(event) {
         if (!isUploadAvailable()) {
             event.preventDefault();
             event.stopPropagation();
-            alert(UPLOAD_DATE_MESSAGE);
+
+            // DB에서 최신 설정 다시 받아오기
+            console.log('[클릭 이벤트] 비활성화 영역 클릭 → DB 재조회');
+            const nowAvailable = await loadUploadSettings(true);
+
+            if (!nowAvailable) {
+                // 여전히 업로드 불가능하면 alert 표시
+                alert(UPLOAD_DATE_MESSAGE);
+            } else {
+                console.log('[클릭 이벤트] ✅ 업로드 가능 상태로 변경됨!');
+            }
             return false;
         }
     }
@@ -2794,10 +2850,17 @@
 
     // 사진 업로드 (병렬 업로드 + 이미지 압축)
     async function uploadPhotos() {
-        // 업로드 가능 날짜 체크
+        // 업로드 가능 날짜 체크 (DB 재조회)
         if (!isUploadAvailable()) {
-            alert(UPLOAD_DATE_MESSAGE);
-            return;
+            console.log('[업로드] 비활성화 상태 → DB 재조회');
+            const nowAvailable = await loadUploadSettings(true);
+
+            if (!nowAvailable) {
+                alert(UPLOAD_DATE_MESSAGE);
+                return;
+            } else {
+                console.log('[업로드] ✅ 업로드 가능 상태로 변경됨!');
+            }
         }
 
         if (!supabaseClient) {
@@ -3023,10 +3086,17 @@
 
     // 내 사진 보기
     async function viewMyPhotos() {
-        // 업로드 가능 날짜 체크
+        // 업로드 가능 날짜 체크 (DB 재조회)
         if (!isUploadAvailable()) {
-            alert(VIEW_PHOTOS_DATE_MESSAGE);
-            return;
+            console.log('[내 사진 보기] 비활성화 상태 → DB 재조회');
+            const nowAvailable = await loadUploadSettings(true);
+
+            if (!nowAvailable) {
+                alert(VIEW_PHOTOS_DATE_MESSAGE);
+                return;
+            } else {
+                console.log('[내 사진 보기] ✅ 업로드 가능 상태로 변경됨!');
+            }
         }
 
         const name = prompt('이름을 입력해주세요:');
@@ -3817,17 +3887,26 @@
             // 달력 및 D-day
             generateCalendar();
             updateDday();
-            setInterval(updateDday, 1000);
+            setInterval(updateDday, 1000); // D-day는 항상 업데이트
 
-            // 업로드 설정
+            // 업로드 설정 로드
             loadUploadSettings().then(() => {
                 checkUploadButtonState();
+
+                // 업로드 가능 상태면 체크 비활성화
+                if (isUploadAvailable()) {
+                    console.log('[초기화] 업로드 가능 상태 → 체크 비활성화');
+                    uploadCheckEnabled = false;
+                } else {
+                    console.log('[초기화] 업로드 불가능 상태 → 1초마다 체크 활성화');
+                }
             });
 
             // 테스트용 안내
             console.log('💡 테스트 도구: testUploadSettings.show() - 현재 설정 확인');
             console.log('💡 테스트 도구: testUploadSettings.setNow() - 즉시 활성화');
             console.log('💡 테스트 도구: testUploadSettings.setIn1Minute() - 1분 후 활성화');
+            console.log('💡 테스트 도구: testUploadSettings.reload() - DB 재조회');
 
             // 갤러리 및 방명록
             if (supabaseClient) {

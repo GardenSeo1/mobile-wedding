@@ -1893,9 +1893,9 @@
 
     <!-- 사진 업로드 -->
     <section class="section upload-section" data-aos="fade-up">
-        <div class="section-title">📸 사진 및 영상 업로드<br><span style="font-size: 14px; color: #1a1a1a; font-weight: 700;">(10월 4일 오전 9시 OPEN)</span></div>
+        <div class="section-title">📸 사진 및 영상 업로드<br><span id="uploadOpenDateTitle" style="font-size: 14px; color: #1a1a1a; font-weight: 700;">(10월 4일 오전 9시 OPEN)</span></div>
         <div style="text-align: center; color: #666; margin-bottom: 25px; font-size: 13px; line-height: 1.8;">
-            <p style="margin: 0 0 8px 0; color: #2c2c2c; font-size: 12px; font-weight: 700;">2026년 10월 4일 오전 9시부터 사진 및 영상 업로드가 가능합니다.</p>
+            <p id="uploadOpenDateText" style="margin: 0 0 8px 0; color: #2c2c2c; font-size: 12px; font-weight: 700;">2026년 10월 4일 오전 9시부터 사진 및 영상 업로드가 가능합니다.</p>
             <p style="margin: 0 0 6px 0;">소중한 순간을 담아주세요.</p>
             <p style="margin: 0 0 6px 0;">여러분의 시선으로 담아주신 순간들이<br>저희에게는 영원한 기억이 됩니다.</p>
             <p style="margin: 0 0 6px 0;">결혼식의 행복한 순간을 함께 나눠주세요.</p>
@@ -2176,6 +2176,33 @@
                     });
                     UPLOAD_DATE_MESSAGE = `사진 및 영상 업로드는 ${dateStr}부터 가능합니다.`;
                     VIEW_PHOTOS_DATE_MESSAGE = `사진 조회는 ${dateStr}부터 가능합니다.`;
+
+                    // HTML 요소에 표시되는 날짜 업데이트
+                    const titleDate = uploadSettings.startDate.toLocaleString('ko-KR', {
+                        month: 'long',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        timeZone: 'Asia/Seoul'
+                    });
+                    const fullDate = uploadSettings.startDate.toLocaleString('ko-KR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        timeZone: 'Asia/Seoul'
+                    });
+
+                    const titleEl = document.getElementById('uploadOpenDateTitle');
+                    const textEl = document.getElementById('uploadOpenDateText');
+
+                    if (titleEl) {
+                        titleEl.textContent = `(${titleDate} OPEN)`;
+                        console.log(`[날짜 업데이트] 제목: (${titleDate} OPEN)`);
+                    }
+                    if (textEl) {
+                        textEl.textContent = `${fullDate}부터 사진 및 영상 업로드가 가능합니다.`;
+                        console.log(`[날짜 업데이트] 설명: ${fullDate}부터 사진 및 영상 업로드가 가능합니다.`);
+                    }
                 }
             }
 

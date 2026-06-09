@@ -4209,23 +4209,50 @@
             // ISO 8601 형식으로 변환 (KST 타임존 포함)
             const startDateISO = formatToKST(startDate);
 
-            // DB 업데이트
+            // DB 업데이트 (UPSERT: 없으면 INSERT, 있으면 UPDATE)
             const updates = [
                 { setting_key: 'guest_upload_start_date', setting_value: startDateISO },
                 { setting_key: 'guest_upload_enabled', setting_value: enabled.toString() }
             ];
 
+            console.log('[설정 저장] 저장할 데이터:', updates);
+
             for (const update of updates) {
-                const { error } = await supabaseClient
+                // UPSERT: INSERT ... ON CONFLICT UPDATE
+                const { data, error } = await supabaseClient
                     .from('admin_settings')
-                    .update({ setting_value: update.setting_value })
-                    .eq('setting_key', update.setting_key);
+                    .upsert(
+                        {
+                            setting_key: update.setting_key,
+                            setting_value: update.setting_value,
+                            updated_at: new Date().toISOString()
+                        },
+                        {
+                            onConflict: 'setting_key',
+                            ignoreDuplicates: false
+                        }
+                    );
 
                 if (error) {
-                    console.error(`${update.setting_key} 업데이트 실패:`, error);
+                    console.error(`[설정 저장] ${update.setting_key} 저장 실패:`, error);
                     showMessage('settingsStatusMessage', '설정 저장에 실패했습니다.', 'error');
                     return;
+                } else {
+                    console.log(`[설정 저장] ${update.setting_key} 저장 성공:`, update.setting_value);
                 }
+            }
+
+            // 저장 완료 후 DB에서 다시 읽어와서 확인
+            console.log('[설정 저장] 저장 완료 → DB 재확인');
+            const { data: verifyData, error: verifyError } = await supabaseClient
+                .from('admin_settings')
+                .select('setting_key, setting_value')
+                .in('setting_key', ['guest_upload_start_date', 'guest_upload_enabled']);
+
+            if (verifyError) {
+                console.error('[설정 저장] 재확인 실패:', verifyError);
+            } else {
+                console.log('[설정 저장] DB 저장 확인:', verifyData);
             }
 
             // 현재 상태 업데이트

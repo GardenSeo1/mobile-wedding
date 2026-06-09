@@ -1737,7 +1737,7 @@
                 <div>토</div>
             </div>
             <div class="calendar-dates" id="calendarDates"></div>
-            <div style="text-align: right; margin-top: 12px; font-size: 11px; color: #FFB6C1; opacity: 0.9;">
+            <div style="text-align: right; margin-top: 12px; font-size: 11px; color: #2c2c2c; font-weight: 700; opacity: 1;">
                 하트를 빠르게 눌러보세요 !
             </div>
         </div>
@@ -1893,9 +1893,9 @@
 
     <!-- 사진 업로드 -->
     <section class="section upload-section" data-aos="fade-up">
-        <div class="section-title">📸 사진 및 영상 업로드<br><span style="font-size: 14px; color: #BB7273; font-weight: 500;">(10월 4일 오전 9시 OPEN)</span></div>
+        <div class="section-title">📸 사진 및 영상 업로드<br><span style="font-size: 14px; color: #1a1a1a; font-weight: 700;">(10월 4일 오전 9시 OPEN)</span></div>
         <div style="text-align: center; color: #666; margin-bottom: 25px; font-size: 13px; line-height: 1.8;">
-            <p style="margin: 0 0 8px 0; color: #999; font-size: 12px;">2026년 10월 4일 오전 9시부터 사진 및 영상 업로드가 가능합니다.</p>
+            <p style="margin: 0 0 8px 0; color: #2c2c2c; font-size: 12px; font-weight: 700;">2026년 10월 4일 오전 9시부터 사진 및 영상 업로드가 가능합니다.</p>
             <p style="margin: 0 0 6px 0;">소중한 순간을 담아주세요.</p>
             <p style="margin: 0 0 6px 0;">여러분의 시선으로 담아주신 순간들이<br>저희에게는 영원한 기억이 됩니다.</p>
             <p style="margin: 0 0 6px 0;">결혼식의 행복한 순간을 함께 나눠주세요.</p>
@@ -3532,10 +3532,12 @@
 
             // Supabase에서 불러온 사진으로 슬라이드 생성
             wrapper.innerHTML = '';
-            data.forEach(photo => {
+            data.forEach((photo, index) => {
                 const slide = document.createElement('div');
                 slide.className = 'swiper-slide';
-                slide.innerHTML = `<img src="${photo.image_url}" alt="Wedding Photo">`;
+                // 첫 번째 이미지는 최우선 로딩, 나머지는 eager 로딩
+                const priority = index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="eager"';
+                slide.innerHTML = `<img src="${photo.image_url}" alt="Wedding Photo" ${priority}>`;
                 wrapper.appendChild(slide);
             });
 
@@ -3764,11 +3766,14 @@
 
     // 페이지 초기화 함수
     async function initPage() {
-        // RSVP 팝업 제일 먼저 표시
-        setTimeout(() => {
-            showRsvpPopup();
-        }, 100); // 0.1초 후 즉시 표시
+        // ========================================
+        // 1단계: 메인 사진 최우선 로딩 (사용자가 가장 먼저 보는 콘텐츠)
+        // ========================================
+        await initSwiper();
 
+        // ========================================
+        // 2단계: 필수 UI 설정 (즉시 필요)
+        // ========================================
         // 브라우저의 자동 스크롤 복원 방지 (페이지 새로고침 시 스크롤 위치 고정 방지)
         if ('scrollRestoration' in history) {
             history.scrollRestoration = 'manual';
@@ -3800,43 +3805,50 @@
             });
         }
 
-        // 초기화
-        generateCalendar();
-        updateDday();
-        setInterval(updateDday, 1000); // 1초마다 업데이트
+        // RSVP 팝업 표시
+        setTimeout(() => {
+            showRsvpPopup();
+        }, 100);
 
-        // 업로드 설정 로드 (DB에서)
-        await loadUploadSettings();
+        // ========================================
+        // 3단계: 나머지 기능들 지연 로드 (사용자 경험에 즉시 영향 없음)
+        // ========================================
+        setTimeout(() => {
+            // 달력 및 D-day
+            generateCalendar();
+            updateDday();
+            setInterval(updateDday, 1000);
 
-        // 업로드 버튼 상태 초기화
-        checkUploadButtonState();
-
-        // 테스트용 안내 (콘솔)
-        console.log('💡 테스트 도구: testUploadSettings.show() - 현재 설정 확인');
-        console.log('💡 테스트 도구: testUploadSettings.setNow() - 즉시 활성화');
-        console.log('💡 테스트 도구: testUploadSettings.setIn1Minute() - 1분 후 활성화');
-
-        if (supabaseClient) {
-            loadGallery();
-            loadGuestbook();
-        }
-
-        initMap();
-        await initSwiper();
-
-        // AOS 초기화
-        if (typeof AOS !== 'undefined') {
-            AOS.init({
-                duration: 800,
-                once: true,
-                offset: 100
+            // 업로드 설정
+            loadUploadSettings().then(() => {
+                checkUploadButtonState();
             });
-            //console.log('✅ AOS 초기화 성공!');
-        } else {
-            console.error('❌ AOS 라이브러리가 로드되지 않았습니다');
-        }
 
-        //console.log('페이지 로드 완료');
+            // 테스트용 안내
+            console.log('💡 테스트 도구: testUploadSettings.show() - 현재 설정 확인');
+            console.log('💡 테스트 도구: testUploadSettings.setNow() - 즉시 활성화');
+            console.log('💡 테스트 도구: testUploadSettings.setIn1Minute() - 1분 후 활성화');
+
+            // 갤러리 및 방명록
+            if (supabaseClient) {
+                loadGallery();
+                loadGuestbook();
+            }
+
+            // 지도 초기화
+            initMap();
+
+            // AOS 초기화
+            if (typeof AOS !== 'undefined') {
+                AOS.init({
+                    duration: 800,
+                    once: true,
+                    offset: 100
+                });
+            } else {
+                console.error('❌ AOS 라이브러리가 로드되지 않았습니다');
+            }
+        }, 50); // 메인 사진 로드 후 50ms 후에 나머지 로드
     }
 
     // 페이지 로드 후 초기화

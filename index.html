@@ -36,7 +36,7 @@
 
         /* 헤더 */
         .header {
-            padding: 60px 20px 40px;
+            padding: 42px 20px 32px;
             text-align: center;
             background: linear-gradient(to bottom, #fafaf8, white);
         }
@@ -64,18 +64,23 @@
         /* 메인 이미지 슬라이더 */
         .main-image {
             width: 100%;
-            height: 500px;
+            height: auto;
             position: relative;
             overflow: hidden;
         }
 
         .swiper {
             width: 100%;
-            height: 100%;
+            height: auto;
+        }
+
+        .mainSwiper {
+            cursor: pointer;
+            touch-action: pan-y;
         }
 
         .swiper-slide {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: #f5f3ed;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -86,9 +91,11 @@
 
         .swiper-slide img {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            height: auto;
+            display: block;
+            background: #f5f3ed;
             user-select: none;
+            -webkit-user-drag: none;
         }
 
         .swiper-pagination-bullet {
@@ -100,16 +107,22 @@
             opacity: 1;
         }
 
+        @media (hover: none) and (pointer: coarse) {
+            .mainSwiper {
+                cursor: auto;
+            }
+        }
+
         /* 섹션 */
         .section {
-            padding: 60px 30px;
+            padding: 44px 30px;
         }
 
         .section-title {
             text-align: center;
             font-size: 18px;
             font-weight: 600;
-            margin-bottom: 30px;
+            margin-bottom: 24px;
             color: #43573a;
             letter-spacing: 2px;
         }
@@ -593,6 +606,7 @@
             justify-content: center;
             width: 100%;
             position: relative;
+            touch-action: none;
         }
 
         .lightbox img {
@@ -2113,6 +2127,13 @@
     let currentTab = 'all';
     let currentGalleryPhotos = []; // 현재 갤러리의 전체 사진 배열
     let currentLightboxIndex = 0; // 현재 라이트박스에서 보는 사진 인덱스
+    let mainSwiperInstance = null; // 메인 사진 슬라이더 인스턴스
+    let lightboxTouchStartX = 0;
+    let lightboxTouchStartY = 0;
+    let lightboxTouchCurrentX = 0;
+    let lightboxTouchCurrentY = 0;
+    let lightboxTouchStartTime = 0;
+    let lightboxSwipeTracking = false;
     let savedScrollPosition = 0; // 모달 열기 전 스크롤 위치 저장
 
     // 업로드 관련 기본값 (DB 로드 실패 시 사용)
@@ -3458,6 +3479,66 @@
         }
     });
 
+    // 모바일에서 라이트박스 사진 좌우 스와이프
+    function initLightboxSwipe() {
+        const lightbox = document.getElementById('lightbox');
+        if (!lightbox) return;
+
+        const isLightboxControl = (target) => {
+            if (!target || !target.closest) return false;
+            return target.closest('.lightbox-thumbnails') ||
+                   target.closest('.lightbox-arrow') ||
+                   target.closest('.lightbox-close');
+        };
+
+        document.addEventListener('touchstart', function(e) {
+            lightboxSwipeTracking = false;
+            if (!lightbox.classList.contains('active') || e.touches.length !== 1 || isLightboxControl(e.target)) return;
+
+            lightboxTouchStartX = e.touches[0].clientX;
+            lightboxTouchStartY = e.touches[0].clientY;
+            lightboxTouchCurrentX = lightboxTouchStartX;
+            lightboxTouchCurrentY = lightboxTouchStartY;
+            lightboxTouchStartTime = Date.now();
+            lightboxSwipeTracking = true;
+        }, { passive: true, capture: true });
+
+        document.addEventListener('touchmove', function(e) {
+            if (!lightboxSwipeTracking || !lightbox.classList.contains('active') || e.touches.length !== 1) return;
+
+            lightboxTouchCurrentX = e.touches[0].clientX;
+            lightboxTouchCurrentY = e.touches[0].clientY;
+        }, { passive: true, capture: true });
+
+        document.addEventListener('touchend', function(e) {
+            if (!lightboxSwipeTracking || !lightbox.classList.contains('active') || currentGalleryPhotos.length <= 1) return;
+            lightboxSwipeTracking = false;
+
+            if (e.changedTouches && e.changedTouches.length > 0) {
+                lightboxTouchCurrentX = e.changedTouches[0].clientX;
+                lightboxTouchCurrentY = e.changedTouches[0].clientY;
+            }
+
+            const diffX = lightboxTouchCurrentX - lightboxTouchStartX;
+            const diffY = lightboxTouchCurrentY - lightboxTouchStartY;
+            const elapsed = Date.now() - lightboxTouchStartTime;
+            const isHorizontalSwipe = Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY) * 1.3;
+
+            if (!isHorizontalSwipe || elapsed > 700) return;
+
+            e.preventDefault();
+            if (diffX > 0) {
+                prevLightboxImage();
+            } else {
+                nextLightboxImage();
+            }
+        }, { passive: false, capture: true });
+
+        document.addEventListener('touchcancel', function() {
+            lightboxSwipeTracking = false;
+        }, { passive: true, capture: true });
+    }
+
     // 모바일에서 배경 스크롤 방지 (iOS 대응)
     let preventScroll = false;
 
@@ -3562,6 +3643,9 @@
             data.forEach((photo, index) => {
                 const slide = document.createElement('div');
                 slide.className = 'swiper-slide';
+                if (index === 0) {
+                    slide.setAttribute('data-swiper-autoplay', '4000');
+                }
                 // 첫 번째 이미지는 최우선 로딩, 나머지는 eager 로딩
                 const priority = index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="eager"';
                 slide.innerHTML = `<img src="${photo.image_url}" alt="Wedding Photo" ${priority}>`;
@@ -3580,8 +3664,17 @@
 
         // 그 다음 Swiper 초기화
         if (typeof Swiper !== 'undefined') {
-            new Swiper('.mainSwiper', {
+            if (mainSwiperInstance) {
+                mainSwiperInstance.destroy(true, true);
+            }
+
+            mainSwiperInstance = new Swiper('.mainSwiper', {
                 loop: true,
+                autoHeight: true,
+                grabCursor: true,
+                simulateTouch: true,
+                touchRatio: 1,
+                threshold: 8,
                 autoplay: {
                     delay: 2000,
                     disableOnInteraction: false,
@@ -3589,6 +3682,16 @@
                 pagination: {
                     el: '.swiper-pagination',
                     clickable: true,
+                },
+                on: {
+                    click(swiper, event) {
+                        const isDesktopPointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+                        const clickedPagination = event.target && event.target.closest('.swiper-pagination');
+
+                        if (isDesktopPointer && !clickedPagination) {
+                            swiper.slideNext();
+                        }
+                    },
                 },
             });
         } else {
@@ -3829,6 +3932,8 @@
                 if (e.target === this) closeMyPhotosModal();
             });
         }
+
+        initLightboxSwipe();
 
         // ========================================
         // 3단계: 나머지 기능들 지연 로드 (사용자 경험에 즉시 영향 없음)

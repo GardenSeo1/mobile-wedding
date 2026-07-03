@@ -155,18 +155,72 @@
             transform: scale(1.05);
         }
         .gallery-item.sortable-drag {
-            opacity: 0.5;
+            opacity: 0 !important;
             cursor: grabbing !important;
+            box-shadow: none !important;
+        }
+        .sortable-fallback-hidden {
+            opacity: 0 !important;
+            box-shadow: none !important;
         }
         .gallery-item.sortable-ghost {
-            opacity: 0.3;
-            background: #e3f2fd;
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.98);
+            border: 4px dashed #2196F3 !important;
+            box-shadow:
+                inset 0 0 0 4px rgba(33, 150, 243, 0.18),
+                0 0 0 4px rgba(33, 150, 243, 0.22),
+                0 8px 24px rgba(33, 150, 243, 0.35);
+            transform: scale(0.96);
+        }
+        .gallery-item.sortable-ghost::before {
+            content: '여기에 놓기';
+            position: absolute;
+            inset: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            background: rgba(227, 242, 253, 0.94);
+            color: #1565c0;
+            font-size: 15px;
+            font-weight: 800;
+            z-index: 20;
+            pointer-events: none;
+        }
+        .gallery-item.sortable-ghost > * {
+            visibility: hidden;
         }
         .gallery-item.visible-photo {
             cursor: grab;
         }
         .gallery-item.visible-photo:active {
             cursor: grabbing;
+        }
+        .gallery-item.selected {
+            box-shadow:
+                0 0 0 4px #2196F3,
+                0 8px 24px rgba(33, 150, 243, 0.35);
+        }
+        .gallery-item.selected::before {
+            content: '✓';
+            position: absolute;
+            top: 7px;
+            left: 7px;
+            width: 30px;
+            height: 30px;
+            z-index: 18;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #2196F3;
+            color: white;
+            border: 2px solid white;
+            border-radius: 50%;
+            font-size: 18px;
+            font-weight: 800;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            pointer-events: none;
         }
         .gallery-item.deleted-photo {
             opacity: 0.5;
@@ -242,11 +296,7 @@
             border-color: #43573a;
         }
         .checkbox-wrapper {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            z-index: 10;
-            touch-action: manipulation; /* 빠른 터치 응답 */
+            display: none;
         }
         .checkbox-wrapper input[type="checkbox"] {
             width: 24px;
@@ -387,12 +437,24 @@
         }
         .bulk-actions.active {
             display: flex;
+            position: fixed;
+            left: 50%;
+            top: 12px;
+            z-index: 1000;
+            width: min(1000px, calc(100% - 24px));
+            max-height: 45vh;
+            overflow-y: auto;
             gap: 10px;
             align-items: center;
             flex-wrap: wrap;
+            transform: translateX(-50%);
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 10px 32px rgba(0,0,0,0.22);
         }
         @media (max-width: 768px) {
             .bulk-actions.active {
+                top: 8px;
+                width: calc(100% - 16px);
                 gap: 6px;
             }
         }
@@ -1629,6 +1691,8 @@
         all: new Set(),
         users: new Set()
     };
+    let lastPhotoToggleKey = '';
+    let lastPhotoToggleTime = 0;
 
     // 순서 선택 상태 (클릭한 순서대로 photo ID 저장)
     let displayOrderSelection = {
@@ -2253,15 +2317,7 @@
                 ? `<div class="display-order-badge ${orderNumber ? 'selected' : 'empty'}">${orderNumber}</div>`
                 : '';
 
-            // 이미지 클릭 핸들러 - main/admin은 visibility 토글, 나머지는 체크박스 토글
-            let imageClickHandler;
-            if (type === 'main' || type === 'admin') {
-                imageClickHandler = `togglePhotoVisibility('${type}', ${photo.id}, ${dbVisibility})`;
-            } else {
-                imageClickHandler = `togglePhotoCheckbox('${type}', ${photo.id})`;
-            }
-
-            // 모든 탭에서 이미지 클릭 시 핸들러 실행
+            // 모든 탭에서 사진 터치/클릭은 선택 토글로 통일
             galleryItem.innerHTML = `
                 <div class="checkbox-wrapper" onclick="event.stopPropagation()">
                     <input type="checkbox" data-photo-id="${photo.id}" onchange="togglePhotoSelection('${type}', ${photo.id}, this.checked)">
@@ -2286,17 +2342,13 @@
                 // 긴 터치나 스크롤은 무시 (드래그 방지)
                 if (Date.now() - touchStartTime > 500) return;
 
-                if (!e.target.closest('.checkbox-wrapper')) {
-                    e.preventDefault(); // 300ms 지연 방지
-                    eval(imageClickHandler);
-                }
+                e.preventDefault(); // 300ms 지연 방지
+                togglePhotoCheckbox(type, photo.id);
             });
 
             // 클릭 이벤트 처리 (데스크톱 호환성)
             galleryItem.addEventListener('click', function(e) {
-                if (!e.target.closest('.checkbox-wrapper')) {
-                    eval(imageClickHandler);
-                }
+                togglePhotoCheckbox(type, photo.id);
             });
 
             gallery.appendChild(galleryItem);
@@ -2328,6 +2380,7 @@
             animation: 200,
             ghostClass: 'sortable-ghost',
             dragClass: 'sortable-drag',
+            fallbackClass: 'sortable-fallback-hidden',
             // 모바일 터치 지원 강화
             touchStartThreshold: 3, // 3px 이동 후 드래그 시작
             forceFallback: false, // HTML5 DnD 사용 (모바일에서 더 부드러움)
@@ -2337,6 +2390,14 @@
             onMove: function(evt) {
                 // 드래그하려는 항목이 visible-photo 클래스가 있는지 확인
                 return evt.dragged.classList.contains('visible-photo');
+            },
+            onStart: function(evt) {
+                if (evt.originalEvent && evt.originalEvent.dataTransfer) {
+                    const transparentDragImage = document.createElement('canvas');
+                    transparentDragImage.width = 1;
+                    transparentDragImage.height = 1;
+                    evt.originalEvent.dataTransfer.setDragImage(transparentDragImage, 0, 0);
+                }
             },
             onEnd: function(evt) {
                 console.log('[드래그 완료] 이전 인덱스:', evt.oldIndex, '→ 새 인덱스:', evt.newIndex);
@@ -2378,22 +2439,22 @@
 
     // 전체선택/전체해제 토글
     function toggleSelectAll(type) {
-        const checkboxes = document.querySelectorAll(`#${type}Gallery .checkbox-wrapper input[type="checkbox"]`);
-        const totalCheckboxes = checkboxes.length;
-        const checkedCheckboxes = Array.from(checkboxes).filter(cb => cb.checked).length;
+        const photoElements = Array.from(document.querySelectorAll(`#${type}Gallery .gallery-item`));
+        const totalPhotos = photoElements.length;
+        const selectedCount = photoElements.filter(item => selectedPhotos[type].has(parseInt(item.dataset.photoId))).length;
 
         // 모두 선택되어 있으면 해제, 아니면 전체 선택
-        const shouldCheck = checkedCheckboxes < totalCheckboxes;
+        const shouldCheck = selectedCount < totalPhotos;
 
-        checkboxes.forEach(cb => {
-            cb.checked = shouldCheck;
-            const photoId = parseInt(cb.dataset.photoId);
+        photoElements.forEach(photoElement => {
+            const photoId = parseInt(photoElement.dataset.photoId);
             if (!isNaN(photoId)) {
                 if (shouldCheck) {
                     selectedPhotos[type].add(photoId);
                 } else {
                     selectedPhotos[type].delete(photoId);
                 }
+                updatePhotoSelectionUI(type, photoId, shouldCheck);
             }
         });
 
@@ -2401,13 +2462,18 @@
         updateSelectAllButton(type);
     }
 
-    // 사진 클릭 시 체크박스 토글
+    // 사진 클릭 시 선택 토글
     function togglePhotoCheckbox(type, photoId) {
-        const checkbox = document.querySelector(`#${type}Gallery .checkbox-wrapper input[data-photo-id="${photoId}"]`);
-        if (checkbox) {
-            checkbox.checked = !checkbox.checked;
-            togglePhotoSelection(type, photoId, checkbox.checked);
+        const toggleKey = `${type}:${photoId}`;
+        const now = Date.now();
+        if (toggleKey === lastPhotoToggleKey && now - lastPhotoToggleTime < 300) {
+            return;
         }
+        lastPhotoToggleKey = toggleKey;
+        lastPhotoToggleTime = now;
+
+        const isSelected = selectedPhotos[type].has(photoId);
+        togglePhotoSelection(type, photoId, !isSelected);
     }
 
     // 사진 선택 토글
@@ -2417,8 +2483,21 @@
         } else {
             selectedPhotos[type].delete(photoId);
         }
+        updatePhotoSelectionUI(type, photoId, checked);
         updateBulkActions(type);
         updateSelectAllButton(type);
+    }
+
+    function updatePhotoSelectionUI(type, photoId, checked) {
+        const photoElement = document.querySelector(`#${type}Gallery .gallery-item[data-photo-id="${photoId}"]`);
+        if (photoElement) {
+            photoElement.classList.toggle('selected', checked);
+        }
+
+        const checkbox = document.querySelector(`#${type}Gallery .checkbox-wrapper input[data-photo-id="${photoId}"]`);
+        if (checkbox) {
+            checkbox.checked = checked;
+        }
     }
 
     // 전체선택 버튼 텍스트 업데이트
@@ -2427,12 +2506,12 @@
         const selectAllBtn = document.getElementById('selectAllBtn' + capitalizedType);
         if (!selectAllBtn) return;
 
-        const checkboxes = document.querySelectorAll(`#${type}Gallery .checkbox-wrapper input[type="checkbox"]`);
-        const totalCheckboxes = checkboxes.length;
-        const checkedCheckboxes = Array.from(checkboxes).filter(cb => cb.checked).length;
+        const photoElements = Array.from(document.querySelectorAll(`#${type}Gallery .gallery-item`));
+        const totalPhotos = photoElements.length;
+        const selectedCount = photoElements.filter(item => selectedPhotos[type].has(parseInt(item.dataset.photoId))).length;
 
         // 모든 체크박스가 체크되어 있으면 "전체해제", 아니면 "전체선택"
-        if (totalCheckboxes > 0 && checkedCheckboxes === totalCheckboxes) {
+        if (totalPhotos > 0 && selectedCount === totalPhotos) {
             selectAllBtn.innerHTML = '☐ 전체해제';
         } else {
             selectAllBtn.innerHTML = '☑️ 전체선택';

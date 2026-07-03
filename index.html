@@ -2867,7 +2867,9 @@
             return;
         }
 
-        if (selectedFiles.length === 0) {
+        const filesToUpload = Array.from(selectedFiles);
+
+        if (filesToUpload.length === 0) {
             alert('파일을 선택해주세요');
             return;
         }
@@ -2880,7 +2882,7 @@
 
         let uploaded = 0;
         let failed = 0;
-        const totalFiles = selectedFiles.length;
+        const totalFiles = filesToUpload.length;
 
         // 진행 상황 표시
         status.className = 'status-message';
@@ -2889,7 +2891,7 @@
 
         try {
             // 1. 모든 파일 압축 (병렬 처리)
-            const compressionPromises = selectedFiles.map((file, index) =>
+            const compressionPromises = filesToUpload.map((file, index) =>
                 compressImage(file).catch(err => {
                     console.error(`[압축 실패] ${file.name}:`, err);
                     return file; // 압축 실패시 원본 사용
@@ -2911,7 +2913,7 @@
 
                 const batchPromises = batch.map(async (file, idx) => {
                     const fileIndex = batchIndex + idx;
-                    const originalFile = selectedFiles[fileIndex];
+                    const originalFile = filesToUpload[fileIndex];
                     const timestamp = Date.now();
                     const filePath = `guest/${timestamp}_${fileIndex}_${originalFile.name}`;
 
@@ -2987,11 +2989,18 @@
         } else if (uploaded > 0 && failed > 0) {
             status.className = 'status-message success';
             status.textContent = uploaded + '개 업로드 성공, ' + failed + '개 실패했습니다.';
-        } else {
+        } else if (failed > 0) {
             status.className = 'status-message error';
-            status.textContent = '업로드에 실패했습니다. 브라우저 콘솔(F12)을 확인해주세요.';
+            status.textContent = totalFiles + '개 중 ' + failed + '개 업로드에 실패했습니다. 다시 시도해주세요.';
             console.error('=== 업로드 실패 요약 ===');
             console.error('전체:', totalFiles + '개');
+            console.error('실패:', failed + '개');
+        } else {
+            status.className = 'status-message error';
+            status.textContent = '선택한 파일을 업로드하지 못했습니다. 파일을 다시 선택해주세요.';
+            console.error('=== 업로드 결과 없음 ===');
+            console.error('전체:', totalFiles + '개');
+            console.error('성공:', uploaded + '개');
             console.error('실패:', failed + '개');
         }
         status.style.display = 'block';

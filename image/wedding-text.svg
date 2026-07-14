@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="430" height="230" viewBox="0 0 430 230" role="img" aria-label="We're getting Married handwritten text">
+  <title>We're getting Married text overlay</title>
+  <g id="wedding-text" fill="none" stroke="#fffdf8" stroke-linecap="round" stroke-linejoin="round">
+    <text x="31" y="126"
+          font-family="Noteworthy, 'Segoe Script', 'Bradley Hand', 'Brush Script MT', cursive"
+          font-size="78"
+          font-weight="300"
+          letter-spacing="-1"
+          stroke-width="2.7"
+          opacity=".9"
+          transform="rotate(-3 31 126)">We're</text>
+    <text x="171" y="111"
+          font-family="Noteworthy, 'Segoe Script', 'Bradley Hand', 'Brush Script MT', cursive"
+          font-size="65"
+          font-weight="300"
+          letter-spacing="-1"
+          stroke-width="2.45"
+          opacity=".86"
+          transform="rotate(2 171 111)">getting</text>
+    <text x="249" y="169"
+          font-family="Noteworthy, 'Segoe Script', 'Bradley Hand', 'Brush Script MT', cursive"
+          font-size="57"
+          font-weight="300"
+          letter-spacing=".2"
+          stroke-width="2.6"
+          opacity=".96"
+          transform="rotate(-6 249 169)">Married</text>
+  </g>
+</svg>

@@ -1004,47 +1004,81 @@
 
         .account-box {
             background: white;
-            padding: 30px;
+            padding: 0;
+            border: 1px solid #e9e5df;
             border-radius: 12px;
             margin-bottom: 20px;
+            overflow: hidden;
         }
         @media (max-width: 480px) {
             .account-box {
-                padding: 20px 15px;
                 border-radius: 10px;
             }
         }
 
         .account-title {
-            text-align: center;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 18px 20px;
+            background: white;
+            border: none;
+            border-bottom: 1px solid transparent;
+            text-align: left;
             font-size: 16px;
             font-weight: 600;
-            margin-bottom: 20px;
+            font-family: inherit;
+            cursor: pointer;
+            color: #383737;
         }
         @media (max-width: 480px) {
             .account-title {
                 font-size: 15px;
-                margin-bottom: 15px;
+                padding: 16px 15px;
             }
         }
 
-        .account-title.groom {
-            color: #5f8b9b;
+        .account-title::after {
+            content: "⌄";
+            color: #999;
+            font-size: 18px;
+            font-weight: 400;
+            line-height: 1;
+            transition: transform 0.25s ease;
         }
 
-        .account-title.bride {
-            color: #BB7273;
+        .account-box.open .account-title {
+            border-bottom-color: #e9e5df;
+        }
+
+        .account-box.open .account-title::after {
+            transform: rotate(180deg);
+        }
+
+        .account-list {
+            display: none;
+            padding: 10px 15px 15px;
+            background: #f8f7f5;
+        }
+
+        .account-box.open .account-list {
+            display: block;
         }
 
         .account-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px;
-            background: #fafaf8;
-            border-radius: 8px;
-            margin-bottom: 10px;
+            padding: 15px 0;
+            background: transparent;
+            border-bottom: 1px solid #e5e1db;
             gap: 10px;
+        }
+
+        .account-item:last-child {
+            border-bottom: none;
         }
         @media (max-width: 480px) {
             .account-item {
@@ -1749,7 +1783,7 @@
 
         <div class="action-buttons">
 <!--            <button class="action-btn" onclick="addToCalendar()">📅 캘린더에 저장</button>-->
-            <button class="action-btn" onclick="shareInvitation()">📤 공유하기</button>
+        <button class="action-btn" onclick="shareInvitation()">공유하기</button>
         </div>
     </section>
 
@@ -1859,7 +1893,7 @@
 
     <!-- RSVP -->
     <section class="section" data-aos="fade-up">
-        <div class="section-title">💌 참석 여부 전달</div>
+        <div class="section-title">참석 여부 전달</div>
         <p style="text-align: center; color: #666; margin-bottom: 20px; font-size: 13px;">
             참석 여부를 알려주시면<br>
             준비하는데 큰 도움이 됩니다
@@ -1895,51 +1929,55 @@
 
     <!-- 계좌번호 -->
     <section class="section account-section" data-aos="fade-up">
-        <div class="section-title">💝 마음 전하실 곳</div>
+        <div class="section-title">마음 전하실 곳</div>
 
         <div class="account-box">
-            <div class="account-title groom">신랑측 계좌번호</div>
-            <div class="account-item">
-                <div class="account-info">
-                    <div class="bank">신랑 서정원 | 카카오뱅크</div>
-                    <div class="number">3333-07-6028326</div>
+            <button class="account-title groom" type="button" aria-expanded="false" onclick="toggleAccountBox(this)">신랑측 계좌번호</button>
+            <div class="account-list">
+                <div class="account-item">
+                    <div class="account-info">
+                        <div class="bank">신랑 서정원 | 카카오뱅크</div>
+                        <div class="number">3333-07-6028326</div>
+                    </div>
+                    <button class="copy-btn" onclick="copyAccount('3333-07-6028326')">복사</button>
                 </div>
-                <button class="copy-btn" onclick="copyAccount('3333-07-6028326')">복사</button>
-            </div>
-            <div class="account-item">
-                <div class="account-info">
-                    <div class="bank">신랑 부 서용항 | 우리은행</div>
-                    <div class="number">1002-950-867322</div>
+                <div class="account-item">
+                    <div class="account-info">
+                        <div class="bank">신랑 부 서용항 | 우리은행</div>
+                        <div class="number">1002-950-867322</div>
+                    </div>
+                    <button class="copy-btn" onclick="copyAccount('1002-950-867322')">복사</button>
                 </div>
-                <button class="copy-btn" onclick="copyAccount('1002-950-867322')">복사</button>
-            </div>
-            <div class="account-item">
-                <div class="account-info">
-                    <div class="bank">신랑 모 김활연 | 새마을금고</div>
-                    <div class="number">9003-2549-1086-8</div>
+                <div class="account-item">
+                    <div class="account-info">
+                        <div class="bank">신랑 모 김활연 | 새마을금고</div>
+                        <div class="number">9003-2549-1086-8</div>
+                    </div>
+                    <button class="copy-btn" onclick="copyAccount('9003-2549-1086-8')">복사</button>
                 </div>
-                <button class="copy-btn" onclick="copyAccount('9003-2549-1086-8')">복사</button>
             </div>
 <!--            <a href="https://qr.kakaopay.com/Ej8sXYGlw" class="kakaopay-btn" style="display: block; margin-top: 15px; padding: 12px; text-align: center; border-radius: 8px; text-decoration: none;">-->
-<!--                💳 카카오페이 송금-->
+<!--                카카오페이 송금-->
 <!--            </a>-->
         </div>
 
         <div class="account-box">
-            <div class="account-title bride">신부측 계좌번호</div>
-            <div class="account-item">
-                <div class="account-info">
-                    <div class="bank">신부 제시현 | 카카오뱅크</div>
-                    <div class="number">3333-15-1320100</div>
+            <button class="account-title bride" type="button" aria-expanded="false" onclick="toggleAccountBox(this)">신부측 계좌번호</button>
+            <div class="account-list">
+                <div class="account-item">
+                    <div class="account-info">
+                        <div class="bank">신부 제시현 | 카카오뱅크</div>
+                        <div class="number">3333-15-1320100</div>
+                    </div>
+                    <button class="copy-btn" onclick="copyAccount('3333-15-1320100')">복사</button>
                 </div>
-                <button class="copy-btn" onclick="copyAccount('3333-15-1320100')">복사</button>
-            </div>
-            <div class="account-item">
-                <div class="account-info">
-                    <div class="bank">신부 부 제인수 | 농협</div>
-                    <div class="number">352-0407-5999-23</div>
+                <div class="account-item">
+                    <div class="account-info">
+                        <div class="bank">신부 부 제인수 | 농협</div>
+                        <div class="number">352-0407-5999-23</div>
+                    </div>
+                    <button class="copy-btn" onclick="copyAccount('352-0407-5999-23')">복사</button>
                 </div>
-                <button class="copy-btn" onclick="copyAccount('352-0407-5999-23')">복사</button>
             </div>
 <!--            <div class="account-item">-->
 <!--                <div class="account-info">-->
@@ -1949,14 +1987,14 @@
 <!--                <button class="copy-btn" onclick="copyAccount('1002-123-456789')">복사</button>-->
 <!--            </div>-->
 <!--            <a href="https://qr.kakaopay.com/Ej9EHQCMh" class="kakaopay-btn" style="display: block; margin-top: 15px; padding: 12px; text-align: center; border-radius: 8px; text-decoration: none;">-->
-<!--                💳 카카오페이 송금-->
+<!--                카카오페이 송금-->
 <!--            </a>-->
         </div>
     </section>
 
     <!-- 방명록 -->
 <!--    <section class="section guestbook-section" data-aos="fade-up">-->
-<!--        <div class="section-title">💌 방명록</div>-->
+<!--        <div class="section-title">방명록</div>-->
 
 <!--        <div class="guestbook-form">-->
 <!--            <div class="form-group">-->
@@ -1976,7 +2014,7 @@
 
     <!-- 사진 업로드 -->
     <section class="section upload-section" data-aos="fade-up">
-        <div class="section-title">📸 사진 및 영상 업로드<br><span id="uploadOpenDateTitle" style="font-size: 14px; color: #1a1a1a; font-weight: 700;">(10월 4일 오전 9시 OPEN)</span></div>
+        <div class="section-title">사진 및 영상 업로드<br><span id="uploadOpenDateTitle" style="font-size: 14px; color: #1a1a1a; font-weight: 700;">(10월 4일 오전 9시 OPEN)</span></div>
         <div style="text-align: center; color: #666; margin-bottom: 25px; font-size: 13px; line-height: 1.8;">
             <p id="uploadOpenDateText" style="margin: 0 0 8px 0; color: #2c2c2c; font-size: 12px; font-weight: 700;">2026년 10월 4일 오전 9시부터 사진 및 영상 업로드가 가능합니다.</p>
             <p style="margin: 0 0 6px 0;">소중한 순간을 담아주세요.</p>
@@ -1995,7 +2033,7 @@
 
             <div class="upload-box" onclick="checkDateAndAlertForFile(event)">
                 <input type="file" id="guestFileInput" accept="image/*,video/*" multiple onchange="previewImages()">
-                <div class="upload-icon">📷</div>
+                <div class="upload-icon"></div>
                 <div style="font-size: 14px; margin-bottom: 5px;">사진/동영상 선택하기</div>
                 <div style="font-size: 12px; color: #999;">여러 장 선택 가능 (사진은 자동 압축됨)</div>
             </div>
@@ -2004,10 +2042,10 @@
 
             <div style="display: flex; gap: 10px; margin-top: 15px;">
                 <button class="upload-btn" id="viewMyPhotosBtn" onclick="viewMyPhotos()" style="flex: 1;">
-                    🖼️ 내 사진 보기
+                    내 사진 보기
                 </button>
                 <button class="upload-btn" id="uploadBtn" onclick="uploadPhotos()" style="flex: 2;">
-                    📤 업로드하기
+                    업로드하기
                 </button>
             </div>
 
@@ -2621,6 +2659,16 @@
         }
     }
 
+    function toggleAccountBox(button) {
+        const accountBox = button.closest('.account-box');
+        if (!accountBox) {
+            return;
+        }
+
+        const isOpen = accountBox.classList.toggle('open');
+        button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
 
     // 갤러리 로드
     async function loadGallery() {
@@ -3039,12 +3087,12 @@
             status.className = 'status-message error';
             status.textContent = '업로드 중 오류가 발생했습니다.';
             uploadBtn.disabled = false;
-            uploadBtn.textContent = '📤 업로드하기';
+            uploadBtn.textContent = '업로드하기';
             return;
         }
 
         uploadBtn.disabled = false;
-        uploadBtn.textContent = '📤 업로드하기';
+        uploadBtn.textContent = '업로드하기';
         document.getElementById('guestFileInput').value = '';
         document.getElementById('uploaderName').value = '';
         document.getElementById('uploaderPassword').value = '';
@@ -4086,7 +4134,7 @@
 
         <div class="rsvp-popup-buttons">
             <button class="rsvp-popup-btn primary" onclick="openRsvpFromPopup()">
-                💌 참석 여부 전달하기
+                참석 여부 전달하기
             </button>
             <button class="rsvp-popup-btn secondary" onclick="closeRsvpPopup()">
                 닫기

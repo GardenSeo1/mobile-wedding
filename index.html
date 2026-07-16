@@ -997,6 +997,47 @@
             }
         }
 
+        .parking-info {
+            margin-top: 22px;
+            padding: 18px 16px;
+            background: #fafaf8;
+            border: 1px solid #e9e5df;
+            border-radius: 10px;
+        }
+
+        .parking-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #383737;
+            margin-bottom: 10px;
+        }
+
+        .parking-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+            font-size: 12px;
+            line-height: 1.7;
+            color: #555;
+        }
+
+        .parking-list li {
+            position: relative;
+            padding-left: 12px;
+        }
+
+        .parking-list li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0.78em;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #999;
+        }
+
         /* 계좌번호 */
         .account-section {
             background: #fafaf8;
@@ -1888,6 +1929,13 @@
                 </svg>
                 티맵
             </a>
+        </div>
+
+        <div class="parking-info">
+            <div class="parking-title">주차 안내</div>
+            <ul class="parking-list">
+                <li>하객 주차는 3시간 무료입니다. 주차권은 소지하지 않으셔도 되며, 주차요원이 배치됩니다.</li>
+            </ul>
         </div>
     </section>
 

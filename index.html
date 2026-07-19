@@ -64,19 +64,25 @@
         /* 메인 이미지 슬라이더 */
         .main-image {
             width: 100%;
-            height: auto;
+            height: min(130vw, 624px);
+            max-height: 624px;
             position: relative;
             overflow: hidden;
+            background: #f5f3ed;
         }
 
         .swiper {
             width: 100%;
-            height: auto;
+            height: 100%;
         }
 
         .mainSwiper {
             cursor: pointer;
             touch-action: pan-y;
+        }
+
+        .mainSwiper .swiper-wrapper {
+            height: 100%;
         }
 
         .swiper-slide {
@@ -91,9 +97,10 @@
 
         .swiper-slide img {
             width: 100%;
-            height: auto;
+            height: 100%;
             display: block;
             background: #f5f3ed;
+            object-fit: cover;
             user-select: none;
             -webkit-user-drag: none;
         }
@@ -266,6 +273,28 @@
             height: 100%;
             object-fit: cover;
             user-select: none;
+        }
+
+        .gallery-more-wrap {
+            margin-top: 22px;
+            text-align: center;
+        }
+
+        .gallery-more-btn {
+            min-width: 116px;
+            padding: 10px 22px;
+            border: 1px solid #ddd;
+            border-radius: 999px;
+            background: white;
+            color: #383737;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .gallery-more-btn:hover {
+            background: #f5f5f5;
         }
 
         .photo-delete-btn {
@@ -1866,6 +1895,9 @@
             <div class="gallery-item">SUB SAMPLE 5</div>
             <div class="gallery-item">SUB SAMPLE 6</div>
         </div>
+        <div class="gallery-more-wrap" id="galleryMoreWrap" style="display: none;">
+            <button type="button" class="gallery-more-btn" id="galleryMoreBtn" onclick="toggleGalleryMore()">더보기</button>
+        </div>
     </section>
 
     <!-- 달력 -->
@@ -2282,6 +2314,9 @@
     let currentTab = 'all';
     let currentGalleryPhotos = []; // 현재 갤러리의 전체 사진 배열
     let currentLightboxIndex = 0; // 현재 라이트박스에서 보는 사진 인덱스
+    let galleryPhotosData = [];
+    let isGalleryExpanded = false;
+    const GALLERY_INITIAL_COUNT = 12;
     let mainSwiperInstance = null; // 메인 사진 슬라이더 인스턴스
     let lightboxTouchStartX = 0;
     let lightboxTouchStartY = 0;
@@ -2718,6 +2753,53 @@
     }
 
 
+    function renderGallery() {
+        const gallery = document.getElementById("gallery");
+        const moreWrap = document.getElementById("galleryMoreWrap");
+        const moreBtn = document.getElementById("galleryMoreBtn");
+
+        if (!gallery) return;
+
+        if (!galleryPhotosData || galleryPhotosData.length === 0) {
+            gallery.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">아직 사진이 없습니다</div>';
+            if (moreWrap) moreWrap.style.display = 'none';
+            return;
+        }
+
+        const visiblePhotos = isGalleryExpanded
+            ? galleryPhotosData
+            : galleryPhotosData.slice(0, GALLERY_INITIAL_COUNT);
+
+        gallery.innerHTML = '';
+
+        visiblePhotos.forEach((photo, index) => {
+            const originalIndex = isGalleryExpanded ? index : index;
+            const item = document.createElement('div');
+            item.className = 'gallery-item';
+
+            let html = '<img src="' + photo.image_url + '" alt="" onclick="openLightbox(' + originalIndex + ')">';
+
+            if (photo.photo_type === 'guest') {
+                html += '<button class="photo-delete-btn" onclick="event.stopPropagation(); deletePhoto(' + photo.id + ', \'' + photo.image_url + '\')">삭제</button>';
+            }
+
+            item.innerHTML = html;
+            gallery.appendChild(item);
+        });
+
+        if (moreWrap && moreBtn) {
+            const shouldShowMore = galleryPhotosData.length > GALLERY_INITIAL_COUNT;
+            moreWrap.style.display = shouldShowMore ? 'block' : 'none';
+            moreBtn.textContent = isGalleryExpanded ? '접기' : '더보기';
+            moreBtn.setAttribute('aria-expanded', isGalleryExpanded ? 'true' : 'false');
+        }
+    }
+
+    function toggleGalleryMore() {
+        isGalleryExpanded = !isGalleryExpanded;
+        renderGallery();
+    }
+
     // 갤러리 로드
     async function loadGallery() {
         if (!supabaseClient) {
@@ -2737,7 +2819,9 @@
             const gallery = document.getElementById("gallery");
 
             if (!data || data.length === 0) {
-                gallery.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">아직 사진이 없습니다</div>';
+                galleryPhotosData = [];
+                currentGalleryPhotos = [];
+                renderGallery();
                 return;
             }
 
@@ -2760,24 +2844,10 @@
             //     console.log(`  ${idx + 1}. Photo ID ${photo.id}: type=${photo.photo_type}, order=${photo.display_order}`);
             // });
 
-            gallery.innerHTML = '';
-
             // 갤러리 사진 URL 배열 저장 (라이트박스용)
+            galleryPhotosData = data;
             currentGalleryPhotos = data.map(photo => photo.image_url);
-
-            data.forEach((photo, index) => {
-                const item = document.createElement('div');
-                item.className = 'gallery-item';
-
-                let html = '<img src="' + photo.image_url + '" alt="" onclick="openLightbox(' + index + ')">';
-
-                if (photo.photo_type === 'guest') {
-                    html += '<button class="photo-delete-btn" onclick="event.stopPropagation(); deletePhoto(' + photo.id + ', \'' + photo.image_url + '\')">삭제</button>';
-                }
-
-                item.innerHTML = html;
-                gallery.appendChild(item);
-            });
+            renderGallery();
         } catch (error) {
             console.error('갤러리 로드 실패:', error);
         }
@@ -3844,7 +3914,7 @@
 
             mainSwiperInstance = new Swiper('.mainSwiper', {
                 loop: true,
-                autoHeight: true,
+                autoHeight: false,
                 grabCursor: true,
                 simulateTouch: true,
                 touchRatio: 1,

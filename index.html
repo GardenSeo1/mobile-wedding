@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" class="intro-scroll-lock">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
@@ -26,6 +26,13 @@
 
             touch-action: manipulation;
             -webkit-touch-callout: none;
+        }
+
+        html.intro-scroll-lock,
+        body.intro-scroll-lock {
+            overflow: hidden;
+            height: 100%;
+            touch-action: none;
         }
 
         .container {
@@ -64,11 +71,33 @@
         /* 메인 이미지 슬라이더 */
         .main-image {
             width: 100%;
-            height: min(130vw, 624px);
-            max-height: 624px;
+            height: 100vh;
+            height: 100svh;
+            min-height: 560px;
             position: relative;
             overflow: hidden;
             background: #f5f3ed;
+        }
+
+        @media (max-width: 480px) {
+            .main-image {
+                min-height: 100svh;
+            }
+        }
+
+        .main-image.intro-active::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 4;
+            pointer-events: none;
+            background: rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(1.25px);
+            -webkit-backdrop-filter: blur(1.25px);
+        }
+
+        .main-image.intro-ready::before {
+            animation: mainIntroVeilOut 0.5s ease 3.2s forwards;
         }
 
         .swiper {
@@ -81,8 +110,193 @@
             touch-action: pan-y;
         }
 
+        .main-handwriting {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            z-index: 5;
+            width: min(108%, 500px);
+            aspect-ratio: 1;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            text-align: center;
+            letter-spacing: 0;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.18));
+            opacity: 1;
+        }
+
+        .main-image.intro-ready .main-handwriting {
+            animation: handwritingExit 0.43s ease 3.2s forwards;
+        }
+
+        .wedding-handwriting-stroke {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            opacity: 0;
+        }
+
+        .wedding-handwriting-stroke img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            mix-blend-mode: screen;
+            filter: contrast(1.06) brightness(1.02);
+            clip-path: inset(var(--crop-top) calc(100% - var(--crop-left)) var(--crop-bottom) var(--crop-left));
+        }
+
+        .main-image.intro-ready .wedding-handwriting-stroke {
+            animation:
+                handwritingImageFade 0.12s ease var(--stroke-delay) forwards;
+        }
+
+        .main-image.intro-ready .wedding-handwriting-stroke img {
+            animation:
+                handwritingStrokeReveal var(--stroke-duration) steps(var(--write-steps), end) var(--stroke-delay) forwards,
+                handwritingInkTexture 0.36s steps(3, end) var(--stroke-delay) 5;
+        }
+
+        .wedding-handwriting-stroke.we-left {
+            --crop-top: 28%;
+            --crop-right: 51%;
+            --crop-bottom: 54%;
+            --crop-left: 28%;
+            --stroke-duration: 0.45s;
+            --stroke-delay: 0.12s;
+            --write-steps: 12;
+        }
+
+        .wedding-handwriting-stroke.we-right {
+            --crop-top: 28%;
+            --crop-right: 36%;
+            --crop-bottom: 54%;
+            --crop-left: 44%;
+            --stroke-duration: 0.41s;
+            --stroke-delay: 0.48s;
+            --write-steps: 11;
+        }
+
+        .wedding-handwriting-stroke.are {
+            --crop-top: 29%;
+            --crop-right: 20%;
+            --crop-bottom: 55%;
+            --crop-left: 56%;
+            --stroke-duration: 0.5s;
+            --stroke-delay: 0.77s;
+            --write-steps: 13;
+        }
+
+        .wedding-handwriting-stroke.getting-start {
+            --crop-top: 47%;
+            --crop-right: 61%;
+            --crop-bottom: 22%;
+            --crop-left: 7%;
+            --stroke-duration: 0.49s;
+            --stroke-delay: 1.22s;
+            --write-steps: 13;
+        }
+
+        .wedding-handwriting-stroke.getting-end {
+            --crop-top: 47%;
+            --crop-right: 42%;
+            --crop-bottom: 22%;
+            --crop-left: 28%;
+            --stroke-duration: 0.46s;
+            --stroke-delay: 1.61s;
+            --write-steps: 12;
+        }
+
+        .wedding-handwriting-stroke.married-start {
+            --crop-top: 50%;
+            --crop-right: 24%;
+            --crop-bottom: 24%;
+            --crop-left: 47%;
+            --stroke-duration: 0.53s;
+            --stroke-delay: 2s;
+            --write-steps: 14;
+        }
+
+        .wedding-handwriting-stroke.married-end {
+            --crop-top: 50%;
+            --crop-right: 7%;
+            --crop-bottom: 24%;
+            --crop-left: 68%;
+            --stroke-duration: 0.45s;
+            --stroke-delay: 2.43s;
+            --write-steps: 12;
+        }
+
+        @keyframes handwritingStrokeReveal {
+            0% {
+                clip-path: inset(var(--crop-top) calc(100% - var(--crop-left)) var(--crop-bottom) var(--crop-left));
+            }
+            100% {
+                clip-path: inset(var(--crop-top) var(--crop-right) var(--crop-bottom) var(--crop-left));
+            }
+        }
+
+        @keyframes handwritingInkTexture {
+            0%, 100% {
+                opacity: 1;
+                filter: contrast(1.06) brightness(1.02);
+            }
+            50% {
+                opacity: 0.88;
+                filter: contrast(1.14) brightness(1.08);
+            }
+        }
+
+        @keyframes handwritingImageFade {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes handwritingExit {
+            to {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+
+        @keyframes mainIntroVeilOut {
+            to {
+                opacity: 0;
+                backdrop-filter: blur(0);
+                -webkit-backdrop-filter: blur(0);
+            }
+        }
+
+        @media (max-width: 360px) {
+            .main-handwriting {
+                width: 100%;
+            }
+        }
+
         .mainSwiper .swiper-wrapper {
             height: 100%;
+        }
+
+        .mainSwiper.single-slide {
+            cursor: default;
+            touch-action: auto;
+        }
+
+        .mainSwiper.single-slide .swiper-wrapper {
+            display: block;
+        }
+
+        .mainSwiper.single-slide .swiper-slide {
+            width: 100%;
+            height: 100%;
+        }
+
+        .mainSwiper.single-slide .swiper-pagination {
+            display: none;
         }
 
         .swiper-slide {
@@ -117,6 +331,16 @@
         @media (hover: none) and (pointer: coarse) {
             .mainSwiper {
                 cursor: auto;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .main-image.intro-active::before {
+                display: none;
+            }
+
+            .main-handwriting {
+                display: none;
             }
         }
 
@@ -1813,20 +2037,10 @@
         }
     </style>
 </head>
-<body>
+<body class="intro-scroll-lock">
 <div class="container">
-    <!-- 헤더 -->
-    <div class="header">
-        <div class="date">2026. 10. 04. SUN</div>
-        <h1>서정원 ❤️ 제시현</h1>
-        <div class="venue">
-            오후 2시<br>
-            부산 라온 웨딩홀 23층 화이트홀
-        </div>
-    </div>
-
     <!-- 메인 이미지 슬라이더 -->
-    <div class="main-image">
+    <div class="main-image intro-active">
         <div class="swiper mainSwiper">
             <div class="swiper-wrapper" id="mainSwiperWrapper">
                 <!-- 메인 사진이 동적으로 로드됩니다 -->
@@ -1835,6 +2049,39 @@
                 </div>
             </div>
             <div class="swiper-pagination"></div>
+        </div>
+        <div class="main-handwriting" aria-hidden="true">
+            <div class="wedding-handwriting-stroke we-left">
+                <img src="image/wedding.png" alt="">
+            </div>
+            <div class="wedding-handwriting-stroke we-right">
+                <img src="image/wedding.png" alt="">
+            </div>
+            <div class="wedding-handwriting-stroke are">
+                <img src="image/wedding.png" alt="">
+            </div>
+            <div class="wedding-handwriting-stroke getting-start">
+                <img src="image/wedding.png" alt="">
+            </div>
+            <div class="wedding-handwriting-stroke getting-end">
+                <img src="image/wedding.png" alt="">
+            </div>
+            <div class="wedding-handwriting-stroke married-start">
+                <img src="image/wedding.png" alt="">
+            </div>
+            <div class="wedding-handwriting-stroke married-end">
+                <img src="image/wedding.png" alt="">
+            </div>
+        </div>
+    </div>
+
+    <!-- 헤더 -->
+    <div class="header" id="rsvpPopupTrigger">
+        <div class="date">2026. 10. 04. SUN</div>
+        <h1>서정원 ❤️ 제시현</h1>
+        <div class="venue">
+            오후 2시<br>
+            부산 라온 웨딩홀 23층 화이트홀
         </div>
     </div>
 
@@ -2318,6 +2565,7 @@
     let isGalleryExpanded = false;
     const GALLERY_INITIAL_COUNT = 12;
     let mainSwiperInstance = null; // 메인 사진 슬라이더 인스턴스
+    let mainSliderPhotoCount = 0;
     let lightboxTouchStartX = 0;
     let lightboxTouchStartY = 0;
     let lightboxTouchCurrentX = 0;
@@ -2325,6 +2573,8 @@
     let lightboxTouchStartTime = 0;
     let lightboxSwipeTracking = false;
     let savedScrollPosition = 0; // 모달 열기 전 스크롤 위치 저장
+    const MAIN_INTRO_DURATION = 3740;
+    let mainIntroScrollLocked = false;
 
     // 업로드 관련 기본값 (DB 로드 실패 시 사용)
     const DEFAULT_UPLOAD_START_DATE = '2026-10-04T09:00:00+09:00'; // 결혼식 당일 오전 9시
@@ -2340,6 +2590,95 @@
     let VIEW_PHOTOS_DATE_MESSAGE = '사진 조회는 아직 시작되지 않았습니다.';
     let previousUploadAvailable = null; // 이전 업로드 가능 상태 저장
     let uploadCheckEnabled = true; // 업로드 체크 활성화 여부
+
+    function preventMainIntroScroll(e) {
+        if (!mainIntroScrollLocked) return;
+        e.preventDefault();
+    }
+
+    function lockMainIntroScroll() {
+        mainIntroScrollLocked = true;
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        document.documentElement.classList.add('intro-scroll-lock');
+        document.body.classList.add('intro-scroll-lock');
+        window.scrollTo(0, 0);
+        document.addEventListener('touchmove', preventMainIntroScroll, { passive: false });
+        document.addEventListener('wheel', preventMainIntroScroll, { passive: false });
+    }
+
+    function unlockMainIntroScroll() {
+        mainIntroScrollLocked = false;
+        document.documentElement.classList.remove('intro-scroll-lock');
+        document.body.classList.remove('intro-scroll-lock');
+        document.removeEventListener('touchmove', preventMainIntroScroll);
+        document.removeEventListener('wheel', preventMainIntroScroll);
+        const mainImage = document.querySelector('.main-image');
+        if (mainImage) {
+            mainImage.classList.remove('intro-active');
+        }
+        const handwriting = document.querySelector('.main-handwriting');
+        if (handwriting) {
+            handwriting.style.display = 'none';
+        }
+    }
+
+    function initMainIntro() {
+        const mainImage = document.querySelector('.main-image.intro-active');
+        if (!mainImage || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            unlockMainIntroScroll();
+            return;
+        }
+
+        lockMainIntroScroll();
+    }
+
+    function startMainIntro() {
+        const mainImage = document.querySelector('.main-image.intro-active');
+        if (!mainImage || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            unlockMainIntroScroll();
+            return;
+        }
+
+        mainImage.classList.add('intro-ready');
+        const handwriting = mainImage.querySelector('.main-handwriting');
+        if (handwriting) {
+            handwriting.addEventListener('animationend', function(e) {
+                if (e.animationName === 'handwritingExit') {
+                    unlockMainIntroScroll();
+                }
+            }, { once: true });
+        }
+        setTimeout(unlockMainIntroScroll, MAIN_INTRO_DURATION);
+    }
+
+    function waitForImageReady(img) {
+        return new Promise((resolve) => {
+            if (!img) {
+                resolve();
+                return;
+            }
+
+            if (img.complete && img.naturalWidth > 0) {
+                if (typeof img.decode === 'function') {
+                    img.decode().then(resolve).catch(resolve);
+                } else {
+                    resolve();
+                }
+                return;
+            }
+
+            img.addEventListener('load', () => {
+                if (typeof img.decode === 'function') {
+                    img.decode().then(resolve).catch(resolve);
+                } else {
+                    resolve();
+                }
+            }, { once: true });
+            img.addEventListener('error', resolve, { once: true });
+        });
+    }
 
     // DB에서 업로드 설정 로드 (재로드 가능)
     async function loadUploadSettings(isReload = false) {
@@ -3869,8 +4208,14 @@
                 .order("display_order", { ascending: true });
 
             const wrapper = document.getElementById("mainSwiperWrapper");
+            const mainSwiperEl = document.querySelector('.mainSwiper');
+            const paginationEl = document.querySelector('.mainSwiper .swiper-pagination');
 
             if (!data || data.length === 0) {
+                mainSliderPhotoCount = 0;
+                if (mainSwiperEl) mainSwiperEl.classList.add('single-slide');
+                if (paginationEl) paginationEl.style.display = 'none';
+
                 // 메인 사진이 없으면 기본 이미지 표시
                 wrapper.innerHTML = `
                     <div class="swiper-slide">
@@ -3879,11 +4224,16 @@
                         </div>
                     </div>
                 `;
-                return;
+                return mainSliderPhotoCount;
             }
+
+            mainSliderPhotoCount = data.length;
+            if (mainSwiperEl) mainSwiperEl.classList.toggle('single-slide', mainSliderPhotoCount <= 1);
+            if (paginationEl) paginationEl.style.display = mainSliderPhotoCount > 1 ? '' : 'none';
 
             // Supabase에서 불러온 사진으로 슬라이드 생성
             wrapper.innerHTML = '';
+            let firstMainImage = null;
             data.forEach((photo, index) => {
                 const slide = document.createElement('div');
                 slide.className = 'swiper-slide';
@@ -3891,27 +4241,42 @@
                     slide.setAttribute('data-swiper-autoplay', '4000');
                 }
                 // 첫 번째 이미지는 최우선 로딩, 나머지는 eager 로딩
-                const priority = index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="eager"';
-                slide.innerHTML = `<img src="${photo.image_url}" alt="Wedding Photo" ${priority}>`;
+                const img = document.createElement('img');
+                img.src = photo.image_url;
+                img.alt = 'Wedding Photo';
+                img.loading = 'eager';
+                if (index === 0) {
+                    img.fetchPriority = 'high';
+                    firstMainImage = img;
+                }
+                slide.appendChild(img);
                 wrapper.appendChild(slide);
             });
 
+            await waitForImageReady(firstMainImage);
+            return mainSliderPhotoCount;
         } catch (error) {
             console.error('메인 슬라이더 로드 실패:', error);
+            return mainSliderPhotoCount;
         }
     }
 
     // 스와이퍼 초기화
     async function initSwiper() {
         // 먼저 메인 사진 로드
-        await loadMainSlider();
+        const photoCount = await loadMainSlider();
+
+        if (mainSwiperInstance) {
+            mainSwiperInstance.destroy(true, true);
+            mainSwiperInstance = null;
+        }
+
+        if (photoCount <= 1) {
+            return;
+        }
 
         // 그 다음 Swiper 초기화
         if (typeof Swiper !== 'undefined') {
-            if (mainSwiperInstance) {
-                mainSwiperInstance.destroy(true, true);
-            }
-
             mainSwiperInstance = new Swiper('.mainSwiper', {
                 loop: true,
                 autoHeight: false,
@@ -4138,19 +4503,17 @@
 
     // 페이지 초기화 함수
     async function initPage() {
+        initMainIntro();
+
         // ========================================
         // 1단계: 메인 사진 최우선 로딩 (사용자가 가장 먼저 보는 콘텐츠)
         // ========================================
         await initSwiper();
+        startMainIntro();
 
         // ========================================
         // 2단계: 필수 UI 설정 (즉시 필요)
         // ========================================
-        // 브라우저의 자동 스크롤 복원 방지 (페이지 새로고침 시 스크롤 위치 고정 방지)
-        if ('scrollRestoration' in history) {
-            history.scrollRestoration = 'manual';
-        }
-
         // 페이지 로드 시 스크롤을 맨 위로
         window.scrollTo(0, 0);
 
@@ -4336,17 +4699,50 @@
         return false; // 기본 링크 동작 방지
     }
 
-    // 페이지 로드 시 팝업 표시 체크
-    window.addEventListener('load', function() {
+    let rsvpPopupTriggered = false;
 
-        // localStorage 확인
-        if (shouldShowPopup()) {
-            showRsvpPopup();
+    function tryShowRsvpPopupFromTrigger() {
+        if (rsvpPopupTriggered || !shouldShowPopup()) {
+            return;
         }
-    });
+
+        rsvpPopupTriggered = true;
+        showRsvpPopup();
+    }
+
+    function initRsvpPopupTrigger() {
+        const trigger = document.getElementById('rsvpPopupTrigger');
+        if (!trigger) return;
+
+        const canOpenPopup = () => window.scrollY > 40;
+        let ticking = false;
+
+        const checkTriggerVisibility = () => {
+            ticking = false;
+            if (rsvpPopupTriggered || !canOpenPopup()) return;
+
+            const rect = trigger.getBoundingClientRect();
+            const isVisible = rect.top < window.innerHeight * 0.72 && rect.bottom > window.innerHeight * 0.2;
+
+            if (isVisible) {
+                tryShowRsvpPopupFromTrigger();
+            }
+        };
+
+        const requestVisibilityCheck = () => {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(checkTriggerVisibility);
+        };
+
+        window.addEventListener('scroll', requestVisibilityCheck, { passive: true });
+        window.addEventListener('resize', requestVisibilityCheck);
+    }
 
     // 팝업 배경 클릭 시 닫기
     document.addEventListener('DOMContentLoaded', function() {
+        initRsvpPopupTrigger();
+
         const popup = document.getElementById('rsvpPopup');
         if (popup) {
             popup.addEventListener('click', function(e) {

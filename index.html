@@ -5,6 +5,19 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>정원 시현 10월4일에 결혼합니다</title>
+    <meta name="description" content="서정원, 제시현 결혼식에 초대합니다. 2026년 10월 4일 토요일 오후 2시">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="정원 시현 10월4일에 결혼합니다">
+    <meta property="og:description" content="서정원, 제시현 결혼식에 초대합니다. 2026년 10월 4일 토요일 오후 2시">
+    <meta property="og:url" content="https://gardenseo1.github.io/mobile-wedding/">
+    <meta property="og:image" content="https://gardenseo1.github.io/mobile-wedding/image/wedding.png">
+    <meta property="og:image:width" content="3464">
+    <meta property="og:image:height" content="3464">
+    <meta property="og:image:type" content="image/png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="정원 시현 10월4일에 결혼합니다">
+    <meta name="twitter:description" content="서정원, 제시현 결혼식에 초대합니다. 2026년 10월 4일 토요일 오후 2시">
+    <meta name="twitter:image" content="https://gardenseo1.github.io/mobile-wedding/image/wedding.png">
     <!-- CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
@@ -513,6 +526,10 @@
             height: 100%;
             object-fit: cover;
             user-select: none;
+        }
+
+        .gallery-grid.gallery-collapsed .gallery-item:nth-child(n+13) {
+            display: none;
         }
 
         .gallery-more-wrap {
@@ -1157,7 +1174,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 15px;
+            gap: 8px;
             margin: 30px 0;
         }
 
@@ -1165,29 +1182,29 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-        }
-
-        .dday-circle {
-            min-width: 70px;
-            height: 70px;
-            padding: 0 8px;
-            border-radius: 50%;
+            justify-content: center;
+            width: 72px;
+            min-height: 72px;
+            padding: 12px 6px 10px;
+            border-radius: 6px;
             background: #fafaf8;
             border: 1px solid #eee9e3;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            box-shadow: 0 6px 16px rgba(56, 55, 55, 0.06);
+        }
+
+        .dday-number {
             font-size: 24px;
             font-weight: 700;
-            margin-bottom: 8px;
-            box-shadow: 0 6px 16px rgba(56, 55, 55, 0.08);
+            line-height: 1;
             white-space: nowrap;
         }
 
         .dday-label {
-            font-size: 11px;
-            opacity: 0.8;
-            font-weight: 400;
+            margin-top: 8px;
+            font-size: 10px;
+            color: #8a8178;
+            font-weight: 500;
+            line-height: 1;
         }
 
         /* 지도 */
@@ -1370,7 +1387,7 @@
         .account-list {
             display: none;
             padding: 10px 15px 15px;
-            background: #f8f7f5;
+            background: white;
         }
 
         .account-box.open .account-list {
@@ -1383,7 +1400,7 @@
             align-items: center;
             padding: 15px 0;
             background: transparent;
-            border-bottom: 1px solid #e5e1db;
+            border-bottom: 1px solid #eee9e3;
             gap: 10px;
         }
 
@@ -2060,9 +2077,6 @@
         <div class="swiper mainSwiper">
             <div class="swiper-wrapper" id="mainSwiperWrapper">
                 <!-- 메인 사진이 동적으로 로드됩니다 -->
-                <div class="swiper-slide">
-                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #999;">사진 로딩 중...</div>
-                </div>
             </div>
             <div class="swiper-pagination"></div>
         </div>
@@ -2251,23 +2265,23 @@
         <div class="dday-title">서정원 <span class="soft-heart" aria-hidden="true"></span> 제시현 결혼식까지</div>
         <div class="dday-counter" id="ddayCounter">
             <div class="dday-item">
-                <div class="dday-circle" id="dday-days">0</div>
-                <div class="dday-label">일</div>
+                <div class="dday-number" id="dday-days">0</div>
+                <div class="dday-label">Days</div>
             </div>
             <div class="dday-item">
-                <div class="dday-circle" id="dday-hours">00</div>
-                <div class="dday-label">시</div>
+                <div class="dday-number" id="dday-hours">0</div>
+                <div class="dday-label">Hours</div>
             </div>
             <div class="dday-item">
-                <div class="dday-circle" id="dday-minutes">00</div>
-                <div class="dday-label">분</div>
+                <div class="dday-number" id="dday-minutes">0</div>
+                <div class="dday-label">Minutes</div>
             </div>
             <div class="dday-item">
-                <div class="dday-circle" id="dday-seconds">00</div>
-                <div class="dday-label">초</div>
+                <div class="dday-number" id="dday-seconds">0</div>
+                <div class="dday-label">Seconds</div>
             </div>
         </div>
-        <div class="dday-date">2026년 10월 4일 토요일 오후 2시</div>
+        <div class="dday-date"><b>2026년 10월 4일 토요일 오후 2시</b></div>
     </section>
 
     <!-- 계좌번호 -->
@@ -3025,9 +3039,9 @@
             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
             daysEl.textContent = days;
-            hoursEl.textContent = String(hours).padStart(2, '0');
-            minutesEl.textContent = String(minutes).padStart(2, '0');
-            secondsEl.textContent = String(seconds).padStart(2, '0');
+            hoursEl.textContent = hours;
+            minutesEl.textContent = minutes;
+            secondsEl.textContent = seconds;
         } else {
             // 지난 날짜 - 마이너스로 표시
             const absDiff = Math.abs(diff);
@@ -3037,9 +3051,9 @@
             const seconds = Math.floor((absDiff % (1000 * 60)) / 1000);
 
             daysEl.textContent = '-' + days;
-            hoursEl.textContent = String(hours).padStart(2, '0');
-            minutesEl.textContent = String(minutes).padStart(2, '0');
-            secondsEl.textContent = String(seconds).padStart(2, '0');
+            hoursEl.textContent = hours;
+            minutesEl.textContent = minutes;
+            secondsEl.textContent = seconds;
         }
 
         // 업로드 가능 상태가 변경되었는지 체크 (1초마다, 체크가 활성화된 경우만)
@@ -3117,22 +3131,21 @@
 
         if (!galleryPhotosData || galleryPhotosData.length === 0) {
             gallery.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">아직 사진이 없습니다</div>';
+            gallery.classList.remove('gallery-collapsed');
             if (moreWrap) moreWrap.style.display = 'none';
             return;
         }
 
-        const visiblePhotos = isGalleryExpanded
-            ? galleryPhotosData
-            : galleryPhotosData.slice(0, GALLERY_INITIAL_COUNT);
+        const shouldShowMore = galleryPhotosData.length > GALLERY_INITIAL_COUNT;
+        gallery.classList.toggle('gallery-collapsed', shouldShowMore && !isGalleryExpanded);
 
         gallery.innerHTML = '';
 
-        visiblePhotos.forEach((photo, index) => {
-            const originalIndex = isGalleryExpanded ? index : index;
+        galleryPhotosData.forEach((photo, index) => {
             const item = document.createElement('div');
             item.className = 'gallery-item';
 
-            let html = '<img src="' + photo.image_url + '" alt="" onclick="openLightbox(' + originalIndex + ')">';
+            let html = '<img src="' + photo.image_url + '" alt="" loading="eager" decoding="async" onclick="openLightbox(' + index + ')">';
 
             if (photo.photo_type === 'guest') {
                 html += '<button class="photo-delete-btn" onclick="event.stopPropagation(); deletePhoto(' + photo.id + ', \'' + photo.image_url + '\')">삭제</button>';
@@ -3143,7 +3156,6 @@
         });
 
         if (moreWrap && moreBtn) {
-            const shouldShowMore = galleryPhotosData.length > GALLERY_INITIAL_COUNT;
             moreWrap.style.display = shouldShowMore ? 'block' : 'none';
             moreBtn.textContent = isGalleryExpanded ? '접기' : '더보기';
             moreBtn.setAttribute('aria-expanded', isGalleryExpanded ? 'true' : 'false');
@@ -3152,7 +3164,18 @@
 
     function toggleGalleryMore() {
         isGalleryExpanded = !isGalleryExpanded;
-        renderGallery();
+        const gallery = document.getElementById("gallery");
+        const moreBtn = document.getElementById("galleryMoreBtn");
+        const shouldShowMore = galleryPhotosData.length > GALLERY_INITIAL_COUNT;
+
+        if (gallery) {
+            gallery.classList.toggle('gallery-collapsed', shouldShowMore && !isGalleryExpanded);
+        }
+
+        if (moreBtn) {
+            moreBtn.textContent = isGalleryExpanded ? '접기' : '더보기';
+            moreBtn.setAttribute('aria-expanded', isGalleryExpanded ? 'true' : 'false');
+        }
     }
 
     // 갤러리 로드

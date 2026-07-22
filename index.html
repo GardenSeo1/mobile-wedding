@@ -1368,7 +1368,7 @@
         }
 
         .account-title::after {
-            content: "⌄";
+            content: "";
             color: #999;
             font-size: 18px;
             font-weight: 400;
@@ -2129,7 +2129,7 @@
         </div>
 
         <div class="action-buttons">
-<!--            <button class="action-btn" onclick="addToCalendar()">📅 캘린더에 저장</button>-->
+<!--            <button class="action-btn" onclick="addToCalendar()">캘린더에 저장</button>-->
         <button class="action-btn" onclick="shareInvitation()">공유하기</button>
         </div>
     </section>
@@ -2202,7 +2202,7 @@
     <section id="location-section" class="section" data-aos="fade-up">
         <div class="section-title">LOCATION</div>
         <div id="map" class="map-container" style="background: white;">
-            🗺️ 지도 영역
+            지도 영역
         </div>
         <div class="location-name">부산 라온 웨딩홀 23층 화이트홀</div>
         <div class="location-address">
@@ -3104,7 +3104,7 @@
     function copyAccount(number) {
         if (navigator.clipboard) {
             navigator.clipboard.writeText(number).then(function() {
-                showToast('계좌번호가 복사되었습니다 ✓');
+                showToast('계좌번호가 복사되었습니다 ');
             });
         } else {
             showToast(number);
@@ -3683,7 +3683,7 @@
                 return;
             }
 
-            showToast('사진이 삭제되었습니다 ✓');
+            showToast('사진이 삭제되었습니다 ');
             loadGallery();
         } catch (err) {
             console.error('삭제 중 오류:', err);
@@ -3847,7 +3847,7 @@
                 empty.innerHTML = '<p style="font-size: 14px;">해당 이름과 비밀번호로<br>업로드한 사진이 없습니다</p>';
             }
 
-            showToast('사진이 삭제되었습니다 ✓');
+            showToast('사진이 삭제되었습니다 ');
         } catch (err) {
             console.error('삭제 중 오류:', err);
             alert('사진 삭제에 실패했습니다.');
@@ -3938,7 +3938,7 @@
                 return;
             }
 
-            showToast('방명록이 삭제되었습니다 ✓');
+            showToast('방명록이 삭제되었습니다 ');
             loadGuestbook();
         } catch (err) {
             console.error('삭제 중 오류:', err);
@@ -4223,11 +4223,11 @@
 
             } else {
                 // 네이버 지도 API가 로드되지 않은 경우 대체 텍스트 표시
-                document.getElementById('map').innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #999; font-size: 14px;">🗺️ 지도를 로드할 수 없습니다<br>아래 버튼으로 위치를 확인하세요</div>';
+                document.getElementById('map').innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #999; font-size: 14px;">지도를 로드할 수 없습니다<br>아래 버튼으로 위치를 확인하세요</div>';
             }
         } catch (error) {
             console.error('지도 초기화 실패:', error);
-            document.getElementById('map').innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #999; font-size: 14px; text-align: center;">🗺️ 지도를 로드할 수 없습니다<br>아래 버튼으로 위치를 확인하세요</div>';
+            document.getElementById('map').innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #999; font-size: 14px; text-align: center;">지도를 로드할 수 없습니다<br>아래 버튼으로 위치를 확인하세요</div>';
         }
     }
 
@@ -4343,7 +4343,7 @@
                 },
             });
         } else {
-            console.error('❌ Swiper 라이브러리가 로드되지 않았습니다');
+            console.error('Swiper 라이브러리가 로드되지 않았습니다');
         }
     }
 
@@ -4359,7 +4359,7 @@
             // 공유 API가 지원되지 않는 경우 URL 복사
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(window.location.href).then(() => {
-                    showToast('초대장 링크가 복사되었습니다 ✓');
+                    showToast('초대장 링크가 복사되었습니다 ');
                 });
             } else {
                 showToast('이 브라우저는 공유 기능을 지원하지 않습니다');
@@ -4527,8 +4527,8 @@
         document.getElementById('contactModalContent').innerHTML = `
             <p style="text-align: center; margin-bottom: 20px; font-size: 16px; font-weight: 600;">${info.name}</p>
             <div class="contact-modal-buttons">
-                <a href="tel:${info.phone}" class="contact-modal-btn">📞 전화하기</a>
-                <a href="sms:${info.sms}" class="contact-modal-btn">💬 문자하기</a>
+                <a href="tel:${info.phone}" class="contact-modal-btn">전화하기</a>
+                <a href="sms:${info.sms}" class="contact-modal-btn">문자하기</a>
             </div>
         `;
         document.getElementById('contactModal').classList.add('active');
@@ -4618,7 +4618,7 @@
                     offset: 100
                 });
             } else {
-                console.error('❌ AOS 라이브러리가 로드되지 않았습니다');
+                console.error('AOS 라이브러리가 로드되지 않았습니다');
             }
         }, 50); // 메인 사진 로드 후 50ms 후에 나머지 로드
     }

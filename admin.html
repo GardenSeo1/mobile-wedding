@@ -260,41 +260,6 @@
             line-height: 1;
             z-index: 10;
         }
-        .preview-order-badge {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            background: rgba(67, 87, 58, 0.95);
-            color: white;
-            border: 2px solid white;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 10;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        .preview-order-badge:hover {
-            background: rgba(67, 87, 58, 1);
-            transform: scale(1.1);
-        }
-        .preview-order-badge.selected {
-            background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
-            border-color: #ffd700;
-        }
-        .preview-item.clickable {
-            cursor: pointer;
-            border: 3px solid transparent;
-            transition: all 0.3s;
-        }
-        .preview-item.clickable:hover {
-            border-color: #43573a;
-        }
         .checkbox-wrapper {
             display: none;
         }
@@ -598,11 +563,6 @@
                 height: 30px;
                 font-size: 14px;
             }
-            .preview-order-badge {
-                width: 30px;
-                height: 30px;
-                font-size: 14px;
-            }
             .visibility-badge {
                 font-size: 9px;
                 padding: 2px 6px;
@@ -616,11 +576,6 @@
         }
         @media (max-width: 480px) {
             .display-order-badge {
-                width: 26px;
-                height: 26px;
-                font-size: 12px;
-            }
-            .preview-order-badge {
                 width: 26px;
                 height: 26px;
                 font-size: 12px;
@@ -1174,14 +1129,14 @@
 
     <!-- 탭 메뉴 -->
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('main')">메인 사진</button>
-        <button class="tab-btn" onclick="switchTab('admin')">웨딩 사진</button>
-        <button class="tab-btn" onclick="switchTab('guest')">게스트 사진</button>
-        <button class="tab-btn" onclick="switchTab('all')">전체 사진</button>
-        <button class="tab-btn" onclick="switchTab('users')">사용자별 보기</button>
-        <button class="tab-btn" onclick="switchTab('guestbook')">방명록 관리</button>
-        <button class="tab-btn" onclick="switchTab('rsvp')">참석 관리</button>
-        <button class="tab-btn" onclick="switchTab('settings')">설정</button>
+        <button class="tab-btn active" onclick="switchTab('main', event)">메인 사진</button>
+        <button class="tab-btn" onclick="switchTab('admin', event)">웨딩 사진</button>
+        <button class="tab-btn" onclick="switchTab('guest', event)">게스트 사진</button>
+        <button class="tab-btn" onclick="switchTab('all', event)">전체 사진</button>
+        <button class="tab-btn" onclick="switchTab('users', event)">사용자별 보기</button>
+        <button class="tab-btn" onclick="switchTab('guestbook', event)">방명록 관리</button>
+        <button class="tab-btn" onclick="switchTab('rsvp', event)">참석 관리</button>
+        <button class="tab-btn" onclick="switchTab('settings', event)">설정</button>
     </div>
 
     <!-- 메인 사진 탭 -->
@@ -1822,11 +1777,14 @@
     }
 
     // 탭 전환
-    function switchTab(tabName) {
+    function switchTab(tabName, clickEvent) {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
-        event.target.classList.add('active');
+        const tabButton = clickEvent && clickEvent.currentTarget
+            ? clickEvent.currentTarget
+            : document.querySelector(`.tab-btn[onclick*="'${tabName}'"]`);
+        if (tabButton) tabButton.classList.add('active');
         document.getElementById(tabName + '-tab').classList.add('active');
 
         if (tabName === 'users') {
@@ -1846,18 +1804,12 @@
         }
     }
 
-    // 순서 선택 상태 저장
-    let uploadOrderSelection = {};
-
     // 사진 미리보기
     async function previewImages(type) {
         const fileInput = document.getElementById(type + 'FileInput');
         const files = Array.from(fileInput.files);
 
-        // 업로드 개수 제한 제거 - 자유롭게 업로드 가능
-
         selectedFiles[type] = files;
-        uploadOrderSelection[type] = []; // 순서 선택 초기화
 
         const previewGrid = document.getElementById(type + 'PreviewGrid');
         const uploadBtn = document.getElementById(type + 'UploadBtn');
@@ -1871,80 +1823,20 @@
 
         uploadBtn.disabled = false;
 
-        // 노출중인 사진 개수 확인
-        const { data: visiblePhotos } = await supabaseClient
-            .from("photos")
-            .select("id")
-            .eq("photo_type", type)
-            .eq("is_visible", true);
-
-        const hasVisiblePhotos = visiblePhotos && visiblePhotos.length > 0;
-
-        // 안내 메시지 표시
-        if (!hasVisiblePhotos) {
-            const infoDiv = document.createElement("div");
-            infoDiv.style.cssText = "grid-column: 1 / -1; background: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center; color: #1565c0; margin-bottom: 10px;";
-            infoDiv.innerHTML = "노출할 사진을 클릭하여 순서를 정해주세요 (1, 2, 3, ...)";
-            previewGrid.appendChild(infoDiv);
-        }
-
         files.forEach((file, index) => {
             const reader = new FileReader();
             reader.onload = (e) => {
                 const previewItem = document.createElement("div");
-                previewItem.className = hasVisiblePhotos ? "preview-item" : "preview-item clickable";
+                previewItem.className = "preview-item";
                 previewItem.dataset.index = index;
 
-                const orderBadge = hasVisiblePhotos ? '' : `<div class="preview-order-badge" onclick="toggleUploadOrder('${type}', ${index})"></div>`;
-
                 previewItem.innerHTML = `
-                    ${orderBadge}
-                    <img src="${e.target.result}" alt="Preview" ${hasVisiblePhotos ? '' : `onclick="toggleUploadOrder('${type}', ${index})"`} />
+                    <img src="${e.target.result}" alt="Preview" />
                     <button class="remove-btn" onclick="removePreview('${type}', ${index})">&times;</button>
                 `;
                 previewGrid.appendChild(previewItem);
             };
             reader.readAsDataURL(file);
-        });
-    }
-
-    // 업로드 순서 토글
-    function toggleUploadOrder(type, index) {
-        const orderArray = uploadOrderSelection[type];
-        const existingIndex = orderArray.indexOf(index);
-
-        if (existingIndex !== -1) {
-            // 이미 선택됨 → 선택 해제
-            orderArray.splice(existingIndex, 1);
-        } else {
-            // 새로 선택
-            orderArray.push(index);
-        }
-
-        // UI 업데이트
-        updateOrderBadges(type);
-    }
-
-    // 순서 배지 UI 업데이트
-    function updateOrderBadges(type) {
-        const orderArray = uploadOrderSelection[type];
-        const previewGrid = document.getElementById(type + 'PreviewGrid');
-        const items = previewGrid.querySelectorAll('.preview-item');
-
-        items.forEach(item => {
-            const index = parseInt(item.dataset.index);
-            const badge = item.querySelector('.preview-order-badge');
-            if (!badge) return;
-
-            const orderPosition = orderArray.indexOf(index);
-
-            if (orderPosition !== -1) {
-                badge.textContent = orderPosition + 1;
-                badge.classList.add('selected');
-            } else {
-                badge.textContent = '';
-                badge.classList.remove('selected');
-            }
         });
     }
 
@@ -2087,7 +1979,9 @@
 
     // 사진 업로드 (이미지 압축 + 병렬 업로드)
     async function uploadImages(type) {
-        if (selectedFiles[type].length === 0) {
+        const filesToUpload = Array.from(selectedFiles[type] || []);
+
+        if (filesToUpload.length === 0) {
             showStatus(type, "파일을 선택해주세요", "error");
             return;
         }
@@ -2103,8 +1997,8 @@
 
         try {
             // 1. 모든 파일 압축 (병렬 처리)
-            console.log('[압축 시작]', selectedFiles[type].length, '개 파일');
-            const compressionPromises = selectedFiles[type].map((file) =>
+            console.log('[압축 시작]', filesToUpload.length, '개 파일');
+            const compressionPromises = filesToUpload.map((file) =>
                 compressImage(file).catch(err => {
                     console.error(`[압축 실패] ${file.name}:`, err);
                     return file; // 압축 실패시 원본 사용
@@ -2117,21 +2011,9 @@
             uploadBtn.textContent = "업로드 중...";
             progressBarFill.style.width = "20%";
 
-            // 노출중인 사진이 있는지 확인
-            const { data: visiblePhotos } = await supabaseClient
-                .from("photos")
-                .select("id")
-                .eq("photo_type", type)
-                .eq("is_visible", true);
-
-            const hasVisiblePhotos = visiblePhotos && visiblePhotos.length > 0;
-            const orderArray = uploadOrderSelection[type] || [];
-
-            console.log(`[업로드] 노출중인 사진 있음: ${hasVisiblePhotos}, 선택된 순서:`, orderArray);
-
-            let uploaded = 0;
-            let failed = 0;
-            const failureMessages = [];
+	            let uploaded = 0;
+	            let failed = 0;
+	            const failureMessages = [];
             const total = compressedFiles.length;
 
             // 2. 병렬 업로드 (한 번에 3개씩)
@@ -2143,7 +2025,7 @@
 
                 const batchPromises = batch.map(async (file, batchIdx) => {
                     const fileIndex = batchStartIndex + batchIdx;
-                    const originalFile = selectedFiles[type][fileIndex];
+                    const originalFile = filesToUpload[fileIndex];
                     const timestamp = Date.now();
                     const safeFileName = getSafeUploadFileName(originalFile, fileIndex);
                     const filePath = `${type}/${timestamp}_${fileIndex}_${safeFileName}`;
@@ -2167,20 +2049,15 @@
 
                         const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/wedding_photos/${filePath}`;
 
-                        // 노출 상태 및 순서 결정
-                        const orderPosition = orderArray.indexOf(fileIndex);
-                        const isVisible = !hasVisiblePhotos && orderPosition !== -1;
-                        const displayOrder = isVisible ? (orderPosition + 1) : null;
-
-                        const { error: insertError } = await supabaseClient.from("photos").insert([
-                            {
-                                image_url: imageUrl,
-                                photo_type: type,
-                                is_visible: isVisible,
-                                display_order: displayOrder,
-                                del_yn: 'N'
-                            }
-                        ]);
+	                        const { error: insertError } = await supabaseClient.from("photos").insert([
+	                            {
+	                                image_url: imageUrl,
+	                                photo_type: type,
+	                                is_visible: false,
+	                                display_order: null,
+	                                del_yn: 'N'
+	                            }
+	                        ]);
 
                         if (insertError) {
                             console.error("[DB 저장 실패]", originalFile.name, insertError);
@@ -2219,23 +2096,22 @@
             progressBar.style.display = "none";
             progressBarFill.style.width = "0%";
 
-            if (uploaded === 0) {
-                const firstReason = failureMessages[0] ? `\n${failureMessages[0]}` : '';
-                showStatus(type, `업로드에 실패했습니다. (${failed}/${total})${firstReason}`, "error");
-                return;
-            }
+	            if (uploaded === 0) {
+	                const firstReason = failureMessages[0] ? `\n${failureMessages[0]}` : '';
+	                showStatus(type, `업로드에 실패했습니다. (${failed}/${total})${firstReason}`, "error");
+	                return;
+	            }
 
-            document.getElementById(type + 'FileInput').value = "";
-            document.getElementById(type + 'PreviewGrid').innerHTML = "";
-            selectedFiles[type] = [];
-            uploadOrderSelection[type] = [];
+	            document.getElementById(type + 'FileInput').value = "";
+	            document.getElementById(type + 'PreviewGrid').innerHTML = "";
+	            selectedFiles[type] = [];
 
-            if (failed > 0) {
-                const firstReason = failureMessages[0] ? `\n${failureMessages[0]}` : '';
-                showStatus(type, `${uploaded}개 업로드, ${failed}개 실패했습니다.${firstReason}`, "error");
-            } else {
-                showStatus(type, `${uploaded}개 파일이 업로드되었습니다!`, "success");
-            }
+	            if (failed > 0) {
+	                const firstReason = failureMessages[0] ? `\n${failureMessages[0]}` : '';
+	                showStatus(type, `${uploaded}개 업로드, ${failed}개 실패했습니다.${firstReason}`, "error");
+	            } else {
+	                showStatus(type, `${uploaded}개 파일이 업로드되었습니다!`, "success");
+	            }
 
             // 순서 재계산
             await reorderVisiblePhotos(type);
@@ -3327,7 +3203,7 @@
                 // galleryItem 전체를 클릭/터치 가능하게
                 galleryItem.style.cursor = 'pointer';
                 galleryItem.style.touchAction = 'manipulation'; // 빠른 터치 응답
-    
+
                 // 터치 이벤트 처리 (모바일)
                 let touchStartTime = 0;
                 galleryItem.addEventListener('touchstart', function(e) {

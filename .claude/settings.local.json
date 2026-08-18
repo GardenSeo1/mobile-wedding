@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "WebFetch(domain:smartstore.naver.com)",
+      "WebFetch(domain:salondeletter.com)",
+      "Bash(open:*)",
+      "Bash(ls:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(curl:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill -9)",
+      "WebFetch(domain:map.naver.com)",
+      "WebSearch",
+      "WebFetch(domain:place.map.kakao.com)",
+      "WebFetch(domain:tmapapi.tmapmobility.com)",
+      "WebFetch(domain:api.ncloud-docs.com)",
+      "WebFetch(domain:navermaps.github.io)",
+      "WebFetch(domain:docs.ncloud.com)",
+      "Bash(perl -i -pe:*)",
+      "Bash(grep:*)"
+    ]
+  }
+}

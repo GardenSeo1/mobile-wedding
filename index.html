@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+          content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>정원 시현 10월4일에 결혼합니다</title>
     <meta name="description" content="서정원, 제시현 결혼식에 초대합니다. 2026년 10월 4일 일요일 오후 2시">
     <meta property="og:type" content="website">
@@ -31,13 +31,19 @@
             box-sizing: border-box;
         }
 
+        html {
+            touch-action: pan-y;
+            -ms-touch-action: pan-y;
+        }
+
         body {
             font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
             color: #383737;
             background: white;
             line-height: 1.8;
 
-            touch-action: manipulation;
+            touch-action: pan-y;
+            -ms-touch-action: pan-y;
             -webkit-touch-callout: none;
         }
 
@@ -1376,12 +1382,13 @@
         }
 
         .account-title::after {
-            content: "";
-            color: #999;
-            font-size: 18px;
-            font-weight: 400;
+            content: "∨";
+            color: #7a756f;
+            font-size: 14px;
+            font-weight: 700;
             line-height: 1;
             transition: transform 0.25s ease;
+            flex-shrink: 0;
         }
 
         .account-box.open .account-title {
@@ -2604,6 +2611,7 @@
     const GALLERY_INITIAL_COUNT = 12;
     let mainSwiperInstance = null; // 메인 사진 슬라이더 인스턴스
     let mainSliderPhotoCount = 0;
+    let deferredMainSliderImages = [];
     let lightboxTouchStartX = 0;
     let lightboxTouchStartY = 0;
     let lightboxTouchCurrentX = 0;
@@ -2630,31 +2638,42 @@
     let previousUploadAvailable = null; // 이전 업로드 가능 상태 저장
     let uploadCheckEnabled = true; // 업로드 체크 활성화 여부
 
-    function preventPageZoom() {
-        document.addEventListener('touchstart', function(e) {
-            if (e.touches.length > 1) {
-                e.preventDefault();
-            }
-        }, { passive: false, capture: true });
+    function isZoomGesture(e) {
+        return (e.touches && e.touches.length > 1) ||
+               (typeof e.scale === 'number' && e.scale !== 1);
+    }
 
-        document.addEventListener('touchmove', function(e) {
-            if (e.touches.length > 1) {
-                e.preventDefault();
-            }
-        }, { passive: false, capture: true });
+    function blockZoomGesture(e) {
+        if (isZoomGesture(e) && e.cancelable) {
+            e.preventDefault();
+        }
+    }
+
+    function preventPageZoom() {
+        const zoomEventTargets = [document, window];
+        const listenerOptions = { passive: false, capture: true };
+
+        zoomEventTargets.forEach((target) => {
+            target.addEventListener('touchstart', blockZoomGesture, listenerOptions);
+            target.addEventListener('touchmove', blockZoomGesture, listenerOptions);
+        });
 
         document.addEventListener('touchend', function(e) {
             const now = Date.now();
-            if (now - lastTouchEnd < 350) {
+            if (now - lastTouchEnd < 350 && e.cancelable) {
                 e.preventDefault();
             }
             lastTouchEnd = now;
-        }, { passive: false, capture: true });
+        }, listenerOptions);
 
         ['gesturestart', 'gesturechange', 'gestureend'].forEach((eventName) => {
-            document.addEventListener(eventName, function(e) {
-                e.preventDefault();
-            }, { passive: false, capture: true });
+            zoomEventTargets.forEach((target) => {
+                target.addEventListener(eventName, function(e) {
+                    if (e.cancelable) {
+                        e.preventDefault();
+                    }
+                }, listenerOptions);
+            });
         });
     }
 
@@ -4289,6 +4308,7 @@
 
             if (!data || data.length === 0) {
                 mainSliderPhotoCount = 0;
+                deferredMainSliderImages = [];
                 if (mainSwiperEl) mainSwiperEl.classList.add('single-slide');
                 if (paginationEl) paginationEl.style.display = 'none';
 
@@ -4304,6 +4324,7 @@
             }
 
             mainSliderPhotoCount = data.length;
+            deferredMainSliderImages = [];
             if (mainSwiperEl) mainSwiperEl.classList.toggle('single-slide', mainSliderPhotoCount <= 1);
             if (paginationEl) paginationEl.style.display = mainSliderPhotoCount > 1 ? '' : 'none';
 
@@ -4316,14 +4337,17 @@
                 if (index === 0) {
                     slide.setAttribute('data-swiper-autoplay', '4000');
                 }
-                // 첫 번째 이미지는 최우선 로딩, 나머지는 eager 로딩
                 const img = document.createElement('img');
-                img.src = photo.image_url;
                 img.alt = 'Wedding Photo';
-                img.loading = 'eager';
                 if (index === 0) {
+                    img.src = photo.image_url;
+                    img.loading = 'eager';
                     img.fetchPriority = 'high';
                     firstMainImage = img;
+                } else {
+                    img.dataset.src = photo.image_url;
+                    img.loading = 'lazy';
+                    deferredMainSliderImages.push(img);
                 }
                 slide.appendChild(img);
                 wrapper.appendChild(slide);
@@ -4335,6 +4359,27 @@
             console.error('메인 슬라이더 로드 실패:', error);
             return mainSliderPhotoCount;
         }
+    }
+
+    function loadDeferredMainSliderImages() {
+        const deferredImages = [
+            ...deferredMainSliderImages,
+            ...document.querySelectorAll('.mainSwiper img[data-src]')
+        ];
+
+        if (!deferredImages.length) {
+            return;
+        }
+
+        deferredImages.forEach((img) => {
+            if (!img.dataset.src || img.src) {
+                return;
+            }
+
+            img.src = img.dataset.src;
+            img.removeAttribute('data-src');
+        });
+        deferredMainSliderImages = [];
     }
 
     // 스와이퍼 초기화
@@ -4587,6 +4632,7 @@
         // ========================================
         await initSwiper();
         startMainIntro();
+        loadDeferredMainSliderImages();
 
         // ========================================
         // 2단계: 필수 UI 설정 (즉시 필요)

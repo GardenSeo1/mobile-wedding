@@ -137,6 +137,7 @@
         .mainSwiper {
             cursor: pointer;
             touch-action: pan-y;
+            -ms-touch-action: pan-y;
         }
 
         .main-handwriting {
@@ -352,6 +353,7 @@
             object-fit: contain;
             pointer-events: none;
             touch-action: pan-y;
+            -ms-touch-action: pan-y;
         }
 
         .swiper-pagination-bullet {
@@ -2611,6 +2613,7 @@
     let savedScrollPosition = 0; // 모달 열기 전 스크롤 위치 저장
     const MAIN_INTRO_DURATION = 3740;
     let mainIntroScrollLocked = false;
+    let lastMainBannerTouchEnd = 0;
 
     // 업로드 관련 기본값 (DB 로드 실패 시 사용)
     const DEFAULT_UPLOAD_START_DATE = '2026-10-04T09:00:00+09:00'; // 결혼식 당일 오전 9시
@@ -2626,6 +2629,42 @@
     let VIEW_PHOTOS_DATE_MESSAGE = '사진 조회는 아직 시작되지 않았습니다.';
     let previousUploadAvailable = null; // 이전 업로드 가능 상태 저장
     let uploadCheckEnabled = true; // 업로드 체크 활성화 여부
+
+    function isMainBannerTouch(target) {
+        return !!(target && target.closest && target.closest('.main-image'));
+    }
+
+    function preventMainBannerZoom() {
+        document.addEventListener('touchstart', function(e) {
+            if (isMainBannerTouch(e.target) && e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false, capture: true });
+
+        document.addEventListener('touchmove', function(e) {
+            if (isMainBannerTouch(e.target) && e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false, capture: true });
+
+        document.addEventListener('touchend', function(e) {
+            if (!isMainBannerTouch(e.target)) return;
+
+            const now = Date.now();
+            if (now - lastMainBannerTouchEnd < 350) {
+                e.preventDefault();
+            }
+            lastMainBannerTouchEnd = now;
+        }, { passive: false, capture: true });
+
+        ['gesturestart', 'gesturechange', 'gestureend'].forEach((eventName) => {
+            document.addEventListener(eventName, function(e) {
+                if (isMainBannerTouch(e.target)) {
+                    e.preventDefault();
+                }
+            }, { passive: false, capture: true });
+        });
+    }
 
     function preventMainIntroScroll(e) {
         if (!mainIntroScrollLocked) return;
@@ -4549,6 +4588,7 @@
     // 페이지 초기화 함수
     async function initPage() {
         initMainIntro();
+        preventMainBannerZoom();
 
         // ========================================
         // 1단계: 메인 사진 최우선 로딩 (사용자가 가장 먼저 보는 콘텐츠)
